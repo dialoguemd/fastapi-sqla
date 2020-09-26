@@ -1,10 +1,12 @@
 import os
+from contextlib import contextmanager
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.concurrency import contextmanager_in_threadpool
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
-from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.orm.session import Session, sessionmaker
 
 __all__ = ["Base", "setup"]
 
@@ -15,6 +17,7 @@ _Session = sessionmaker()
 
 def setup(app: FastAPI):
     app.add_event_handler("startup", startup)
+    app.add_middleware("http", middleware)
 
 
 def startup():
@@ -27,3 +30,75 @@ def startup():
 
 class Base(declarative_base(cls=DeferredReflection)):  # type: ignore
     __abstract__ = True
+
+
+@contextmanager
+def open_session() -> Session:
+    """Context manager that opens a session and properly closes session when exiting.
+
+    If no exception is raised before exiting context, session is committed when exiting
+    context. If an exception is raised, session is rollbacked.
+    """
+    session = _Session()
+    logger.bind(db_session=session)
+
+    try:
+        yield session
+        logger.debug("committing")
+        session.commit()
+    except Exception:
+        logger.exception("rolling back")
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def with_session(request: Request) -> Session:
+    """Yield the sqlalchmey session for that request.
+
+    It is meant to be used as a FastAPI® dependency::
+
+        from er import sqla
+        from fastapi import APIRouter, Depends
+
+        router = APIRouter()
+
+        @router.get("/users")
+        def get_users(db: sqla.Session = Depends(sqla.with_session)):
+            pass
+    """
+    try:
+        yield request.scope["sqla_session"]
+    except KeyError:  # pragma: no cover
+        raise Exception(
+            "No session found in request, please ensure you added the sqla middleware."
+        )
+
+
+async def middleware(request: Request, call_next):
+    """Middleware which injects a new sqla session into every request.
+
+    Handles creation of session, as well as commit, rollback, and closing of session.
+
+    Usage::
+
+        import fastapi_sqla
+        from fastapi import FastApi
+
+        app = FastApi()
+
+        app.include_router(fastapi_sqla.router)
+        app.middleware("http", fastapi_sqla.middleware)
+
+        @app.get("/users")
+        def get_users(session: sqla.Session = Depends(sqla.new_session)):
+            return session.query(...) # use your session here
+    """
+    async with contextmanager_in_threadpool(open_session()) as session:
+        request.scope["sqla_session"] = session
+        response = await call_next(request)
+        if response.status_code >= 400:
+            session.rollback()
+
+    return response
