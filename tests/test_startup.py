@@ -2,12 +2,11 @@ import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from pytest import fixture, mark
+from sqlalchemy.orm.session import close_all_sessions
 
 
 @fixture(autouse=True)
 def setup_tear_down():
-    from sqlalchemy.orm.session import close_all_sessions
-
     yield
     close_all_sessions()
 
