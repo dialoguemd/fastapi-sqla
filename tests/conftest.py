@@ -12,6 +12,6 @@ def db_uri(tmp_path_factory):
 
 @fixture(autouse=True)
 def environ(db_uri):
-    values = {"sqlalchemy_database_uri": db_uri}
+    values = {"sqlalchemy_url": db_uri}
     with patch.dict("os.environ", values=values, clear=True) as environ:
         yield environ

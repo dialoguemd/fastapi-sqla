@@ -1,9 +1,9 @@
+import os
+
 import structlog
 from fastapi import APIRouter
-from pydantic import BaseSettings, SecretStr
-from sqlalchemy import create_engine
+from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import sessionmaker
-
 
 __all__ = ["router"]
 
@@ -13,19 +13,19 @@ logger = structlog.get_logger(__name__)
 _Session = sessionmaker()
 
 
-class Settings(BaseSettings):
-    sqlalchemy_connection_pool_size: int = 15
-    sqlalchemy_connection_max_overflow: int = 15
-    sqlalchemy_database_uri: SecretStr
-
-
 @router.on_event("startup")
 def startup():
-    settings = Settings()
-    engine = create_engine(
-        settings.sqlalchemy_database_uri.get_secret_value(),
-        pool_size=settings.sqlalchemy_connection_pool_size,
-        max_overflow=settings.sqlalchemy_connection_max_overflow,
-    )
+    """Setup sqlalchemy.
+
+    Create the sqla engine instance using environment variables.
+    The keys of interest in `os.environ` are prefixed with `sqlalchemy_`.
+    Each matching key (after the prefix is stripped) is treated as though it were the
+    corresponding keyword argument to [`sqlalchemy.create_engine`]
+    (https://docs.sqlalchemy.org/en/13/core/engines.html?highlight=create_engine#sqlalchemy.create_engine)  # noqa
+    call.
+
+    The only required key is `sqlalchemy_url`, which provides the database URL.
+    """
+    engine = engine_from_config(os.environ, prefix="sqlalchemy_")
     _Session.configure(bind=engine)
-    logger.info("startup", engine=engine, settings=settings)
+    logger.info("startup", engine=engine)
