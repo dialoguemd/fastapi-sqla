@@ -51,3 +51,12 @@ workflows:
             branches:
               ignore: /.*/
           context: org-global-v2
+
+executors:
+  python-postgres:
+    docker:
+      - image: dialogue/launchpad:python3.7
+      - image: postgres:10.12
+        name: postgres
+        environment:
+          POSTGRES_HOST_AUTH_METHOD: trust
