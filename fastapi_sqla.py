@@ -4,6 +4,9 @@ from pydantic import BaseSettings, SecretStr
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
+
+__all__ = ["router"]
+
 router = APIRouter()
 logger = structlog.get_logger(__name__)
 
