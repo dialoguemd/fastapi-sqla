@@ -5,8 +5,6 @@ orbs:
   python: dialogue/python@2.9.1
   release: dialogue/release@2.1.5
 
-executors:
-  python: python/python
 
 workflows:
   ci:
@@ -23,7 +21,7 @@ workflows:
       - python/test:
           name: test
           context: org-global-v2
-          executor: python-postgress
+          executor: python-postgres
       - release/release:
           name: release
           requires:
