@@ -5,7 +5,7 @@ from pytest import fixture, mark
 
 
 @fixture(autouse=True)
-def tear_down():
+def setup_tear_down():
     from sqlalchemy.orm.session import close_all_sessions
 
     yield
