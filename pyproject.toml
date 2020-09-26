@@ -10,6 +10,7 @@ sqlalchemy = "<2"
 fastapi = ">=0.61"
 pydantic = "<2"
 structlog = ">=20"
+psycopg2 = "^2.8.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.2"
