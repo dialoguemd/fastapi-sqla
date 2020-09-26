@@ -6,6 +6,7 @@ from pytest import fixture, mark
 @fixture(autouse=True)
 def tear_down():
     from sqlalchemy.orm.session import close_all_sessions
+
     from fastapi_sqla import _Session
 
     yield
@@ -26,6 +27,7 @@ def test_startup():
 @mark.asyncio
 async def test_fastapi_integration():
     from fastapi import FastAPI
+
     from fastapi_sqla import _Session, router
 
     app = FastAPI()
