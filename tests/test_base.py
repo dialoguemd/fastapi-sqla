@@ -1,5 +1,3 @@
-import importlib
-
 from pytest import fixture, raises
 from sqlalchemy import engine_from_config
 from sqlalchemy.exc import NoSuchTableError
@@ -8,16 +6,12 @@ from sqlalchemy.orm.session import close_all_sessions
 
 @fixture(autouse=True)
 def setup_tear_down(environ):
-    import fastapi_sqla
-
     engine = engine_from_config(environ, prefix="sqlalchemy_")
 
     engine.execute("CREATE TABLE IF NOT EXISTS test_table (id integer primary key)")
     yield
     close_all_sessions()
     engine.execute("DROP TABLE test_table")
-    # reload fastapi_sqla to clear sqla deferred reflection mapping stored in Base
-    importlib.reload(fastapi_sqla)
 
 
 def test_startup_reflect_test_table():

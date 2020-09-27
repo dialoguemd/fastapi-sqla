@@ -1,3 +1,4 @@
+import importlib
 import os
 from unittest.mock import patch
 
@@ -15,3 +16,11 @@ def environ(db_uri):
     values = {"sqlalchemy_url": db_uri}
     with patch.dict("os.environ", values=values, clear=True):
         yield values
+
+
+@fixture(autouse=True)
+def tear_down():
+    import fastapi_sqla
+
+    # reload fastapi_sqla to clear sqla deferred reflection mapping stored in Base
+    importlib.reload(fastapi_sqla)
