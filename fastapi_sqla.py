@@ -88,8 +88,7 @@ async def middleware(request: Request, call_next):
 
         app = FastApi()
 
-        app.include_router(fastapi_sqla.router)
-        app.middleware("http", fastapi_sqla.middleware)
+        fastapi_sqla.setup(app)  # includes middleware
 
         @app.get("/users")
         def get_users(session: sqla.Session = Depends(sqla.new_session)):
