@@ -1,10 +1,9 @@
 import httpx
 from asgi_lifespan import LifespanManager
-from fastapi import FastAPI, Depends, Body
+from fastapi import Body, Depends, FastAPI
 from pytest import fixture, mark
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import close_all_sessions
-
 
 pytestmark = mark.asyncio
 
