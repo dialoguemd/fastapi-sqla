@@ -26,6 +26,6 @@ SqlAlchemy integration for FastAPI®
   ```python
   from fastapi_sqla import Base
 
-  class Entity(sqla.Base):
+  class Entity(Base):
       __tablename__ = "table-name-in-db"
   ```
