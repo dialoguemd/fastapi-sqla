@@ -73,7 +73,7 @@ def with_session(request: Request) -> Session:
         yield request.scope["sqla_session"]
     except KeyError:  # pragma: no cover
         raise Exception(
-            "No session found in request, please ensure you added the sqla middleware."
+            "No session found in request, please ensure you've setup fastapi_sqla."
         )
 
 
