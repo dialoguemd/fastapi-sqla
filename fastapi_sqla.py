@@ -7,7 +7,6 @@ from fastapi.concurrency import contextmanager_in_threadpool
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm.session import Session, sessionmaker
-from starlette.middleware.base import BaseHTTPMiddleware
 
 __all__ = ["Base", "setup", "with_session"]
 
@@ -18,7 +17,7 @@ _Session = sessionmaker()
 
 def setup(app: FastAPI):
     app.add_event_handler("startup", startup)
-    app.middleware("http")(middleware)
+    app.middleware("http")(add_session_to_request)
 
 
 def startup():
@@ -99,6 +98,8 @@ async def add_session_to_request(request: Request, call_next):
         request.scope["sqla_session"] = session
         response = await call_next(request)
         if response.status_code >= 400:
+            # If ever a route handler returns an http exception, we do not want the
+            # session opened by current context manager to commit anything in db.
             session.rollback()
 
     return response
