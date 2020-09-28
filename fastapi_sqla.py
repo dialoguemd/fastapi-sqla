@@ -6,7 +6,6 @@ from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm.session import sessionmaker
 
-
 __all__ = ["Base", "setup"]
 
 logger = structlog.get_logger(__name__)
