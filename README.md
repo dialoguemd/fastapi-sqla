@@ -22,3 +22,10 @@ SqlAlchemy integration for FastAPI®
   app = FastAPI()
   fastapi_sqla.setup(app)
   ```
+* Adding a new entity class:
+  ```python
+  from fastapi_sqla import Base
+
+  class Entity(Base):
+      __tablename__ = "table-name-in-db"
+  ```
