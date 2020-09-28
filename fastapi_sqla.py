@@ -7,6 +7,7 @@ from fastapi.concurrency import contextmanager_in_threadpool
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm.session import Session, sessionmaker
+from starlette.middleware.base import BaseHTTPMiddleware
 
 __all__ = ["Base", "setup"]
 
@@ -17,7 +18,7 @@ _Session = sessionmaker()
 
 def setup(app: FastAPI):
     app.add_event_handler("startup", startup)
-    app.add_middleware("http", middleware)
+    app.add_middleware(BaseHTTPMiddleware, dispatch=middleware)
 
 
 def startup():

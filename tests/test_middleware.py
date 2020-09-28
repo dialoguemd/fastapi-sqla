@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 import httpx
 from asgi_lifespan import LifespanManager
-from fastapi import Body, Depends, FastAPI
+from fastapi import Depends, FastAPI
+from pydantic import BaseModel
 from pytest import fixture, mark
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import close_all_sessions
@@ -8,10 +11,14 @@ from sqlalchemy.orm.session import close_all_sessions
 pytestmark = mark.asyncio
 
 
-@fixture(autouse=True)
-def setup_tear_down(environ):
+@fixture
+def engine(environ):
     engine = engine_from_config(environ, prefix="sqlalchemy_")
+    return engine
 
+
+@fixture(autouse=True)
+def setup_tear_down(engine):
     engine.execute(
         """
         CREATE TABLE IF NOT EXISTS public.user (
@@ -37,26 +44,33 @@ def User():
 
 
 @fixture
-async def client(User):
-
-    import fastapi_sqla
+def app(User):
+    from fastapi_sqla import setup, with_session
 
     app = FastAPI()
+    setup(app)
 
-    app.include_router(fastapi_sqla.router)
-    app.middleware("http")(fastapi_sqla.middleware)
+    class UserIn(BaseModel):
+        id: int
+        first_name: str
+        last_name: str
 
     @app.post("/users")
-    def create_user(request: Request, session=Depends(fastapi_sqla.with_session)):
-        # fmt: off
-        import pdb; pdb.set_trace()
-        # fmt: on
-        session.add(User(**body))
-        return body
+    def create_user(user: UserIn, session=Depends(with_session)):
+        session.add(User(**user.dict()))
+        session.flush()
+        return {}
+
+    return app
+
+
+@fixture
+async def client(app):
 
     async with LifespanManager(app):
+        transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
         async with httpx.AsyncClient(
-            app=app, base_url="http://example.local"
+            transport=transport, base_url="http://example.local"
         ) as client:
             yield client
 
@@ -66,3 +80,25 @@ async def test_session_dependency(client):
         "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
     )
     assert res.status_code == 200
+
+
+@fixture
+def user_1(engine):
+    engine.execute("INSERT INTO public.user VALUES (1, 'bob', 'morane') ")
+    yield
+
+
+async def test_commit_error_returns_500(client, user_1):
+    res = await client.post(
+        "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
+    )
+    assert res.status_code == 500
+
+
+async def test_rollback_on_http_exception(client):
+    with patch("fastapi_sqla.open_session") as open_session:
+        session = open_session.return_value.__enter__.return_value
+
+        await client.get("/404")
+
+        session.rollback.assert_called_once_with()
