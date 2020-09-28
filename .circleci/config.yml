@@ -5,8 +5,6 @@ orbs:
   python: dialogue/python@2.9.1
   release: dialogue/release@2.1.5
 
-executors:
-  python: python/python
 
 workflows:
   ci:
@@ -23,6 +21,7 @@ workflows:
       - python/test:
           name: test
           context: org-global-v2
+          executor: python-postgres
       - release/release:
           name: release
           requires:
@@ -51,3 +50,12 @@ workflows:
             branches:
               ignore: /.*/
           context: org-global-v2
+
+executors:
+  python-postgres:
+    docker:
+      - image: cimg/python:3.7.8
+      - image: postgres:10.12
+        name: postgres
+        environment:
+          POSTGRES_HOST_AUTH_METHOD: trust
