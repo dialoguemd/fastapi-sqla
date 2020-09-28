@@ -77,7 +77,7 @@ def with_session(request: Request) -> Session:
         )
 
 
-async def middleware(request: Request, call_next):
+async def add_session_to_request(request: Request, call_next):
     """Middleware which injects a new sqla session into every request.
 
     Handles creation of session, as well as commit, rollback, and closing of session.
