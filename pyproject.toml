@@ -9,7 +9,7 @@ python = "^3.7"
 sqlalchemy = "<2"
 fastapi = ">=0.61"
 structlog = ">=20"
-psycopg2 = "^2.8.6"
+psycopg2 = "<3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.2"
