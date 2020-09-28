@@ -9,7 +9,7 @@ from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm.session import Session, sessionmaker
 from starlette.middleware.base import BaseHTTPMiddleware
 
-__all__ = ["Base", "setup"]
+__all__ = ["Base", "setup", "with_session"]
 
 logger = structlog.get_logger(__name__)
 
