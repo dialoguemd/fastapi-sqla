@@ -3,6 +3,7 @@ import os
 from unittest.mock import patch
 
 from pytest import fixture
+from sqlalchemy.orm.session import close_all_sessions
 
 
 @fixture(scope="session")
@@ -22,5 +23,8 @@ def environ(db_uri):
 def tear_down():
     import fastapi_sqla
 
+    yield
+
+    close_all_sessions()
     # reload fastapi_sqla to clear sqla deferred reflection mapping stored in Base
     importlib.reload(fastapi_sqla)
