@@ -54,7 +54,7 @@ workflows:
 executors:
   python-postgres:
     docker:
-      - image: dialogue/launchpad:python3.7
+      - image: cimg/python:3.7.8
       - image: postgres:10.12
         name: postgres
         environment:
