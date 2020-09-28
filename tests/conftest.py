@@ -5,7 +5,7 @@ from pytest import fixture
 
 
 @fixture(scope="session")
-def db_uri(tmp_path_factory):
+def db_uri():
     host = "postgres" if "CIRCLECI" in os.environ else "localhost"
     return f"postgresql://postgres@{host}/postgres"
 
