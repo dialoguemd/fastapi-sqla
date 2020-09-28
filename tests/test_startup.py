@@ -25,8 +25,9 @@ def test_startup():
 
 @mark.asyncio
 async def test_fastapi_integration():
-    from fastapi_sqla import _Session, setup
     from fastapi import FastAPI
+
+    from fastapi_sqla import _Session, setup
 
     app = FastAPI()
     setup(app)
