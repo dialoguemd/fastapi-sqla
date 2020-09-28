@@ -18,7 +18,7 @@ _Session = sessionmaker()
 
 def setup(app: FastAPI):
     app.add_event_handler("startup", startup)
-    app.add_middleware(BaseHTTPMiddleware, dispatch=middleware)
+    app.middleware("http")(middleware)
 
 
 def startup():
