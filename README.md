@@ -14,11 +14,11 @@ SqlAlchemy integration for FastAPI®
 
   The only required key is `sqlalchemy_url`, which provides the database URL.
 
-* Add `APIRouter` to app:
+* Setup the app:
   ```python
   import fastapi_sqla
   from fastapi import FastAPI
 
   app = FastAPI()
-  app.include_router(fastapi_sqla.router)
+  fastapi_sqla.setup(app)
   ```
