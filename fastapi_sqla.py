@@ -68,7 +68,8 @@ def with_session(request: Request) -> Session:
         def get_users(db: sqla.Session = Depends(sqla.with_session)):
             pass
     """
-    if "fastapi_sqla_middleware" not in request.scope:
+    is_not_middleware_handled = "fastapi_sqla_middleware" not in request.scope
+    if is_not_middleware_handled:
         msg = (
             "fastapi_sqla middleware not configured using fastapi_sqla.setup. "
             "Please consult fastapi_sqle README"
@@ -100,7 +101,7 @@ async def handle_session_completion(request: Request, call_next):
         def get_users(session: sqla.Session = Depends(sqla.with_session)):
             return session.query(...) # use your session here
     """
-    request.scope["fastapi_sqla_middleware"] = True  # sometimes, boolean works 🐱
+    request.scope["fastapi_sqla_middleware"] = True
     response = await call_next(request)
 
     if "sqla_session" in request.scope:
