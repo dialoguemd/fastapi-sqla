@@ -10,6 +10,9 @@ from sqlalchemy.orm.session import Session, sessionmaker
 
 __all__ = ["Base", "setup", "with_session"]
 
+
+_SESSION_KEY = "fastapi_sqla_session"
+
 logger = structlog.get_logger(__name__)
 
 _Session = sessionmaker()
@@ -68,7 +71,7 @@ def with_session(request: Request) -> Session:
         def get_users(db: sqla.Session = Depends(sqla.with_session)):
             pass
     """
-    is_not_middleware_handled = "fastapi_sqla_middleware" not in request.scope
+    is_not_middleware_handled = _SESSION_KEY not in request.scope
     if is_not_middleware_handled:
         msg = (
             "fastapi_sqla middleware not configured using fastapi_sqla.setup. "
@@ -79,7 +82,7 @@ def with_session(request: Request) -> Session:
 
     session = _Session()
     logger.bind(db_session=session)
-    request.scope["sqla_session"] = session
+    request.scope[_SESSION_KEY] = session
     return session
 
 
@@ -101,13 +104,14 @@ async def handle_session_completion(request: Request, call_next):
         def get_users(session: sqla.Session = Depends(sqla.with_session)):
             return session.query(...) # use your session here
     """
-    request.scope["fastapi_sqla_middleware"] = True
+    request.scope[_SESSION_KEY] = None
+
     response = await call_next(request)
 
-    if "sqla_session" in request.scope:
+    if request.scope.get(_SESSION_KEY):
         loop = asyncio.get_running_loop()
         loop.run_in_executor(
-            None, complete_session, request["sqla_session"], response.status_code,
+            None, complete_session, request[_SESSION_KEY], response.status_code,
         )
 
     return response

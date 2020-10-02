@@ -12,9 +12,9 @@ def test_with_session_raise_exception_if_middleware_not_in_scope():
 
 
 def test_with_session():
-    from fastapi_sqla import with_session
+    from fastapi_sqla import _SESSION_KEY, with_session
 
-    request = Mock(scope={"fastapi_sqla_middleware": True})
+    request = Mock(scope={_SESSION_KEY: True})
 
     with patch("fastapi_sqla._Session") as _Session:
         session = with_session(request)
