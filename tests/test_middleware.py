@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import httpx
 from asgi_lifespan import LifespanManager
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from pytest import fixture, mark
 from sqlalchemy import engine_from_config
@@ -55,6 +55,10 @@ def app(User):
         first_name: str
         last_name: str
 
+    @app.post("/400")
+    def raise_http_exception(session=Depends(with_session)):
+        raise HTTPException(status_code=400)
+
     @app.post("/users")
     def create_user(user: UserIn, session=Depends(with_session)):
         session.add(User(**user.dict()))
@@ -96,9 +100,10 @@ async def test_commit_error_returns_500(client, user_1):
 
 
 async def test_rollback_on_http_exception(client):
-    with patch("fastapi_sqla.open_session") as open_session:
-        session = open_session.return_value.__enter__.return_value
+    with patch("fastapi_sqla._Session") as _Session:
+        session = _Session.return_value
 
-        await client.get("/404")
+        await client.post("/400")
 
         session.rollback.assert_called_once_with()
+        session.close.assert_called_once_with()

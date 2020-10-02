@@ -1,9 +1,9 @@
+import asyncio
 import os
 from contextlib import contextmanager
 
 import structlog
 from fastapi import FastAPI, Request
-from fastapi.concurrency import contextmanager_in_threadpool
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm.session import Session, sessionmaker
@@ -17,7 +17,7 @@ _Session = sessionmaker()
 
 def setup(app: FastAPI):
     app.add_event_handler("startup", startup)
-    app.middleware("http")(add_session_to_request)
+    app.middleware("http")(handle_session_completion)
 
 
 def startup():
@@ -55,7 +55,7 @@ def open_session() -> Session:
 
 
 def with_session(request: Request) -> Session:
-    """Yield the sqlalchmey session for that request.
+    """Open and yield an sqlalchmey session for that request.
 
     It is meant to be used as a FastAPI® dependency::
 
@@ -68,18 +68,24 @@ def with_session(request: Request) -> Session:
         def get_users(db: sqla.Session = Depends(sqla.with_session)):
             pass
     """
-    try:
-        yield request.scope["sqla_session"]
-    except KeyError:  # pragma: no cover
-        raise Exception(
-            "No session found in request, please ensure you've setup fastapi_sqla."
+    if "fastapi_sqla_middleware" not in request.scope:
+        msg = (
+            "fastapi_sqla middleware not configured using fastapi_sqla.setup. "
+            "Please consult fastapi_sqle README"
         )
+        logger.critical(msg)
+        raise Exception(msg)
+
+    session = _Session()
+    logger.bind(db_session=session)
+    request.scope["sqla_session"] = session
+    return session
 
 
-async def add_session_to_request(request: Request, call_next):
-    """Middleware which injects a new sqla session into every request.
+async def handle_session_completion(request: Request, call_next):
+    """Middleware to handle sqla session completion after every request.
 
-    Handles creation of session, as well as commit, rollback, and closing of session.
+    Handles session commit, rollback, and closing.
 
     Usage::
 
@@ -91,15 +97,31 @@ async def add_session_to_request(request: Request, call_next):
         fastapi_sqla.setup(app)  # includes middleware
 
         @app.get("/users")
-        def get_users(session: sqla.Session = Depends(sqla.new_session)):
+        def get_users(session: sqla.Session = Depends(sqla.with_session)):
             return session.query(...) # use your session here
     """
-    async with contextmanager_in_threadpool(open_session()) as session:
-        request.scope["sqla_session"] = session
-        response = await call_next(request)
-        if response.status_code >= 400:
-            # If ever a route handler returns an http exception, we do not want the
-            # session opened by current context manager to commit anything in db.
-            session.rollback()
+    request.scope["fastapi_sqla_middleware"] = True  # sometimes, boolean works 🐱
+    response = await call_next(request)
+
+    if "sqla_session" in request.scope:
+        loop = asyncio.get_running_loop()
+        loop.run_in_executor(
+            None, complete_session, request["sqla_session"], response.status_code,
+        )
 
     return response
+
+
+def complete_session(session: Session, status_code: int):
+    """Closing session after commiting or rollbacking."""
+    func = session.rollback if status_code >= 400 else session.commit
+
+    try:
+        func()
+
+    except Exception:
+        logger.exception(f"{func} failed")
+        raise
+
+    finally:
+        session.close()
