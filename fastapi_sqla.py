@@ -111,7 +111,10 @@ async def handle_session_completion(request: Request, call_next):
     if request.scope.get(_SESSION_KEY):
         loop = asyncio.get_running_loop()
         loop.run_in_executor(
-            None, complete_session, request[_SESSION_KEY], response.status_code,
+            None,
+            complete_session,
+            request[_SESSION_KEY],
+            response.status_code,
         )
 
     return response
