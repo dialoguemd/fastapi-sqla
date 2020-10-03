@@ -105,5 +105,6 @@ async def test_rollback_on_http_exception(client):
 
         await client.post("/400")
 
+        assert session.commit.called is False
         session.rollback.assert_called_once_with()
         session.close.assert_called_once_with()
