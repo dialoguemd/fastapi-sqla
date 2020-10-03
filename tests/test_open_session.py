@@ -15,6 +15,7 @@ def test_open_session(_Session):
     with open_session() as session:
         pass
 
+    assert session.rollback.called is False
     session.commit.assert_called_once_with()
     session.close.assert_called_once_with()
 
@@ -25,5 +26,6 @@ def test_open_session_rollback_on_exception(_Session):
     with raises(Exception), open_session() as session:
         raise Exception()
 
+    assert session.commit.called is False
     session.rollback.assert_called_once_with()
     session.close.assert_called_once_with()
