@@ -10,7 +10,6 @@ from sqlalchemy.orm.session import Session, sessionmaker
 
 __all__ = ["Base", "setup", "with_session"]
 
-
 _SESSION_KEY = "fastapi_sqla_session"
 
 logger = structlog.get_logger(__name__)
