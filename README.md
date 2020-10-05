@@ -45,3 +45,73 @@ router = APIRouter()
 def example(session: Session = Depends(with_session)):
     return session.execute("SELECT now()").scalar()
 ```
+
+## Pytest fixtures
+
+By default, no records are actually written in database when running tests.
+There is no way to deactivate that behaviour at the moment.
+
+### `sqla_modules`
+
+This fixture must be defined to allow loading db tables information in sqla entities
+adequately.
+
+It should just import all modules containing sqla entity classes.
+
+Example:
+
+```python
+from pytest import fixture
+
+
+@fixture
+def sqla_modules():
+    from er import sqla  # noqa
+```
+
+### `db_url`
+
+Db url used.
+
+When `CIRCLECI` key is set in environment variables, it uses `postgres` as host name:
+
+```
+postgresql://postgres@posgres/postgres
+```
+
+Else, host used is `localhost`:
+
+```
+postgresql://postgres@localhost/postgres
+```
+
+Of course, you can override it, example:
+
+```python
+from pytest import fixture
+
+
+@fixture(scope="session")
+def db_url():
+    return "postgresql://postgres@localhost/test_database"
+```
+
+
+### `session`
+
+Sqla session to create db fixture. No record will actually be written in the database.
+Changes in one session need to be committed to be _seen_ from other sessions.
+
+Example:
+```python
+from pytest import fixture
+
+
+@fixture
+def patient(session):
+    from er.sqla import Patient
+    patient = Patient(first_name="Bob", last_name="David")
+    session.add(patient)
+    session.commit()
+    return patient
+```
