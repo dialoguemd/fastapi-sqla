@@ -109,7 +109,7 @@ async def handle_session_completion(request: Request, call_next):
 
     if request.scope.get(_SESSION_KEY):
         loop = asyncio.get_running_loop()
-        loop.run_in_executor(
+        await loop.run_in_executor(
             None,
             complete_session,
             request[_SESSION_KEY],
@@ -121,13 +121,17 @@ async def handle_session_completion(request: Request, call_next):
 
 def complete_session(session: Session, status_code: int):
     """Closing session after commiting or rollbacking."""
-    func = session.rollback if status_code >= 400 else session.commit
+    func, func_name = (
+        (session.rollback, "rollback")
+        if status_code >= 400
+        else (session.commit, "commit")
+    )
 
     try:
         func()
 
     except Exception:
-        logger.exception(f"{func} failed")
+        logger.exception(f"{func_name} failed")
         raise
 
     finally:

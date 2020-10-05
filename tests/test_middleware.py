@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from pytest import fixture, mark
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import close_all_sessions
+from structlog.testing import capture_logs
 
 pytestmark = mark.asyncio
 
@@ -62,7 +63,6 @@ def app(User):
     @app.post("/users")
     def create_user(user: UserIn, session=Depends(with_session)):
         session.add(User(**user.dict()))
-        session.flush()
         return {}
 
     return app
@@ -93,10 +93,13 @@ def user_1(engine):
 
 
 async def test_commit_error_returns_500(client, user_1):
-    res = await client.post(
-        "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
-    )
+    with capture_logs() as caplog:
+        res = await client.post(
+            "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
+        )
+
     assert res.status_code == 500
+    assert {"event": "commit failed", "log_level": "exception"} in caplog
 
 
 async def test_rollback_on_http_exception(client):
