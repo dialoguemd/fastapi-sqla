@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import contextmanager
 
@@ -44,12 +45,13 @@ def open_session() -> Session:
 
     try:
         yield session
-        logger.debug("committing")
         session.commit()
+
     except Exception:
-        logger.exception("rolling back")
+        logger.exception("commit failed. Rolling back")
         session.rollback()
         raise
+
     finally:
         session.close()
 
@@ -100,6 +102,7 @@ async def add_session_to_request(request: Request, call_next):
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
-            session.rollback()
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, session.rollback)
 
     return response
