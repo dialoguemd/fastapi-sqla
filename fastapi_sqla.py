@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import contextmanager
 
@@ -11,6 +12,8 @@ from sqlalchemy.orm.session import Session, sessionmaker
 __all__ = ["Base", "setup", "with_session"]
 
 logger = structlog.get_logger(__name__)
+
+_SESSION_KEY = "fastapi_sqla_session"
 
 _Session = sessionmaker()
 
@@ -44,12 +47,13 @@ def open_session() -> Session:
 
     try:
         yield session
-        logger.debug("committing")
         session.commit()
+
     except Exception:
-        logger.exception("rolling back")
+        logger.exception("commit failed, rolling back")
         session.rollback()
         raise
+
     finally:
         session.close()
 
@@ -69,7 +73,7 @@ def with_session(request: Request) -> Session:
             pass
     """
     try:
-        yield request.scope["sqla_session"]
+        yield request.scope[_SESSION_KEY]
     except KeyError:  # pragma: no cover
         raise Exception(
             "No session found in request, please ensure you've setup fastapi_sqla."
@@ -95,11 +99,12 @@ async def add_session_to_request(request: Request, call_next):
             return session.query(...) # use your session here
     """
     async with contextmanager_in_threadpool(open_session()) as session:
-        request.scope["sqla_session"] = session
+        request.scope[_SESSION_KEY] = session
         response = await call_next(request)
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
-            session.rollback()
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, session.rollback)
 
     return response
