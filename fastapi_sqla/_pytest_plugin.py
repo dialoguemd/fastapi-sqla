@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from pytest import fixture
@@ -6,9 +7,15 @@ from sqlalchemy import create_engine
 
 @fixture(scope="session")
 def db_url():
-    raise Exception(
-        "db_url fixture is not defined. Define a db_url fixture in session scope."
-    )
+    """Default db url used by depending fixtures.
+
+    When CIRCLECI key is set in environment variables, it uses `postgres` as host name:
+    postgresql://postgres@posgres/postgres
+
+    Else, host used is `localhost`: postgresql://postgres@localhost/postgres
+    """
+    host = "postgres" if "CIRCLECI" in os.environ else "localhost"
+    return f"postgresql://postgres@{host}/postgres"
 
 
 @fixture(scope="session")
@@ -19,8 +26,16 @@ def sqla_connection(db_url):
     connection.close()
 
 
+@fixture
+def sqla_modules():
+    raise Exception(
+        "sqla_modules fixture is not defined. Define a sqla_modules fixture which "
+        "imports all modules with sqla entities deriving from fastapi_sqla.Base ."
+    )
+
+
 @fixture(autouse=True)
-def sqla_reflection(sqla_connection, db_url):
+def sqla_reflection(sqla_modules, sqla_connection, db_url):
     import fastapi_sqla
 
     fastapi_sqla.Base.metadata.bind = sqla_connection
@@ -28,7 +43,7 @@ def sqla_reflection(sqla_connection, db_url):
 
 
 @fixture(autouse=True)
-def patch_sqla_engine(db_url, sqla_connection, sqla_transaction):
+def patch_sessionmaker(db_url, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
     with patch("fastapi_sqla.engine_from_config") as engine_from_config:
         engine_from_config.return_value = sqla_connection
