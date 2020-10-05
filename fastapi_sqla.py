@@ -50,7 +50,7 @@ def open_session() -> Session:
         session.commit()
 
     except Exception:
-        logger.exception("commit failed. Rolling back")
+        logger.exception("commit failed, rolling back")
         session.rollback()
         raise
 
