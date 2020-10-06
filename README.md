@@ -47,15 +47,17 @@ def example(session: Session = Depends(with_session)):
 ```
 
 ## Pytest fixtures
-This library provides a set of utility fixtures, through its PyTest plugin, which is automatically installed with the library.
+This library provides a set of utility fixtures, through its PyTest plugin, which is
+automatically installed with the library.
 
 By default, no records are actually written to the database when running tests.
 There currently is no way to change this behaviour.
 
 ### `sqla_modules`
 
-You must define this fixture, in order for the plugin to reflect table metadata in your SQLAlchemy entities.
-It should just import all of the application's modules which contain SQLAlchemy models.
+You must define this fixture, in order for the plugin to reflect table metadata in your
+SQLAlchemy entities. It should just import all of the application's modules which contain
+SQLAlchemy models.
 
 Example:
 
