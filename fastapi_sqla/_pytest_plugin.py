@@ -59,6 +59,11 @@ def sqla_transaction(sqla_connection):
 
 @fixture
 def session(sqla_transaction, sqla_connection):
+    """Sqla session to use when creating db fixture.
+
+    While it does not write any record in DB, application does access any record
+    committed with that session.
+    """
     import fastapi_sqla
 
     session = fastapi_sqla._Session(bind=sqla_connection)

@@ -53,14 +53,13 @@ There is no way to deactivate that behaviour at the moment.
 
 ### `sqla_modules`
 
-This fixture must be defined to allow loading db tables information in sqla entities
-adequately.
-
+This fixture must be defined to load db tables information in sqla entities adequately.
 It should just import all modules containing sqla entity classes.
 
 Example:
 
 ```python
+# tests/conftest.py
 from pytest import fixture
 
 
