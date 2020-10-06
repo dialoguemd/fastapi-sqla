@@ -75,7 +75,7 @@ def sqla_modules():
 
 The DB url to use.
 
-When `CIRCLECI` key is set in environment variables, it uses `postgres` as host name:
+When `CIRCLECI` key is set in environment variables, it defaults to using `postgres` as the host name:
 
 ```
 postgresql://postgres@posgres/postgres
