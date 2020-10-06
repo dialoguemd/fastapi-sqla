@@ -54,7 +54,7 @@ There currently is no way to change this behaviour.
 
 ### `sqla_modules`
 
-This fixture must be defined to load db tables information in sqla entities adequately.
+You must define this fixture, in order for the plugin to reflect table metadata in your SQLAlchemy entities.
 It should just import all modules containing sqla entity classes.
 
 Example:
