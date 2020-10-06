@@ -5,20 +5,12 @@ from asgi_lifespan import LifespanManager
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark
-from sqlalchemy import engine_from_config
-from sqlalchemy.orm.session import close_all_sessions
 from structlog.testing import capture_logs
 
 pytestmark = mark.asyncio
 
 
-@fixture
-def engine(environ):
-    engine = engine_from_config(environ, prefix="sqlalchemy_")
-    return engine
-
-
-@fixture(autouse=True)
+@fixture(scope="module", autouse=True)
 def setup_tear_down(engine):
     engine.execute(
         """
@@ -30,7 +22,6 @@ def setup_tear_down(engine):
     """
     )
     yield
-    close_all_sessions()
     engine.execute("DROP TABLE public.user")
 
 

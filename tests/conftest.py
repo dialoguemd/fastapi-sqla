@@ -1,22 +1,22 @@
 import importlib
-import os
 from unittest.mock import patch
 
 from pytest import fixture
+from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import close_all_sessions
 
 
-@fixture(scope="session")
-def db_uri():
-    host = "postgres" if "CIRCLECI" in os.environ else "localhost"
-    return f"postgresql://postgres@{host}/postgres"
-
-
-@fixture(autouse=True)
-def environ(db_uri):
-    values = {"sqlalchemy_url": db_uri}
+@fixture(scope="session", autouse=True)
+def environ(db_url):
+    values = {"sqlalchemy_url": db_url}
     with patch.dict("os.environ", values=values, clear=True):
         yield values
+
+
+@fixture(scope="session")
+def engine(environ):
+    engine = engine_from_config(environ, prefix="sqlalchemy_")
+    return engine
 
 
 @fixture(autouse=True)
@@ -28,3 +28,8 @@ def tear_down():
     close_all_sessions()
     # reload fastapi_sqla to clear sqla deferred reflection mapping stored in Base
     importlib.reload(fastapi_sqla)
+
+
+@fixture
+def sqla_modules():
+    pass

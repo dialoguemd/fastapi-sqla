@@ -45,3 +45,77 @@ router = APIRouter()
 def example(session: Session = Depends(with_session)):
     return session.execute("SELECT now()").scalar()
 ```
+
+## Pytest fixtures
+This library provides a set of utility fixtures, through its PyTest plugin, which is
+automatically installed with the library.
+
+By default, no records are actually written to the database when running tests.
+There currently is no way to change this behaviour.
+
+### `sqla_modules`
+
+You must define this fixture, in order for the plugin to reflect table metadata in your
+SQLAlchemy entities. It should just import all of the application's modules which contain
+SQLAlchemy models.
+
+Example:
+
+```python
+# tests/conftest.py
+from pytest import fixture
+
+
+@fixture
+def sqla_modules():
+    from er import sqla  # noqa
+```
+
+### `db_url`
+
+The DB url to use.
+
+When `CI` key is set in environment variables, it defaults to using `postgres` as the host name:
+
+```
+postgresql://postgres@posgres/postgres
+```
+
+In other cases, the host is set to `localhost`:
+
+```
+postgresql://postgres@localhost/postgres
+```
+
+Of course, you can override it by overloading the fixture:
+
+```python
+from pytest import fixture
+
+
+@fixture(scope="session")
+def db_url():
+    return "postgresql://postgres@localhost/test_database"
+```
+
+
+### `session`
+
+Sqla session to create db fixture:
+* All changes done at test setiup or during the test are rollbacked at test tear down;
+* No record will actually be written in the database;
+* Changes in one session need to be committed to be available from other sessions;
+
+Example:
+```python
+from pytest import fixture
+
+
+@fixture
+def patient(session):
+    from er.sqla import Patient
+    patient = Patient(first_name="Bob", last_name="David")
+    session.add(patient)
+    session.commit()
+    return patient
+```
