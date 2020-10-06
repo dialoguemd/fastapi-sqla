@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 def db_url():
     """Default db url used by depending fixtures.
 
-    When CIRCLECI key is set in environment variables, it uses `postgres` as host name:
+    When CI key is set in environment variables, it uses `postgres` as host name:
     postgresql://postgres@posgres/postgres
 
     Else, host used is `localhost`: postgresql://postgres@localhost/postgres
