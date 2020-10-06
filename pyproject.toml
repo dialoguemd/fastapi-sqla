@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-sqla"
-version = "0.2.1"
+version = "0.3.0"
 description = "SqlAlchemy integration for FastAPI®"
 authors = ["Hadrien David <hadrien.david@dialogue.co>"]
 
