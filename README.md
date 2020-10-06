@@ -87,7 +87,7 @@ In other cases, the host is set to `localhost`:
 postgresql://postgres@localhost/postgres
 ```
 
-Of course, you can override it, example:
+Of course, you can override it by overloading the fixture:
 
 ```python
 from pytest import fixture
