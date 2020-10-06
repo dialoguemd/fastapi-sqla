@@ -47,6 +47,7 @@ def example(session: Session = Depends(with_session)):
 ```
 
 ## Pytest fixtures
+This library provides a set of utility fixtures, through its PyTest plugin, which is automatically installed with the library.
 
 By default, no records are actually written in database when running tests.
 There is no way to deactivate that behaviour at the moment.
