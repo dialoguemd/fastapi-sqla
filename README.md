@@ -101,8 +101,10 @@ def db_url():
 
 ### `session`
 
-Sqla session to create db fixture. No record will actually be written in the database.
-Changes in one session need to be committed to be _seen_ from other sessions.
+Sqla session to create db fixture:
+* All changes done at test setiup or during the test are rollbacked at test tear down;
+* No record will actually be written in the database;
+* Changes in one session need to be committed to be available from other sessions;
 
 Example:
 ```python
