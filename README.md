@@ -81,7 +81,7 @@ When `CI` key is set in environment variables, it defaults to using `postgres` a
 postgresql://postgres@posgres/postgres
 ```
 
-Else, host used is `localhost`:
+In other cases, the host is set to `localhost`:
 
 ```
 postgresql://postgres@localhost/postgres
