@@ -14,7 +14,7 @@ def db_url():
 
     Else, host used is `localhost`: postgresql://postgres@localhost/postgres
     """
-    host = "postgres" if "CIRCLECI" in os.environ else "localhost"
+    host = "postgres" if "CI" in os.environ else "localhost"
     return f"postgresql://postgres@{host}/postgres"
 
 
