@@ -1,12 +1,9 @@
 from pytest import fixture, raises
-from sqlalchemy import engine_from_config
 from sqlalchemy.exc import NoSuchTableError
 
 
 @fixture(autouse=True, scope="module")
-def setup_tear_down(environ):
-    engine = engine_from_config(environ, prefix="sqlalchemy_")
-
+def setup_tear_down(engine):
     engine.execute("CREATE TABLE IF NOT EXISTS test_table (id integer primary key)")
     yield
     engine.execute("DROP TABLE test_table")
