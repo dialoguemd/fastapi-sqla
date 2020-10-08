@@ -1,5 +1,4 @@
 from pytest import fixture, mark
-
 from sqlalchemy.orm import joinedload, relationship
 
 

@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from typing import Generic, List, TypeVar
 
 import structlog
-from fastapi import FastAPI, Request, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
@@ -13,7 +13,6 @@ from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as DbQuery
 from sqlalchemy.orm.session import Session, sessionmaker
 from sqlalchemy.sql import func
-
 
 __all__ = ["Base", "setup", "with_session"]
 
