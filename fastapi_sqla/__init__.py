@@ -1,13 +1,19 @@
 import asyncio
 import os
 from contextlib import contextmanager
+from typing import Generic, List, TypeVar
 
 import structlog
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.concurrency import contextmanager_in_threadpool
+from pydantic import BaseModel, Field
+from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
+from sqlalchemy.orm import Query as DbQuery
 from sqlalchemy.orm.session import Session, sessionmaker
+from sqlalchemy.sql import func
+
 
 __all__ = ["Base", "setup", "with_session"]
 
@@ -108,3 +114,67 @@ async def add_session_to_request(request: Request, call_next):
             await loop.run_in_executor(None, session.rollback)
 
     return response
+
+
+T = TypeVar("T")
+
+
+class Item(GenericModel, Generic[T]):
+    """Item container."""
+
+    data: T
+
+
+class Collection(GenericModel, Generic[T]):
+    """Collection container."""
+
+    data: List[T]
+
+
+class Meta(BaseModel):
+    """Meta information on current page and collection"""
+
+    offset: int = Field(..., description="Current page offset")
+    total_items: int = Field(..., description="Total number of items in the collection")
+    total_pages: int = Field(..., description="Total number of pages in the collection")
+    page_number: int = Field(..., description="Current page number")
+
+
+class Paginated(Collection, Generic[T]):
+    """Paginated collection with information on current page and total items in meta."""
+
+    meta: Meta
+
+
+def with_pagination(offset: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100)):
+    def paginated_result(query: DbQuery) -> Paginated[T]:
+        """"""
+        # faster count than query.count(), doesn't do subquery
+        # see https://gist.github.com/hest/8798884
+        try:
+            # order_by(None) removes any ordering applied to query
+            # as you can't apply it, since this query will not select
+            # the column(s) used for ordering.
+            total_items = (
+                query.order_by(None)
+                .statement.with_only_columns([func.count()])
+                .scalar()
+            )
+
+        except Exception:  # pragma: no cover
+            total_items = query.count()
+
+        total_pages = total_items / limit + (1 if total_items % limit else 0)
+        page_number = offset / limit + 1
+
+        return Paginated[T](
+            data=query.offset(offset).limit(limit).all(),
+            meta={
+                "offset": offset,
+                "total_items": total_items,
+                "total_pages": total_pages,
+                "page_number": page_number,
+            },
+        )
+
+    return paginated_result
