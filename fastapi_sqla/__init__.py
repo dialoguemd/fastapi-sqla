@@ -145,35 +145,44 @@ class Paginated(Collection, Generic[T]):
     meta: Meta
 
 
-def with_pagination(offset: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100)):
-    def paginated_result(query: DbQuery) -> Paginated[T]:
-        """"""
-        # faster count than query.count(), doesn't do subquery
-        # see https://gist.github.com/hest/8798884
-        try:
-            # order_by(None) removes any ordering applied to query
-            # as you can't apply it, since this query will not select
-            # the column(s) used for ordering.
-            total_items = (
-                query.order_by(None)
-                .statement.with_only_columns([func.count()])
-                .scalar()
+def new_pagination(min_page_size: int = 5, max_page_size: int = 100):
+    def dependency(
+        offset: int = Query(0, ge=0),
+        limit: int = Query(min_page_size, ge=1, le=max_page_size),
+    ):
+        def paginated_result(query: DbQuery) -> Paginated[T]:
+            """"""
+            # faster count than query.count(), doesn't do subquery
+            # see https://gist.github.com/hest/8798884
+            try:
+                # order_by(None) removes any ordering applied to query
+                # as you can't apply it, since this query will not select
+                # the column(s) used for ordering.
+                total_items = (
+                    query.order_by(None)
+                    .statement.with_only_columns([func.count()])
+                    .scalar()
+                )
+
+            except Exception:  # pragma: no cover
+                total_items = query.count()
+
+            total_pages = total_items / limit + (1 if total_items % limit else 0)
+            page_number = offset / limit + 1
+
+            return Paginated[T](
+                data=query.offset(offset).limit(limit).all(),
+                meta={
+                    "offset": offset,
+                    "total_items": total_items,
+                    "total_pages": total_pages,
+                    "page_number": page_number,
+                },
             )
 
-        except Exception:  # pragma: no cover
-            total_items = query.count()
+        return paginated_result
 
-        total_pages = total_items / limit + (1 if total_items % limit else 0)
-        page_number = offset / limit + 1
+    return dependency
 
-        return Paginated[T](
-            data=query.offset(offset).limit(limit).all(),
-            meta={
-                "offset": offset,
-                "total_items": total_items,
-                "total_pages": total_pages,
-                "page_number": page_number,
-            },
-        )
 
-    return paginated_result
+with_pagination = new_pagination(min_page_size=10, max_page_size=100)
