@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from typing import Generic, List, TypeVar
 
 import structlog
-from fastapi import FastAPI, Query, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
@@ -144,7 +144,7 @@ class Paginated(Collection, Generic[T]):
     meta: Meta
 
 
-def query_count(query):
+def _query_count(session, query):
     """Default function used to count items returned by a query.
 
     Default Query.count is slower than a manually written query could be: It runs the
@@ -156,14 +156,15 @@ def query_count(query):
 
 
 def new_pagination(
-    min_page_size: int = 5, max_page_size: int = 100, query_count=query_count
+    min_page_size: int = 5, max_page_size: int = 100, query_count=_query_count
 ):
     def dependency(
+        session: Session = Depends(with_session),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ):
         def paginated_result(query: DbQuery) -> Paginated[T]:
-            total_items = query_count(query)
+            total_items = query_count(session, query)
             total_pages = total_items / limit + (1 if total_items % limit else 0)
             page_number = offset / limit + 1
 

@@ -1,4 +1,5 @@
 from pytest import fixture, mark
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload, relationship
 
 
@@ -74,7 +75,31 @@ def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
     from fastapi_sqla import with_pagination
 
     query = session.query(user_cls).options(joinedload("notes"))
-    result = with_pagination(offset, limit)(query)
+    result = with_pagination(session, offset, limit)(query)
+
+    assert result.meta.total_items == 42
+    assert result.meta.offset == offset
+    assert result.meta.total_pages == total_pages
+    assert result.meta.page_number == page_number
+
+
+@mark.parametrize(
+    "offset,limit,total_pages,page_number",
+    [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
+)
+def test_new_pagination_with_custom_count(
+    session, user_cls, offset, limit, total_pages, page_number
+):
+    from fastapi_sqla import new_pagination
+
+    query_count = (
+        lambda sess, _: session.query(user_cls)
+        .statement.with_only_columns([func.count()])
+        .scalar()
+    )
+    with_pagination = new_pagination(query_count=query_count)
+    query = session.query(user_cls).options(joinedload("notes"))
+    result = with_pagination(session, offset, limit)(query)
 
     assert result.meta.total_items == 42
     assert result.meta.offset == offset
