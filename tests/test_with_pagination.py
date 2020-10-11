@@ -55,7 +55,12 @@ def tons_of_users(session, user_cls, note_cls, faker):
     for i in range(1, 43):
         session.add(
             user_cls(
-                id=i, name=faker.name(), notes=[note_cls(id=i, content=faker.text())]
+                id=i,
+                name=faker.name(),
+                notes=[
+                    note_cls(id=1, content=faker.text()),
+                    note_cls(id=2, content=faker.text()),
+                ],
             )
         )
     session.commit()
@@ -65,9 +70,7 @@ def tons_of_users(session, user_cls, note_cls, faker):
     "offset,limit,total_pages,page_number",
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
 )
-def test_pagination(
-    session, user_cls, note_cls, offset, limit, total_pages, page_number
-):
+def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
     from fastapi_sqla import with_pagination
 
     query = session.query(user_cls).options(joinedload("notes"))

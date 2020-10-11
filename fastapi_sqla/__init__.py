@@ -12,7 +12,6 @@ from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as DbQuery
 from sqlalchemy.orm.session import Session, sessionmaker
-from sqlalchemy.sql import func
 
 __all__ = ["Base", "setup", "with_session"]
 
@@ -145,28 +144,26 @@ class Paginated(Collection, Generic[T]):
     meta: Meta
 
 
-def new_pagination(min_page_size: int = 5, max_page_size: int = 100):
+def query_count(query):
+    """Default function used to count items returned by a query.
+
+    Default Query.count is slower than a manually written query could be: It runs the
+    query in a subquery, and count the number of elements returned:
+
+    See https://gist.github.com/hest/8798884
+    """
+    return query.count()
+
+
+def new_pagination(
+    min_page_size: int = 5, max_page_size: int = 100, query_count=query_count
+):
     def dependency(
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ):
         def paginated_result(query: DbQuery) -> Paginated[T]:
-            """"""
-            # faster count than query.count(), doesn't do subquery
-            # see https://gist.github.com/hest/8798884
-            try:
-                # order_by(None) removes any ordering applied to query
-                # as you can't apply it, since this query will not select
-                # the column(s) used for ordering.
-                total_items = (
-                    query.order_by(None)
-                    .statement.with_only_columns([func.count()])
-                    .scalar()
-                )
-
-            except Exception:  # pragma: no cover
-                total_items = query.count()
-
+            total_items = query_count(query)
             total_pages = total_items / limit + (1 if total_items % limit else 0)
             page_number = offset / limit + 1
 
@@ -185,4 +182,4 @@ def new_pagination(min_page_size: int = 5, max_page_size: int = 100):
     return dependency
 
 
-with_pagination = new_pagination(min_page_size=10, max_page_size=100)
+with_pagination = new_pagination()
