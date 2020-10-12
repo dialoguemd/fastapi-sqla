@@ -22,6 +22,8 @@ app = FastAPI()
 fastapi_sqla.setup(app)
 ```
 
+## SQLAlchemy
+
 ### Adding a new entity class:
 
 ```python
@@ -46,7 +48,39 @@ def example(session: Session = Depends(with_session)):
     return session.execute("SELECT now()").scalar()
 ```
 
+### Pagination
+
+```python
+from typing import Callable
+
+from fastapi import APIRouter, Depends
+from fastapi_sqla import Base, Paginated, Session, with_pagination, with_session
+from pydantic import BaseModel
+from sqlalchemy.orm import Query
+
+router = APIRouter()
+
+
+class UserEntity(Base):
+    __tablename__ = "user"
+
+
+class User(BaseModel):
+    id: int
+    name: str
+
+
+@router.get("/users", response_model=Paginated[User])
+def all_users(
+    session: Session = Depends(with_session),
+    paginated_result: Callable[[Query], Paginated[User]] = Depends(with_pagination),
+):
+    query = session.query(UserEntity)
+    return paginated_result(query)
+```
+
 ## Pytest fixtures
+
 This library provides a set of utility fixtures, through its PyTest plugin, which is
 automatically installed with the library.
 
@@ -75,7 +109,8 @@ def sqla_modules():
 
 The DB url to use.
 
-When `CI` key is set in environment variables, it defaults to using `postgres` as the host name:
+When `CI` key is set in environment variables, it defaults to using `postgres` as the
+host name:
 
 ```
 postgresql://postgres@posgres/postgres
