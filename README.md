@@ -84,7 +84,7 @@ By default:
 ### Custom pagination
 
 You can customize:
-- Minimum and maximunm number of items per pages;
+- Minimum and maximum number of items per pages;
 - How the total number of items in the collection is queried;
 
 To customize pagination, create a dependency using `fastapi_sqla.Pagination`
