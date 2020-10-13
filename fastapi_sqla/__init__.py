@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 from contextlib import contextmanager
 from typing import Generic, List, TypeVar
@@ -165,7 +166,7 @@ def new_pagination(
     ):
         def paginated_result(query: DbQuery) -> Paginated[T]:
             total_items = query_count(session, query)
-            total_pages = ceil(total_items / limit)
+            total_pages = math.ceil(total_items / limit)
             page_number = offset / limit + 1
 
             return Paginated[T](
