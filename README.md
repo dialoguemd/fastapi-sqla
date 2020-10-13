@@ -186,7 +186,7 @@ def db_url():
 ### `session`
 
 Sqla session to create db fixture:
-* All changes done at test setiup or during the test are rollbacked at test tear down;
+* All changes done at test setup or during the test are rollbacked at test tear down;
 * No record will actually be written in the database;
 * Changes in one session need to be committed to be available from other sessions;
 
