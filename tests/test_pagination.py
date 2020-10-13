@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 import httpx
@@ -30,21 +31,12 @@ def setup_tear_down(engine):
     metadata = MetaData(bind=engine)
     user = Table("user", metadata, autoload=True, autoload_with=engine)
     note = Table("note", metadata, autoload=True, autoload_with=engine)
-
-    user_params = []
-    note_params = []
-    for i in range(1, 43):
-        user_params.append({"id": i, "name": faker.name()})
-        note_params.extend(
-            [
-                {"user_id": i, "id": 1, "content": faker.text()},
-                {"user_id": i, "id": 2, "content": faker.text()},
-            ]
-        )
-
+    user_params = [{"id": i, "name": faker.name()} for i in range(1, 43)]
+    note_params = [
+        {"user_id": i % 42 + 1, "id": math.ceil(i / 42)} for i in range(0, 84)
+    ]
     engine.execute(user.insert(), *user_params)
     engine.execute(note.insert(), *note_params)
-
     yield
     engine.execute("drop table note cascade")
     engine.execute("drop table public.user cascade")
