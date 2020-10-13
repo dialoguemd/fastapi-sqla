@@ -165,7 +165,7 @@ def new_pagination(
     ):
         def paginated_result(query: DbQuery) -> Paginated[T]:
             total_items = query_count(session, query)
-            total_pages = total_items / limit + (1 if total_items % limit else 0)
+            total_pages = ceil(total_items / limit)
             page_number = offset / limit + 1
 
             return Paginated[T](
