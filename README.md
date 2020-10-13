@@ -111,7 +111,7 @@ class User(BaseModel):
 
 
 def query_count(session, query):
-    return session.query(UserEntity).statement.with_only_columns([func.count()]).scalar()
+    return query.statement.with_only_columns([func.count()]).scalar()
 
 
 with_custom_pagination = new_pagination(
