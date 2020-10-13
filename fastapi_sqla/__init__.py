@@ -157,7 +157,7 @@ def _query_count(session, query):
 
 
 def Pagination(
-    min_page_size: int = 10, max_page_size: int = 100, query_count=_query_count
+    min_page_size: int = 10, max_page_size: int = 100, query_count: Callable[[Session, DbQuery], int]=_query_count
 ):
     def dependency(
         session: Session = Depends(with_session),
