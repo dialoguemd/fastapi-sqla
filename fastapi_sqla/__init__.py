@@ -2,7 +2,7 @@ import asyncio
 import math
 import os
 from contextlib import contextmanager
-from typing import Callable, Generic, List, TypeVar
+from typing import Generic, List, TypeVar
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
@@ -156,7 +156,7 @@ def _query_count(session, query):
     return query.count()
 
 
-def new_pagination(
+def Pagination(
     min_page_size: int = 10, max_page_size: int = 100, query_count=_query_count
 ):
     def dependency(
@@ -184,4 +184,4 @@ def new_pagination(
     return dependency
 
 
-with_pagination = new_pagination()
+with_pagination = Pagination()

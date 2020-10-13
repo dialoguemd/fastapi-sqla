@@ -87,11 +87,11 @@ You can customize:
 - Minimum and maximunm number of items per pages;
 - How the total number of items in the collection is queried;
 
-To customize pagination, create a dependency using `fastapi_sqla.new_pagination`
+To customize pagination, create a dependency using `fastapi_sqla.Pagination`
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import Base, Paginated, Session, new_pagination, with_session
+from fastapi_sqla import Base, Paginated, Pagination, Session, with_session
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Query
@@ -112,7 +112,7 @@ def query_count(session: Session, query: Query):
     return query.statement.with_only_columns([func.count()]).scalar()
 
 
-with_custom_pagination = new_pagination(
+with_custom_pagination = Pagination(
     min_page_size=5,
     max_page_size=500,
     query_count=query_count,

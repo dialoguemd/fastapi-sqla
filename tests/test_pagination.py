@@ -89,17 +89,17 @@ def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
     "offset,limit,total_pages,page_number",
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
 )
-def test_new_pagination_with_custom_count(
+def test_Pagination_with_custom_count(
     session, user_cls, offset, limit, total_pages, page_number
 ):
-    from fastapi_sqla import new_pagination
+    from fastapi_sqla import Pagination
 
     query_count = (
         lambda sess, _: session.query(user_cls)
         .statement.with_only_columns([func.count()])
         .scalar()
     )
-    with_pagination = new_pagination(query_count=query_count)
+    with_pagination = Pagination(query_count=query_count)
     query = session.query(user_cls).options(joinedload("notes"))
     result = with_pagination(session, offset, limit)(query)
 
@@ -111,14 +111,9 @@ def test_new_pagination_with_custom_count(
 
 @fixture
 def app(user_cls, note_cls):
-    from fastapi_sqla import (
-        Paginated,
-        Session,
-        setup,
-        with_pagination,
-        with_session,
-    )
     from sqlalchemy.orm import joinedload
+
+    from fastapi_sqla import Paginated, Session, setup, with_pagination, with_session
 
     app = FastAPI()
     setup(app)
