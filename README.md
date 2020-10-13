@@ -97,6 +97,7 @@ from fastapi import APIRouter, Depends
 from fastapi_sqla import Base, Paginated, Session, new_pagination, with_session
 from pydantic import BaseModel
 from sqlalchemy import func
+from sqlalchemy.orm import Query
 
 router = APIRouter()
 
@@ -110,7 +111,7 @@ class User(BaseModel):
     name: str
 
 
-def query_count(session, query):
+def query_count(session: Session, query: Query):
     return query.statement.with_only_columns([func.count()]).scalar()
 
 
