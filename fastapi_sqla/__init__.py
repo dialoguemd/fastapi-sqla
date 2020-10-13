@@ -2,7 +2,7 @@ import asyncio
 import math
 import os
 from contextlib import contextmanager
-from typing import Generic, List, TypeVar
+from typing import Callable, Generic, List, TypeVar
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
@@ -136,7 +136,7 @@ class Meta(BaseModel):
     offset: int = Field(..., description="Current page offset")
     total_items: int = Field(..., description="Total number of items in the collection")
     total_pages: int = Field(..., description="Total number of pages in the collection")
-    page_number: int = Field(..., description="Current page number")
+    page_number: int = Field(..., description="Current page number. Starts at 1.")
 
 
 class Paginated(Collection, Generic[T]):
@@ -145,7 +145,7 @@ class Paginated(Collection, Generic[T]):
     meta: Meta
 
 
-def _query_count(session, query):
+def _query_count(session: Session, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
     Default Query.count is slower than a manually written query could be: It runs the
@@ -157,18 +157,19 @@ def _query_count(session, query):
 
 
 def Pagination(
-    min_page_size: int = 10, max_page_size: int = 100, query_count: Callable[[Session, DbQuery], int]=_query_count
-):
+    min_page_size: int = 10,
+    max_page_size: int = 100,
+    query_count: Callable[[Session, DbQuery], int] = _query_count,
+) -> Callable[[Session, int, int], Callable[[DbQuery], Paginated[T]]]:
     def dependency(
         session: Session = Depends(with_session),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
-    ):
+    ) -> Callable[[DbQuery], Paginated[T]]:
         def paginated_result(query: DbQuery) -> Paginated[T]:
             total_items = query_count(session, query)
             total_pages = math.ceil(total_items / limit)
             page_number = offset / limit + 1
-
             return Paginated[T](
                 data=query.offset(offset).limit(limit).all(),
                 meta={
