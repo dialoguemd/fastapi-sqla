@@ -22,6 +22,8 @@ app = FastAPI()
 fastapi_sqla.setup(app)
 ```
 
+## SQLAlchemy
+
 ### Adding a new entity class:
 
 ```python
@@ -46,7 +48,88 @@ def example(session: Session = Depends(with_session)):
     return session.execute("SELECT now()").scalar()
 ```
 
+### Pagination
+
+```python
+from fastapi import APIRouter, Depends
+from fastapi_sqla import Base, Paginated, Session, with_pagination, with_session
+from pydantic import BaseModel
+
+router = APIRouter()
+
+
+class UserEntity(Base):
+    __tablename__ = "user"
+
+
+class User(BaseModel):
+    id: int
+    name: str
+
+
+@router.get("/users", response_model=Paginated[User])
+def all_users(
+    session: Session = Depends(with_session),
+    paginated_result=Depends(with_pagination),
+):
+    query = session.query(UserEntity)
+    return paginated_result(query)
+```
+
+By default:
+* It returns pages of 10 items, up to 100 items;
+* Total number of items in the collection is queried using
+  [`Query.count`](https://docs.sqlalchemy.org/en/13/orm/query.html#sqlalchemy.orm.query.Query.count)
+
+### Custom pagination
+
+You can customize:
+- Minimum and maximunm number of items per pages;
+- How the total number of items in the collection is queried;
+
+To customize pagination, create a dependency using `fastapi_sqla.Pagination`
+
+```python
+from fastapi import APIRouter, Depends
+from fastapi_sqla import Base, Paginated, Pagination, Session, with_session
+from pydantic import BaseModel
+from sqlalchemy import func
+from sqlalchemy.orm import Query
+
+router = APIRouter()
+
+
+class UserEntity(Base):
+    __tablename__ = "user"
+
+
+class User(BaseModel):
+    id: int
+    name: str
+
+
+def query_count(session: Session, query: Query):
+    return query.statement.with_only_columns([func.count()]).scalar()
+
+
+with_custom_pagination = Pagination(
+    min_page_size=5,
+    max_page_size=500,
+    query_count=query_count,
+)
+
+
+@router.get("/users", response_model=Paginated[User])
+def all_users(
+    session: Session = Depends(with_session),
+    paginated_result=Depends(with_custom_pagination),
+):
+    query = session.query(UserEntity)
+    return paginated_result(query)
+```
+
 ## Pytest fixtures
+
 This library provides a set of utility fixtures, through its PyTest plugin, which is
 automatically installed with the library.
 
@@ -75,7 +158,8 @@ def sqla_modules():
 
 The DB url to use.
 
-When `CI` key is set in environment variables, it defaults to using `postgres` as the host name:
+When `CI` key is set in environment variables, it defaults to using `postgres` as the
+host name:
 
 ```
 postgresql://postgres@posgres/postgres
