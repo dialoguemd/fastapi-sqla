@@ -2,7 +2,7 @@ import asyncio
 import math
 import os
 from contextlib import contextmanager
-from typing import Generic, List, TypeVar
+from typing import Callable, Generic, List, TypeVar
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request

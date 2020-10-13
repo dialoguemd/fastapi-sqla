@@ -51,12 +51,9 @@ def example(session: Session = Depends(with_session)):
 ### Pagination
 
 ```python
-from typing import Callable
-
 from fastapi import APIRouter, Depends
 from fastapi_sqla import Base, Paginated, Session, with_pagination, with_session
 from pydantic import BaseModel
-from sqlalchemy.orm import Query
 
 router = APIRouter()
 
@@ -73,7 +70,7 @@ class User(BaseModel):
 @router.get("/users", response_model=Paginated[User])
 def all_users(
     session: Session = Depends(with_session),
-    paginated_result: Callable[[Query], Paginated[User]] = Depends(with_pagination),
+    paginated_result=Depends(with_pagination),
 ):
     query = session.query(UserEntity)
     return paginated_result(query)
