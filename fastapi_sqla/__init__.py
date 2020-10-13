@@ -156,7 +156,7 @@ def _query_count(session, query):
 
 
 def new_pagination(
-    min_page_size: int = 5, max_page_size: int = 100, query_count=_query_count
+    min_page_size: int = 10, max_page_size: int = 100, query_count=_query_count
 ):
     def dependency(
         session: Session = Depends(with_session),

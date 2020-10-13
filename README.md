@@ -79,6 +79,57 @@ def all_users(
     return paginated_result(query)
 ```
 
+By default:
+* It returns pages of 10 items, up to 100 items;
+* Total number of items in the collection is queried using
+  [`Query.count`](https://docs.sqlalchemy.org/en/13/orm/query.html#sqlalchemy.orm.query.Query.count)
+
+### Custom pagination
+
+You can customize:
+- Minimum and maximunm number of items per pages;
+- How the total number of items in the collection is queried;
+
+To customize pagination, create a dependency using `fastapi_sqla.new_pagination`
+
+```python
+from fastapi import APIRouter, Depends
+from fastapi_sqla import Base, Paginated, Session, new_pagination, with_session
+from pydantic import BaseModel
+from sqlalchemy import func
+
+router = APIRouter()
+
+
+class UserEntity(Base):
+    __tablename__ = "user"
+
+
+class User(BaseModel):
+    id: int
+    name: str
+
+
+def query_count(session, query):
+    return session.query(UserEntity).statement.with_only_columns([func.count()]).scalar()
+
+
+with_custom_pagination = new_pagination(
+    min_page_size=5,
+    max_page_size=500,
+    query_count=query_count,
+)
+
+
+@router.get("/users", response_model=Paginated[User])
+def all_users(
+    session: Session = Depends(with_session),
+    paginated_result=Depends(with_custom_pagination),
+):
+    query = session.query(UserEntity)
+    return paginated_result(query)
+```
+
 ## Pytest fixtures
 
 This library provides a set of utility fixtures, through its PyTest plugin, which is
