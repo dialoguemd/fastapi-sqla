@@ -3,6 +3,7 @@ from unittest.mock import patch
 import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pytest import fixture, mark
 from structlog.testing import capture_logs
@@ -42,6 +43,8 @@ def app(User):
     app = FastAPI()
     setup(app)
 
+    app.add_middleware(CORSMiddleware, allow_origins=["*"])
+
     class UserIn(BaseModel):
         id: int
         first_name: str
@@ -68,9 +71,14 @@ async def client(app):
 
 async def test_session_dependency(client):
     res = await client.post(
-        "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
+        "/users",
+        json={"id": 1, "first_name": "Bob", "last_name": "Morane"},
+        headers={"origin": "localhost"},
     )
     assert res.status_code == 200
+    assert (
+        "access-control-allow-origin" in res.headers
+    ), "should not prevent other middlewares from running"
 
 
 @fixture
@@ -82,10 +90,15 @@ def user_1(engine):
 async def test_commit_error_returns_500(client, user_1):
     with capture_logs() as caplog:
         res = await client.post(
-            "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
+            "/users",
+            json={"id": 1, "first_name": "Bob", "last_name": "Morane"},
+            headers={"origin": "localhost"},
         )
 
     assert res.status_code == 500
+    assert (
+        "access-control-allow-origin" in res.headers
+    ), "should not prevent other middlewares from running"
     assert {"event": "commit failed, rolling back", "log_level": "exception"} in caplog
 
 
