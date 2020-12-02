@@ -2,9 +2,9 @@ from unittest.mock import Mock, patch
 
 import httpx
 from asgi_lifespan import LifespanManager
-from fastapi import Depends, FastAPI, HTTPException, BackgroundTasks
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
-from pytest import fixture, mark, raises
+from pytest import fixture, mark
 from sqlalchemy.orm.session import Session
 from structlog.testing import capture_logs
 
