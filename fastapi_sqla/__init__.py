@@ -81,9 +81,12 @@ def with_session(request: Request) -> Session:
         def get_users(db: sqla.Session = Depends(sqla.with_session)):
             pass
     """
-    with open_session() as session:
-        request.scope[_SESSION_KEY] = session
-        yield session
+    try:
+        return request.scope[_SESSION_KEY]
+    except KeyError:
+        raise Exception(
+            "No session found in request, please ensure you've setup fastapi_sqla."
+        )
 
 
 async def add_session_to_request(request: Request, call_next):
@@ -104,29 +107,27 @@ async def add_session_to_request(request: Request, call_next):
         def get_users(session: sqla.Session = Depends(sqla.new_session)):
             return session.query(...) # use your session here
     """
-    response = await call_next(request)
+    with open_session() as session:
+        request.scope[_SESSION_KEY] = session
 
-    session = request.scope.get(_SESSION_KEY)
+        response = await call_next(request)
 
-    if not session:
-        return response
+        loop = asyncio.get_running_loop()
 
-    loop = asyncio.get_running_loop()
+        if response.status_code < 400:
+            try:
+                await loop.run_in_executor(None, session.commit)
+            except:
+                logger.exception("commit failed, rolling back")
+                response = PlainTextResponse(
+                    content="[fastapi-sqla] failed to commit", status_code=500
+                )
 
-    if response.status_code < 400:
-        try:
-            await loop.run_in_executor(None, session.commit)
-        except:
-            logger.exception("commit failed, rolling back")
-            response = PlainTextResponse(
-                content="[fastapi-sqla] failed to commit", status_code=500
-            )
-
-    if response.status_code >= 400:
-        # If ever a route handler returns an http exception, we do not want the
-        # session opened by current context manager to commit anything in db.
-        logger.warning("rolling back due to http error")
-        await loop.run_in_executor(None, session.rollback)
+        if response.status_code >= 400:
+            # If ever a route handler returns an http exception, we do not want the
+            # session opened by current context manager to commit anything in db.
+            logger.warning("rolling back due to http error")
+            await loop.run_in_executor(None, session.rollback)
 
     return response
 
