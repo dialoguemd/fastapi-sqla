@@ -115,6 +115,9 @@ async def add_session_to_request(request: Request, call_next):
 
         loop = asyncio.get_running_loop()
 
+        # try to commit after response, so that
+        # we can return a proper 500 response
+        # and not raise an true internal server error
         if response.status_code < 400:
             try:
                 await loop.run_in_executor(None, session.commit)
