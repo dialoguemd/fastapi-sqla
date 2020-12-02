@@ -6,6 +6,7 @@ from typing import Callable, Generic, List, TypeVar
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
+from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
@@ -107,7 +108,7 @@ async def add_session_to_request(request: Request, call_next):
         def get_users(session: sqla.Session = Depends(sqla.new_session)):
             return session.query(...) # use your session here
     """
-    with open_session() as session:
+    async with contextmanager_in_threadpool(open_session()) as session:
         request.scope[_SESSION_KEY] = session
 
         response = await call_next(request)
