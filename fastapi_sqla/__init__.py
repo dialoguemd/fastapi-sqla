@@ -118,7 +118,9 @@ async def add_session_to_request(request: Request, call_next):
             await loop.run_in_executor(None, session.commit)
         except:
             logger.exception("commit failed, rolling back")
-            response = PlainTextResponse(status_code=500)
+            response = PlainTextResponse(
+                content="[fastapi-sqla] failed to commit", status_code=500
+            )
 
     if response.status_code >= 400:
         # If ever a route handler returns an http exception, we do not want the
