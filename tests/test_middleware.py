@@ -1,11 +1,12 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import httpx
 from asgi_lifespan import LifespanManager
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pytest import fixture, mark
+from sqlalchemy.orm.session import Session
 from structlog.testing import capture_logs
 
 pytestmark = mark.asyncio
@@ -43,8 +44,6 @@ def app(User):
     app = FastAPI()
     setup(app)
 
-    app.add_middleware(CORSMiddleware, allow_origins=["*"])
-
     class UserIn(BaseModel):
         id: int
         first_name: str
@@ -55,7 +54,24 @@ def app(User):
         session.add(User(**user.dict()))
         return {}
 
+    @app.get("/404")
+    def get_users(session: Session = Depends(with_session)):
+        raise HTTPException(status_code=404, detail="YOLO")
+
     return app
+
+
+@fixture
+def mock_middleware(app: FastAPI):
+    mock_middleware = Mock()
+
+    @app.middleware("http")
+    async def a_middleware(request, call_next):
+        res = await call_next(request)
+        mock_middleware()
+        return res
+
+    return mock_middleware
 
 
 @fixture
@@ -69,16 +85,14 @@ async def client(app):
             yield client
 
 
-async def test_session_dependency(client):
+async def test_session_dependency(client, mock_middleware):
     res = await client.post(
         "/users",
         json={"id": 1, "first_name": "Bob", "last_name": "Morane"},
         headers={"origin": "localhost"},
     )
     assert res.status_code == 200
-    assert (
-        "access-control-allow-origin" in res.headers
-    ), "should not prevent other middlewares from running"
+    mock_middleware.assert_called_once()
 
 
 @fixture
@@ -87,7 +101,7 @@ def user_1(engine):
     yield
 
 
-async def test_commit_error_returns_500(client, user_1):
+async def test_commit_error_returns_500(client, user_1, mock_middleware):
     with capture_logs() as caplog:
         res = await client.post(
             "/users",
@@ -96,16 +110,15 @@ async def test_commit_error_returns_500(client, user_1):
         )
 
     assert res.status_code == 500
-    assert (
-        "access-control-allow-origin" in res.headers
-    ), "should not prevent other middlewares from running"
     assert {"event": "commit failed, rolling back", "log_level": "exception"} in caplog
+    mock_middleware.assert_called_once()
 
 
-async def test_rollback_on_http_exception(client):
+async def test_rollback_on_http_exception(client, mock_middleware):
     with patch("fastapi_sqla.open_session") as open_session:
         session = open_session.return_value.__enter__.return_value
 
         await client.get("/404")
 
         session.rollback.assert_called_once_with()
+        mock_middleware.assert_called_once()

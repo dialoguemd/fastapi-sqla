@@ -6,7 +6,7 @@ from typing import Callable, Generic, List, TypeVar
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
-from fastapi.concurrency import contextmanager_in_threadpool
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config
@@ -52,10 +52,14 @@ def open_session() -> Session:
 
     try:
         yield session
-        session.commit()
+        try:
+            session.commit()
+        except Exception:
+            logger.exception("commit failed, rolling back")
+            raise
 
     except Exception:
-        logger.exception("commit failed, rolling back")
+        logger.warning("rolling back due to error", exc_info=True)
         session.rollback()
         raise
 
@@ -77,12 +81,9 @@ def with_session(request: Request) -> Session:
         def get_users(db: sqla.Session = Depends(sqla.with_session)):
             pass
     """
-    try:
-        yield request.scope[_SESSION_KEY]
-    except KeyError:  # pragma: no cover
-        raise Exception(
-            "No session found in request, please ensure you've setup fastapi_sqla."
-        )
+    with open_session() as session:
+        request.scope[_SESSION_KEY] = session
+        yield session
 
 
 async def add_session_to_request(request: Request, call_next):
@@ -103,14 +104,27 @@ async def add_session_to_request(request: Request, call_next):
         def get_users(session: sqla.Session = Depends(sqla.new_session)):
             return session.query(...) # use your session here
     """
-    async with contextmanager_in_threadpool(open_session()) as session:
-        request.scope[_SESSION_KEY] = session
-        response = await call_next(request)
-        if response.status_code >= 400:
-            # If ever a route handler returns an http exception, we do not want the
-            # session opened by current context manager to commit anything in db.
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, session.rollback)
+    response = await call_next(request)
+
+    session = request.scope.get(_SESSION_KEY)
+
+    if not session:
+        return response
+
+    loop = asyncio.get_running_loop()
+
+    if response.status_code < 400:
+        try:
+            await loop.run_in_executor(None, session.commit)
+        except:
+            logger.exception("commit failed, rolling back")
+            response = PlainTextResponse(status_code=500)
+
+    if response.status_code >= 400:
+        # If ever a route handler returns an http exception, we do not want the
+        # session opened by current context manager to commit anything in db.
+        logger.warning("rolling back due to http error")
+        await loop.run_in_executor(None, session.rollback)
 
     return response
 
