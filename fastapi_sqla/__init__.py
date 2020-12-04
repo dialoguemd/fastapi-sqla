@@ -121,7 +121,7 @@ async def add_session_to_request(request: Request, call_next):
         if response.status_code < 400:
             try:
                 await loop.run_in_executor(None, session.commit)
-            except:
+            except Exception:
                 logger.exception("commit failed, rolling back")
                 response = PlainTextResponse(
                     content="[fastapi-sqla] failed to commit", status_code=500
