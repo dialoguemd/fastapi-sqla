@@ -211,13 +211,21 @@ A session scope fixture that runs `alembic upgrade` at test session setup and
 
 It depends on `alembic_ini_path` fixture to get the path of `alembic.ini` file.
 
-To use:
+To use in a test or test module:
 
 ```python
 from pytest import mark
 
 pytestmark = mark.usefixtures("db_migration")
 ```
+
+To use globally, add to [pytest options](https://docs.pytest.org/en/stable/reference.html#confval-usefixtures):
+
+ ```ini
+ [pytest]
+ usefixtures = 
+     db_migration
+ ```
 
 ### `alembic_ini_path`
 
