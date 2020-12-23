@@ -45,3 +45,34 @@ def test_all_opened_sessions_are_within_the_same_transaction(session, singer_cls
 
     other_session = _Session()
     assert other_session.query(singer_cls).get(1)
+
+
+def test_sqla_modules(testdir):
+    testdir.makepyfile(
+        """
+        from pytest import fixture
+
+
+        @fixture
+        def sqla_modules():
+            pass
+
+
+        def test_anything(session):
+            session.execute("SELECT 1")
+    """
+    )
+    result = testdir.runpytest()
+    result.assert_outcomes(passed=1)
+
+
+def test_sqla_modules_fixture_raises_exception_when_not_overriden(testdir):
+    testdir.makepyfile(
+        """
+        def test_anything(session):
+            session.execute("SELECT 1")
+    """
+    )
+    result = testdir.runpytest()
+    result.assert_outcomes(errors=1)
+    result.stdout.fnmatch_lines(["*sqla_modules fixture is not defined*"])
