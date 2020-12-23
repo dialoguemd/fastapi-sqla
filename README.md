@@ -227,6 +227,17 @@ To use globally, add to [pytest options](https://docs.pytest.org/en/stable/refer
      db_migration
  ```
 
+Or depends on it in top-level `conftest.py` and mark it as _autoused_:
+
+```python
+from pytest import fixture
+
+
+@fixture(scope="session", autouse=True)
+def db_migration(db_migration):
+    pass
+```
+
 ### `alembic_ini_path`
 
 It returns the path of  `alembic.ini` configuration file. By default, it returns
