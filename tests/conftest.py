@@ -5,7 +5,7 @@ from pytest import fixture
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import close_all_sessions
 
-pytest_plugins = ["fastapi_sqla._pytest_plugin"]
+pytest_plugins = ["fastapi_sqla._pytest_plugin", "pytester"]
 
 
 @fixture(scope="session", autouse=True)
