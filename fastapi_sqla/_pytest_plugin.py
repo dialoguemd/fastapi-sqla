@@ -30,7 +30,7 @@ def sqla_connection(db_url):
 
 @fixture(scope="session")
 def alembic_ini_path():  # pragma: no cover
-    """Path for alembic.ini file, default to `./alembic.ini`."""
+    """Path for alembic.ini file, defaults to `./alembic.ini`."""
     return "./alembic.ini"
 
 
