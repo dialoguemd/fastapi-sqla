@@ -203,3 +203,23 @@ def patient(session):
     session.commit()
     return patient
 ```
+
+### `db_migration`
+
+A session scope fixture that runs `alembic upgrade` at test session setup and
+`alembic downgrade` at tear down.
+
+It depends on `alembic_ini_path` fixture to get the path of `alembic.ini` file.
+
+To use:
+
+```python
+from pytest import mark
+
+pytestmark = mark.usefixtures("db_migration")
+```
+
+### `alembic_ini_path`
+
+It returns the path of  `alembic.ini` configuration file. By default, it returns
+`./alembic.ini`.
