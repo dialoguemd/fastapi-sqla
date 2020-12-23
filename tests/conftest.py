@@ -35,3 +35,8 @@ def tear_down():
 @fixture
 def sqla_modules():
     pass
+
+
+@fixture(scope="session")
+def alembic_ini_path():
+    return "./tests/alembic.ini"

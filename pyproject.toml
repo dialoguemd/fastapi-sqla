@@ -24,6 +24,7 @@ asgi_lifespan = "^1.0.1"
 httpx = "^0.15.4"
 pytest-asyncio = "^0.14.0"
 Faker = "^4.5.0"
+alembic = "^1.4.3"
 
 [build-system]
 requires = ["poetry>=0.12"]

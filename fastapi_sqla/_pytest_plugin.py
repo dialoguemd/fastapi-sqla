@@ -1,6 +1,8 @@
 import os
 from unittest.mock import patch
 
+from alembic import command
+from alembic.config import Config
 from pytest import fixture
 from sqlalchemy import create_engine
 
@@ -24,6 +26,28 @@ def sqla_connection(db_url):
     connection = engine.connect()
     yield connection
     connection.close()
+
+
+@fixture(scope="session")
+def alembic_ini_path():  # pragma: no cover
+    """Path for alembic.ini file, default to `./alembic.ini`."""
+    return "./alembic.ini"
+
+
+@fixture(scope="session", autouse=True)
+def db_migration(db_url, sqla_connection, alembic_ini_path):
+    """Run alembic upgrade at test session setup and downgrade at tear down.
+
+    Override fixture `alembic_ini_path` to change path of `alembic.ini` file.
+    """
+    alembic_config = Config(file_=alembic_ini_path)
+    alembic_config.set_main_option("sqlalchemy.url", db_url)
+
+    sqla_connection.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+
+    command.upgrade(alembic_config, "head")
+    yield
+    command.downgrade(alembic_config, "base")
 
 
 @fixture
