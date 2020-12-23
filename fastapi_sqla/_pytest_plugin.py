@@ -34,7 +34,7 @@ def alembic_ini_path():  # pragma: no cover
     return "./alembic.ini"
 
 
-@fixture(scope="session", autouse=True)
+@fixture(scope="session")
 def db_migration(db_url, sqla_connection, alembic_ini_path):
     """Run alembic upgrade at test session setup and downgrade at tear down.
 
