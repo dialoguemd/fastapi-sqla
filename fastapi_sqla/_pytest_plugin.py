@@ -51,7 +51,7 @@ def db_migration(db_url, sqla_connection, alembic_ini_path):
 
 
 @fixture
-def sqla_modules():  # pragma: no cover
+def sqla_modules():
     raise Exception(
         "sqla_modules fixture is not defined. Define a sqla_modules fixture which "
         "imports all modules with sqla entities deriving from fastapi_sqla.Base ."
