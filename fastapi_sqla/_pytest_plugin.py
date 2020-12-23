@@ -27,7 +27,7 @@ def sqla_connection(db_url):
 
 
 @fixture
-def sqla_modules():
+def sqla_modules():  # pragma: no cover
     raise Exception(
         "sqla_modules fixture is not defined. Define a sqla_modules fixture which "
         "imports all modules with sqla entities deriving from fastapi_sqla.Base ."
@@ -61,8 +61,8 @@ def sqla_transaction(sqla_connection):
 def session(sqla_transaction, sqla_connection):
     """Sqla session to use when creating db fixtures.
 
-    While it does not write any record in DB, the application will still be able to access any record
-    committed with that session.
+    While it does not write any record in DB, the application will still be able to
+    access any record committed with that session.
     """
     import fastapi_sqla
 
