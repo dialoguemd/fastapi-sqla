@@ -2,6 +2,12 @@
 
 SqlAlchemy integration for FastAPI®
 
+* Setup using environment variables to connect on DB;
+* `fastapi_sqla.Base` declarative class to reflect DB tables at startup;
+* `fastapi_sqla.with_session` FastAPI dependency to get an sqla session;
+* Automated commit/rollback of sqla session at the end of request before returning response;
+* pytest fixtures to easy writing test;
+
 ## Configuration
 
 ### Environment variables:
