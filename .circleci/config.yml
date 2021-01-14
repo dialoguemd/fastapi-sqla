@@ -1,9 +1,9 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.9.0
-  python: dialogue/python@2.9.1
-  release: dialogue/release@2.1.5
+  base: dialogue/base@1.9.1
+  release: dialogue/release@2.1.7
+  python: dialogue/python@2.12.0
 
 
 workflows:
@@ -30,26 +30,21 @@ workflows:
             - black
             - isort
           context: org-global-v2
-      - python/publish_package:
-          name: publish-dev
-          include_dev: true
-          requires:
-            - test
-          context: org-global-v2
           filters:
             branches:
-              ignore: master
+              only: master
 
   release:
     jobs:
-      - python/publish_package:
+      - python/publish:
           name: publish
+          context: org-global-v2
+          repository: pypi
           filters:
             tags:
               only: /^v.*/
             branches:
               ignore: /.*/
-          context: org-global-v2
 
 executors:
   python-postgres:
