@@ -2,7 +2,10 @@
 name = "fastapi-sqla"
 version = "0.5.0"
 description = "A highly opinionated SqlAlchemy extension for FastAPI."
-authors = ["Hadrien David <hadrien.david@dialogue.co>"]
+authors = [
+    "Hadrien David <hadrien.david@dialogue.co>",
+    "Victor Repkow <victor.repkow@dialogue.co>",
+]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/dialoguemd/fastapi-sqla"
