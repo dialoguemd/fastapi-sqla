@@ -34,7 +34,7 @@ workflows:
             branches:
               only: master
 
-  release:
+  publish:
     jobs:
       - python/publish:
           name: publish
