@@ -1,6 +1,6 @@
 # fastapi-sqla
 
-A highly opinionated SqlAlchemy extension for FastAPI.
+A highly opinionated SQLAlchemy extension for FastAPI.
 
 It provides:
 
