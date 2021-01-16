@@ -145,6 +145,9 @@ class Paginated(Collection, Generic[T]):
     meta: Meta
 
 
+PaginatedResult = Callable[[DbQuery], Paginated[T]]
+
+
 def _query_count(session: Session, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
@@ -160,12 +163,12 @@ def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
     query_count: Callable[[Session, DbQuery], int] = _query_count,
-) -> Callable[[Session, int, int], Callable[[DbQuery], Paginated[T]]]:
+) -> Callable[[Session, int, int], PaginatedResult]:
     def dependency(
         session: Session = Depends(with_session),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
-    ) -> Callable[[DbQuery], Paginated[T]]:
+    ) -> PaginatedResult:
         def paginated_result(query: DbQuery) -> Paginated[T]:
             total_items = query_count(session, query)
             total_pages = math.ceil(total_items / limit)

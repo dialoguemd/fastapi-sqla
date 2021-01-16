@@ -1,22 +1,25 @@
 # fastapi-sqla
 
-SqlAlchemy integration for FastAPI®
+A highly opinionated SQLAlchemy extension for FastAPI:
 
 * Setup using environment variables to connect on DB;
-* `fastapi_sqla.Base` declarative class to reflect DB tables at startup;
-* `fastapi_sqla.with_session` FastAPI dependency to get an sqla session;
-* Automated commit/rollback of sqla session at the end of request before returning response;
-* pytest fixtures to easy writing test;
+* `fastapi_sqla.Base` a declarative base class to reflect DB tables at startup;
+* `fastapi_sqla.with_session` a dependency to get an sqla session;
+* Automated commit/rollback of sqla session at the end of request before returning
+  response;
+* Pagination utilities;
+* Pytest fixtures to easy writing test;
 
 ## Configuration
 
 ### Environment variables:
-  The keys of interest in `os.environ` are prefixed with `sqlalchemy_`.
-  Each matching key (after the prefix is stripped) is treated as though it were the
-  corresponding keyword argument to [`sqlalchemy.create_engine`](https://docs.sqlalchemy.org/en/13/core/engines.html?highlight=create_engine#sqlalchemy.create_engine)
-  call.
 
-  The only required key is `sqlalchemy_url`, which provides the database URL.
+The keys of interest in `os.environ` are prefixed with `sqlalchemy_`.
+Each matching key (after the prefix is stripped) is treated as though it were the
+corresponding keyword argument to [`sqlalchemy.create_engine`]
+call.
+
+The only required key is `sqlalchemy_url`, which provides the database URL.
 
 ### Setup the app:
 
@@ -58,7 +61,14 @@ def example(session: Session = Depends(with_session)):
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import Base, Paginated, Session, with_pagination, with_session
+from fastapi_sqla import (
+    Base,
+    Paginated,
+    PaginatedResult,
+    Session,
+    with_pagination,
+    with_session,
+)
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -76,7 +86,7 @@ class User(BaseModel):
 @router.get("/users", response_model=Paginated[User])
 def all_users(
     session: Session = Depends(with_session),
-    paginated_result=Depends(with_pagination),
+    paginated_result: PaginatedResult = Depends(with_pagination),
 ):
     query = session.query(UserEntity)
     return paginated_result(query)
@@ -84,8 +94,7 @@ def all_users(
 
 By default:
 * It returns pages of 10 items, up to 100 items;
-* Total number of items in the collection is queried using
-  [`Query.count`](https://docs.sqlalchemy.org/en/13/orm/query.html#sqlalchemy.orm.query.Query.count)
+* Total number of items in the collection is queried using [`Query.count`]
 
 ### Custom pagination
 
@@ -97,7 +106,14 @@ To customize pagination, create a dependency using `fastapi_sqla.Pagination`
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import Base, Paginated, Pagination, Session, with_session
+from fastapi_sqla import (
+    Base,
+    Paginated,
+    PaginatedResult,
+    Pagination,
+    Session,
+    with_session,
+)
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Query
@@ -128,7 +144,7 @@ with_custom_pagination = Pagination(
 @router.get("/users", response_model=Paginated[User])
 def all_users(
     session: Session = Depends(with_session),
-    paginated_result=Depends(with_custom_pagination),
+    paginated_result: PaginatedResult = Depends(with_custom_pagination),
 ):
     query = session.query(UserEntity)
     return paginated_result(query)
@@ -225,15 +241,15 @@ from pytest import mark
 pytestmark = mark.usefixtures("db_migration")
 ```
 
-To use globally, add to [pytest options](https://docs.pytest.org/en/stable/reference.html#confval-usefixtures):
+To use globally, add to [pytest options]:
 
  ```ini
  [pytest]
- usefixtures = 
+ usefixtures =
      db_migration
  ```
 
-Or depends on it in top-level `conftest.py` and mark it as _autoused_:
+Or depends on it in top-level `conftest.py` and mark it as _auto-used_:
 
 ```python
 from pytest import fixture
@@ -248,3 +264,8 @@ def db_migration(db_migration):
 
 It returns the path of  `alembic.ini` configuration file. By default, it returns
 `./alembic.ini`.
+
+
+[`sqlalchemy.create_engine`]: https://docs.sqlalchemy.org/en/13/core/engines.html?highlight=create_engine#sqlalchemy.create_engine
+[`Query.count`]: https://docs.sqlalchemy.org/en/13/orm/query.html#sqlalchemy.orm.query.Query.count
+[pytest options]: https://docs.pytest.org/en/stable/reference.html#confval-usefixtures
