@@ -1,9 +1,9 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.9.0
-  python: dialogue/python@2.9.1
-  release: dialogue/release@2.1.5
+  base: dialogue/base@1.9.1
+  release: dialogue/release@2.1.7
+  python: dialogue/python@2.12.1
 
 
 workflows:
@@ -30,31 +30,42 @@ workflows:
             - black
             - isort
           context: org-global-v2
-      - python/publish_package:
-          name: publish-dev
-          include_dev: true
-          requires:
-            - test
-          context: org-global-v2
           filters:
             branches:
-              ignore: master
+              only: master
 
-  release:
+  publish:
     jobs:
-      - python/publish_package:
+      - publish:
           name: publish
+          context: org-global-v2
           filters:
             tags:
               only: /^v.*/
             branches:
               ignore: /.*/
-          context: org-global-v2
+
+jobs:
+  publish:
+    docker:
+    - image: cimg/python:3.9
+      auth:
+        username: $DOCKERHUB_USER
+        password: $DOCKERHUB_ACCESS_TOKEN
+    working_directory: ~/project/.
+    steps:
+      - base/setup
+      - python/setup
+      - run:
+          name: "publish package on pypi"
+          command: |
+            poetry config http-basic.pypi $PYPI_USER $PYPI_PASSWORD
+            poetry publish --build --no-interaction
 
 executors:
   python-postgres:
     docker:
-      - image: cimg/python:3.7.8
+      - image: cimg/python:3.9
       - image: postgres:10.12
         name: postgres
         environment:
