@@ -1,8 +1,6 @@
 # fastapi-sqla
 
-A highly opinionated SQLAlchemy extension for FastAPI.
-
-It provides:
+A highly opinionated SQLAlchemy extension for FastAPI:
 
 * Setup using environment variables to connect on DB;
 * `fastapi_sqla.Base` a declarative base class to reflect DB tables at startup;
