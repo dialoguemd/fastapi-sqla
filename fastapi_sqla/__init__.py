@@ -12,9 +12,9 @@ from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as DbQuery
-from sqlalchemy.orm.session import Session, sessionmaker
+from sqlalchemy.orm.session import Session as SqlaSession, sessionmaker
 
-__all__ = ["Base", "setup", "with_session"]
+__all__ = ["Base", "Session", "setup"]
 
 logger = structlog.get_logger(__name__)
 
@@ -40,6 +40,29 @@ class Base(declarative_base(cls=DeferredReflection)):  # type: ignore
     __abstract__ = True
 
 
+class Session(SqlaSession):
+    def __new__(cls, request: Request) -> SqlaSession:
+        """Yield the sqlalchmey session for that request.
+
+        It is meant to be used as a FastAPI dependency::
+
+            from fastapi import APIRouter, Depends
+            from fastapi_sqla import Session
+
+            router = APIRouter()
+
+            @router.get("/users")
+            def get_users(session: Session = Depends()):
+                pass
+        """
+        try:
+            return request.scope[_SESSION_KEY]
+        except KeyError:  # pragma: no cover
+            raise Exception(
+                "No session found in request, please ensure you've setup fastapi_sqla."
+            )
+
+
 @contextmanager
 def open_session() -> Session:
     """Context manager that opens a session and properly closes session when exiting.
@@ -61,28 +84,6 @@ def open_session() -> Session:
 
     finally:
         session.close()
-
-
-def with_session(request: Request) -> Session:
-    """Yield the sqlalchmey session for that request.
-
-    It is meant to be used as a FastAPI® dependency::
-
-        from er import sqla
-        from fastapi import APIRouter, Depends
-
-        router = APIRouter()
-
-        @router.get("/users")
-        def get_users(db: sqla.Session = Depends(sqla.with_session)):
-            pass
-    """
-    try:
-        yield request.scope[_SESSION_KEY]
-    except KeyError:  # pragma: no cover
-        raise Exception(
-            "No session found in request, please ensure you've setup fastapi_sqla."
-        )
 
 
 async def add_session_to_request(request: Request, call_next):
@@ -165,7 +166,7 @@ def Pagination(
     query_count: Callable[[Session, DbQuery], int] = _query_count,
 ) -> Callable[[Session, int, int], PaginatedResult]:
     def dependency(
-        session: Session = Depends(with_session),
+        session: Session = Depends(),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginatedResult:
