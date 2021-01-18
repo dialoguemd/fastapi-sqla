@@ -47,17 +47,17 @@ class Entity(Base):
     __tablename__ = "table-name-in-db"
 ```
 
-### Getting an sqla orm session
+### Getting an sqla session
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import Session, with_session
+from fastapi_sqla import Session
 
 router = APIRouter()
 
 
 @router.get("/example")
-def example(session: Session = Depends(with_session)):
+def example(session: Session = Depends()):
     return session.execute("SELECT now()").scalar()
 ```
 
@@ -71,7 +71,6 @@ from fastapi_sqla import (
     PaginatedResult,
     Session,
     with_pagination,
-    with_session,
 )
 from pydantic import BaseModel
 
@@ -89,7 +88,7 @@ class User(BaseModel):
 
 @router.get("/users", response_model=Paginated[User])
 def all_users(
-    session: Session = Depends(with_session),
+    session: Session = Depends(),
     paginated_result: PaginatedResult = Depends(with_pagination),
 ):
     query = session.query(UserEntity)
@@ -116,7 +115,6 @@ from fastapi_sqla import (
     PaginatedResult,
     Pagination,
     Session,
-    with_session,
 )
 from pydantic import BaseModel
 from sqlalchemy import func
@@ -147,7 +145,7 @@ with_custom_pagination = Pagination(
 
 @router.get("/users", response_model=Paginated[User])
 def all_users(
-    session: Session = Depends(with_session),
+    session: Session = Depends(),
     paginated_result: PaginatedResult = Depends(with_custom_pagination),
 ):
     query = session.query(UserEntity)

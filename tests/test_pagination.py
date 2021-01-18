@@ -113,7 +113,7 @@ def test_Pagination_with_custom_count(
 def app(user_cls, note_cls):
     from sqlalchemy.orm import joinedload
 
-    from fastapi_sqla import Paginated, Session, setup, with_pagination, with_session
+    from fastapi_sqla import Paginated, Session, setup, with_pagination
 
     app = FastAPI()
     setup(app)
@@ -129,7 +129,7 @@ def app(user_cls, note_cls):
 
     @app.get("/users")
     def all_users(
-        session: Session = Depends(with_session),
+        session: Session = Depends(),
         paginated_result=Depends(with_pagination),
         reponse_model=Paginated[User],
     ):

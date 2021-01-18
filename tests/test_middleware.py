@@ -37,7 +37,7 @@ def User():
 
 @fixture
 def app(User):
-    from fastapi_sqla import setup, with_session
+    from fastapi_sqla import Session, setup
 
     app = FastAPI()
     setup(app)
@@ -48,7 +48,7 @@ def app(User):
         last_name: str
 
     @app.post("/users")
-    def create_user(user: UserIn, session=Depends(with_session)):
+    def create_user(user: UserIn, session: Session = Depends()):
         session.add(User(**user.dict()))
         return {}
 
