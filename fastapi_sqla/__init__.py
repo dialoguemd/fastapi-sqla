@@ -12,7 +12,8 @@ from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as DbQuery
-from sqlalchemy.orm.session import Session as SqlaSession, sessionmaker
+from sqlalchemy.orm.session import Session as SqlaSession
+from sqlalchemy.orm.session import sessionmaker
 
 __all__ = ["Base", "Page", "Paginate", "Session", "open_session", "setup"]
 

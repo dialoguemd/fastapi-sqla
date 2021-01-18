@@ -113,6 +113,7 @@ def test_Pagination_with_custom_count(
 @fixture
 def app(user_cls, note_cls):
     from sqlalchemy.orm import joinedload
+
     from fastapi_sqla import Page, Paginate, Session, setup
 
     app = FastAPI()
