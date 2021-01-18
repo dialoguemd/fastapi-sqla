@@ -33,7 +33,8 @@ def setup_tear_down(engine):
     note = Table("note", metadata, autoload=True, autoload_with=engine)
     user_params = [{"id": i, "name": faker.name()} for i in range(1, 43)]
     note_params = [
-        {"user_id": i % 42 + 1, "id": math.ceil(i / 42)} for i in range(0, 84)
+        {"user_id": i % 42 + 1, "id": math.ceil(i / 42), "content": faker.text()}
+        for i in range(0, 84)
     ]
     engine.execute(user.insert(), *user_params)
     engine.execute(note.insert(), *note_params)
@@ -74,10 +75,10 @@ def note_cls():
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
 )
 def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
-    from fastapi_sqla import with_pagination
+    from fastapi_sqla import Paginate
 
     query = session.query(user_cls).options(joinedload("notes"))
-    result = with_pagination(session, offset, limit)(query)
+    result = Paginate(session, offset, limit)(query)
 
     assert result.meta.total_items == 42
     assert result.meta.offset == offset
@@ -99,9 +100,9 @@ def test_Pagination_with_custom_count(
         .statement.with_only_columns([func.count()])
         .scalar()
     )
-    with_pagination = Pagination(query_count=query_count)
+    pagination = Pagination(query_count=query_count)
     query = session.query(user_cls).options(joinedload("notes"))
-    result = with_pagination(session, offset, limit)(query)
+    result = pagination(session, offset, limit)(query)
 
     assert result.meta.total_items == 42
     assert result.meta.offset == offset
@@ -112,8 +113,7 @@ def test_Pagination_with_custom_count(
 @fixture
 def app(user_cls, note_cls):
     from sqlalchemy.orm import joinedload
-
-    from fastapi_sqla import Paginated, Session, setup, with_pagination
+    from fastapi_sqla import Page, Paginate, Session, setup
 
     app = FastAPI()
     setup(app)
@@ -122,19 +122,21 @@ def app(user_cls, note_cls):
         id: int
         content: str
 
+        class Config:
+            orm_mode = True
+
     class User(BaseModel):
         id: int
         name: str
         notes: List[Note]
 
-    @app.get("/users")
-    def all_users(
-        session: Session = Depends(),
-        paginated_result=Depends(with_pagination),
-        reponse_model=Paginated[User],
-    ):
+        class Config:
+            orm_mode = True
+
+    @app.get("/users", response_model=Page[User])
+    def all_users(session: Session = Depends(), paginate: Paginate = Depends()):
         query = session.query(user_cls).options(joinedload("notes"))
-        return paginated_result(query)
+        return paginate(query)
 
     return app
 
@@ -156,7 +158,7 @@ async def client(app):
 async def test_functional(client, offset, items_number):
     result = await client.get("/users", params={"offset": offset})
 
-    assert result.status_code == 200
+    assert result.status_code == 200, result.json()
     users = result.json()["data"]
     assert len(users) == items_number
     user_ids = [u["id"] for u in users]
