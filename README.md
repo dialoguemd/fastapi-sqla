@@ -65,13 +65,7 @@ def example(session: Session = Depends()):
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import (
-    Base,
-    Paginated,
-    PaginatedResult,
-    Session,
-    with_pagination,
-)
+from fastapi_sqla import Base, Page, Paginate, Session
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -86,13 +80,10 @@ class User(BaseModel):
     name: str
 
 
-@router.get("/users", response_model=Paginated[User])
-def all_users(
-    session: Session = Depends(),
-    paginated_result: PaginatedResult = Depends(with_pagination),
-):
+@router.get("/users", response_model=Page[User])
+def all_users(session: Session = Depends(), paginate: Paginate = Depends()):
     query = session.query(UserEntity)
-    return paginated_result(query)
+    return paginate(query)
 ```
 
 By default:
@@ -109,13 +100,7 @@ To customize pagination, create a dependency using `fastapi_sqla.Pagination`
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import (
-    Base,
-    Paginated,
-    PaginatedResult,
-    Pagination,
-    Session,
-)
+from fastapi_sqla import Base, Page, Pagination, Session
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Query
@@ -136,20 +121,20 @@ def query_count(session: Session, query: Query):
     return query.statement.with_only_columns([func.count()]).scalar()
 
 
-with_custom_pagination = Pagination(
+Paginate = Pagination(
     min_page_size=5,
     max_page_size=500,
     query_count=query_count,
 )
 
 
-@router.get("/users", response_model=Paginated[User])
+@router.get("/users", response_model=Page[User])
 def all_users(
     session: Session = Depends(),
-    paginated_result: PaginatedResult = Depends(with_custom_pagination),
+    paginate: Paginate = Depends(),
 ):
     query = session.query(UserEntity)
-    return paginated_result(query)
+    return paginate(query)
 ```
 
 ## Pytest fixtures

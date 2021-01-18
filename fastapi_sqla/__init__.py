@@ -14,7 +14,7 @@ from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as DbQuery
 from sqlalchemy.orm.session import Session as SqlaSession, sessionmaker
 
-__all__ = ["Base", "Session", "setup"]
+__all__ = ["Base", "Page", "Paginate", "Session", "setup"]
 
 logger = structlog.get_logger(__name__)
 
@@ -140,13 +140,10 @@ class Meta(BaseModel):
     page_number: int = Field(..., description="Current page number. Starts at 1.")
 
 
-class Paginated(Collection, Generic[T]):
-    """Paginated collection with information on current page and total items in meta."""
+class Page(Collection, Generic[T]):
+    """A page of the collection with info on current page and total items in meta."""
 
     meta: Meta
-
-
-PaginatedResult = Callable[[DbQuery], Paginated[T]]
 
 
 def _query_count(session: Session, query: DbQuery) -> int:
@@ -160,21 +157,24 @@ def _query_count(session: Session, query: DbQuery) -> int:
     return query.count()
 
 
+PaginateSignature = Callable[[DbQuery], Page[T]]
+
+
 def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
     query_count: Callable[[Session, DbQuery], int] = _query_count,
-) -> Callable[[Session, int, int], PaginatedResult]:
+) -> Callable[[Session, int, int], PaginateSignature]:
     def dependency(
         session: Session = Depends(),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
-    ) -> PaginatedResult:
-        def paginated_result(query: DbQuery) -> Paginated[T]:
+    ) -> PaginateSignature:
+        def paginate(query: DbQuery) -> Page[T]:
             total_items = query_count(session, query)
             total_pages = math.ceil(total_items / limit)
             page_number = offset / limit + 1
-            return Paginated[T](
+            return Page[T](
                 data=query.offset(offset).limit(limit).all(),
                 meta={
                     "offset": offset,
@@ -184,9 +184,9 @@ def Pagination(
                 },
             )
 
-        return paginated_result
+        return paginate
 
     return dependency
 
 
-with_pagination = Pagination()
+Paginate: PaginateSignature = Pagination()
