@@ -14,7 +14,7 @@ from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as DbQuery
 from sqlalchemy.orm.session import Session as SqlaSession, sessionmaker
 
-__all__ = ["Base", "Page", "Paginate", "Session", "setup"]
+__all__ = ["Base", "Page", "Paginate", "Session", "open_session", "setup"]
 
 logger = structlog.get_logger(__name__)
 
