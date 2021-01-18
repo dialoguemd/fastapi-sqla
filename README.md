@@ -4,7 +4,7 @@
 [![CircleCI](https://circleci.com/gh/dialoguemd/fastapi-sqla.svg?style=svg&circle-token=998482f269270ee521aa54f2accbee2e22943743)](https://circleci.com/gh/dialoguemd/fastapi-sqla)
 [![codecov](https://codecov.io/gh/dialoguemd/fastapi-sqla/branch/master/graph/badge.svg?token=BQHLryClIn)](https://codecov.io/gh/dialoguemd/fastapi-sqla)
 
-A highly opinionated SQLAlchemy extension for FastAPI:
+A highly opinionated [SQLAlchemy] extension for [FastAPI]:
 
 * Setup using environment variables to connect on DB;
 * `fastapi_sqla.Base` a declarative base class to reflect DB tables at startup;
@@ -49,6 +49,13 @@ class Entity(Base):
 
 ### Getting an sqla session
 
+#### Using dependency injection
+
+Use [FastAPI dependency injection] to get a session as a parameter of a path operation
+function.
+SQLAlchemy session is committed before response is returned or rollbacked if any
+exception occurred:
+
 ```python
 from fastapi import APIRouter, Depends
 from fastapi_sqla import Session
@@ -59,6 +66,30 @@ router = APIRouter()
 @router.get("/example")
 def example(session: Session = Depends()):
     return session.execute("SELECT now()").scalar()
+```
+
+#### Using a context manager
+
+When needing a session outside of a path operation, like when using
+[FastAPI background tasks], use `fastapi_sqla.open_session` context manager.
+SQLAlchemy session is committed when exiting context or rollbacked if any exception
+occurred:
+
+```python
+from fastapi import APIRouter, BackgroundTasks
+from fastapi_sqla import open_session
+
+router = APIRouter()
+
+
+@router.get("/example")
+def example(bg: BackgroundTasks):
+    bg.add_task(run_bg)
+
+
+def run_bg():
+    with open_session() as session:
+        session.execute("SELECT now()").scalar()
 ```
 
 ### Pagination
@@ -87,10 +118,11 @@ def all_users(session: Session = Depends(), paginate: Paginate = Depends()):
 ```
 
 By default:
+
 * It returns pages of 10 items, up to 100 items;
 * Total number of items in the collection is queried using [`Query.count`]
 
-### Custom pagination
+#### Customize pagination
 
 You can customize:
 - Minimum and maximum number of items per pages;
@@ -256,3 +288,7 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 [`sqlalchemy.create_engine`]: https://docs.sqlalchemy.org/en/13/core/engines.html?highlight=create_engine#sqlalchemy.create_engine
 [`Query.count`]: https://docs.sqlalchemy.org/en/13/orm/query.html#sqlalchemy.orm.query.Query.count
 [pytest options]: https://docs.pytest.org/en/stable/reference.html#confval-usefixtures
+[FastAPI]: https://fastapi.tiangolo.com/
+[FastAPI dependency injection]: https://fastapi.tiangolo.com/tutorial/dependencies/
+[FastAPI background tasks]: https://fastapi.tiangolo.com/tutorial/background-tasks/
+[SQLAlchemy]: http://sqlalchemy.org/
