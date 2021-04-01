@@ -73,6 +73,7 @@ fastapi-sqla = "fastapi_sqla._pytest_plugin"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
+passenv = CI *
 isolated_build = True
 
 envlist = py39-sqlalchemy{13,14}
