@@ -70,7 +70,8 @@ jobs:
           name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.*"
           command: |
             poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>
-
+      - utils/send_coverage_to_codecov:
+          codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>
   publish:
     docker:
     - image: cimg/python:3.9
