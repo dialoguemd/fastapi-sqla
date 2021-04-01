@@ -74,13 +74,13 @@ fastapi-sqla = "fastapi_sqla._pytest_plugin"
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = sqlalchemy{13,14}
+envlist = sqlalchemy{1.3,1.4}
 
 [testenv]
 passenv = CI *
 deps =
-    sqlalchemy13: sqlalchemy<1.4
-    sqlalchemy14: sqlalchemy>=1.4,<2
+    sqlalchemy1.3: sqlalchemy<1.4
+    sqlalchemy1.4: sqlalchemy>=1.4,<2
 
-commands = pytest
+commands = pytest -vv --showlocals --cov-report xml --cov-report html --junitxml=test-reports/pytest/junit.xml
 """
