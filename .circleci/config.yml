@@ -20,8 +20,10 @@ workflows:
           context: org-global-v2
       - test-sqlalchemy13:
           name: test-sqlalchemy13
+          context: org-global-v2
       - test-sqlalchemy14:
           name: test-sqlalchemy14
+          context: org-global-v2
       - python/test:
           name: test
           context: org-global-v2
