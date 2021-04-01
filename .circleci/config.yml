@@ -33,8 +33,8 @@ workflows:
             - pylama
             - black
             - isort
-            - test-sqlalchemy13
-            - test-sqlalchemy14
+            - Test with sqlalchemy 1.3.*
+            - Test with sqlalchemy 1.4.*
           context: org-global-v2
           filters:
             branches:
