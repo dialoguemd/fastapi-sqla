@@ -60,10 +60,10 @@ jobs:
     steps:
       - base/setup
       - python/setup
+      - python/install_deps
       - run:
           name: "run tests against sqlalchemy 1.3.*"
           command: |
-            pip install tox
             tox sqlalchemy13
 
   test-sqlalchemy14:
@@ -72,10 +72,10 @@ jobs:
     steps:
       - base/setup
       - python/setup
+      - python/install_deps
       - run:
           name: "run tests against sqlalchemy 1.3.*"
           command: |
-            pip install tox
             tox sqlalchemy14
 
   publish:
