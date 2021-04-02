@@ -20,21 +20,17 @@ workflows:
           name: black
           context: org-global-v2
       - test:
-          name: Test against sqlalchemy 1.3.*
           context: org-global-v2
           sqlalchemy_version: "1.3"
-      - test:
-          name: Test against sqlalchemy 1.4.*
-          context: org-global-v2
-          sqlalchemy_version: "1.4"
+          parameters:
+            sqlalchemy_version: ["1.3", "1.4"]
       - release/release:
           name: release
           requires:
             - pylama
             - black
             - isort
-            - Test against sqlalchemy 1.3.*
-            - Test against sqlalchemy 1.4.*
+            - test
           context: org-global-v2
           filters:
             branches:
