@@ -6,9 +6,10 @@ from asgi_lifespan import LifespanManager
 from faker import Faker
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
-from pytest import fixture, mark
-from sqlalchemy import MetaData, Table, func
+from pytest import fixture, mark, param
+from sqlalchemy import MetaData, Table, func, select
 from sqlalchemy.orm import joinedload, relationship
+from sqlalchemy.sql import Select
 
 
 @fixture(scope="module", autouse=True)
@@ -75,10 +76,10 @@ def note_cls():
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
 )
 def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
-    from fastapi_sqla import Paginate
+    from fastapi_sqla import Paginate, query_count_dependency
 
     query = session.query(user_cls).options(joinedload("notes"))
-    result = Paginate(session, offset, limit)(query)
+    result = Paginate(session, query_count_dependency(), offset, limit)(query)
 
     assert result.meta.total_items == 42
     assert result.meta.offset == offset
@@ -91,19 +92,69 @@ def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
     "offset,limit,total_pages,page_number",
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
 )
-def test_Pagination_with_custom_count(
+def test_pagination_with_legacy_query_count(
     session, user_cls, offset, limit, total_pages, page_number
 ):
-    from fastapi_sqla import Pagination
+    from fastapi_sqla import Paginate, query_count_dependency
 
-    query_count = (
-        lambda sess, _: session.query(user_cls)
-        .statement.with_only_columns([func.count()])
-        .scalar()
-    )
-    pagination = Pagination(query_count=query_count)
     query = session.query(user_cls).options(joinedload("notes"))
-    result = pagination(session, offset, limit)(query)
+    result = Paginate(session, query_count_dependency(), offset, limit)(query)
+
+    assert result.meta.total_items == 42
+    assert result.meta.offset == offset
+    assert result.meta.total_pages == total_pages
+    assert result.meta.page_number == page_number
+
+
+@mark.sqlalchemy("1.3")
+@mark.parametrize(
+    "offset,limit,total_pages,page_number",
+    [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
+)
+def test_Pagination_with_custom_sqla13_compliant_count(
+    session, user_cls, offset, limit, total_pages, page_number
+):
+    from fastapi_sqla import DbQuery, Pagination, QueryCount, Session
+
+    def query_count_dependency(session: Session = Depends()) -> QueryCount:
+        def query_count(query: DbQuery) -> int:
+            return (
+                session.query(user_cls)
+                .statement.with_only_columns([func.count()])
+                .scalar()
+            )
+
+        return query_count
+
+    pagination = Pagination(query_count_dependency=query_count_dependency)
+    query = session.query(user_cls).options(joinedload("notes"))
+    result = pagination(session, query_count_dependency(session), offset, limit)(query)
+
+    assert result.meta.total_items == 42
+    assert result.meta.offset == offset
+    assert result.meta.total_pages == total_pages
+    assert result.meta.page_number == page_number
+
+
+@mark.sqlalchemy("1.4")
+@mark.parametrize(
+    "offset,limit,total_pages,page_number",
+    [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
+)
+def test_Pagination_with_custom_sqla14_compliant_count(
+    session, user_cls, offset, limit, total_pages, page_number
+):
+    from fastapi_sqla import DbQuery, Pagination, QueryCount, Session
+
+    def query_count_dependency(session: Session = Depends()) -> QueryCount:
+        def query_count(query: DbQuery) -> int:
+            return session.execute(select(func.count(user_cls.id))).scalar()
+
+        return query_count
+
+    pagination = Pagination(query_count_dependency=query_count_dependency)
+    query = session.query(user_cls).options(joinedload("notes"))
+    result = pagination(session, query_count_dependency(session), offset, limit)(query)
 
     assert result.meta.total_items == 42
     assert result.meta.offset == offset
@@ -113,9 +164,15 @@ def test_Pagination_with_custom_count(
 
 @fixture
 def app(user_cls, note_cls):
-    from sqlalchemy.orm import joinedload
-
-    from fastapi_sqla import Page, Paginate, Session, setup
+    from fastapi_sqla import (
+        Page,
+        Paginate,
+        PaginateSignature,
+        Pagination,
+        QueryCount,
+        Session,
+        setup,
+    )
 
     app = FastAPI()
     setup(app)
@@ -135,9 +192,31 @@ def app(user_cls, note_cls):
         class Config:
             orm_mode = True
 
-    @app.get("/users", response_model=Page[User])
-    def all_users(session: Session = Depends(), paginate: Paginate = Depends()):
-        query = session.query(user_cls).options(joinedload("notes"))
+    @app.get("/v1/users", response_model=Page[User])
+    def sqla_13_all_users(session: Session = Depends(), paginate: Paginate = Depends()):
+        query = (
+            session.query(user_cls).options(joinedload("notes")).order_by(user_cls.id)
+        )
+        return paginate(query)
+
+    @app.get("/v2/users", response_model=Page[User])
+    def sqla_14_all_users(paginate: Paginate = Depends()):
+        query = select(user_cls).options(joinedload("notes")).order_by(user_cls.id)
+        return paginate(query)
+
+    def query_count_dependency(session: Session = Depends()) -> QueryCount:
+        def count(_: Select) -> int:
+            return session.execute(select(func.count()).select_from(user_cls)).scalar()
+
+        return count
+
+    CustomPaginate: PaginateSignature = Pagination(
+        query_count_dependency=query_count_dependency
+    )
+
+    @app.get("/v2/custom/users", response_model=Page[User])
+    def sqla_14_all_users_custom_pagination(paginate: CustomPaginate = Depends()):
+        query = select(user_cls).options(joinedload("notes")).order_by(user_cls.id)
         return paginate(query)
 
     return app
@@ -154,14 +233,27 @@ async def client(app):
 
 @mark.asyncio
 @mark.parametrize(
-    "offset,items_number",
-    [(0, 10), (10, 10), (40, 2)],
+    "offset,items_number,path",
+    [
+        param(0, 10, "/v1/users"),
+        param(10, 10, "/v1/users"),
+        param(40, 2, "/v1/users"),
+        param(0, 10, "/v2/users", marks=mark.sqlalchemy("1.4")),
+        param(10, 10, "/v2/users", marks=mark.sqlalchemy("1.4")),
+        param(40, 2, "/v2/users", marks=mark.sqlalchemy("1.4")),
+        param(0, 10, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
+        param(10, 10, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
+        param(40, 2, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
+    ],
 )
-async def test_functional(client, offset, items_number):
-    result = await client.get("/users", params={"offset": offset})
+async def test_functional(client, offset, items_number, path):
+    result = await client.get(path, params={"offset": offset})
 
     assert result.status_code == 200, result.json()
     users = result.json()["data"]
     assert len(users) == items_number
     user_ids = [u["id"] for u in users]
     assert user_ids == list(range(offset + 1, offset + 1 + items_number))
+
+    meta = result.json()["meta"]
+    assert meta["total_items"] == 42

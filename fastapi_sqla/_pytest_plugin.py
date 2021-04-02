@@ -69,7 +69,7 @@ def sqla_reflection(sqla_modules, sqla_connection, db_url):
 @fixture(autouse=True)
 def patch_sessionmaker(db_url, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
-    with patch("fastapi_sqla.engine_from_config") as engine_from_config:
+    with patch("fastapi_sqla.sa.engine_from_config") as engine_from_config:
         engine_from_config.return_value = sqla_connection
         yield engine_from_config
 

@@ -2,18 +2,20 @@ import asyncio
 import math
 import os
 from contextlib import contextmanager
-from typing import Callable, Generic, List, TypeVar
+from functools import singledispatch
+from typing import Callable, Generic, List, TypeVar, Union
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
-from sqlalchemy import engine_from_config
+import sqlalchemy as sa
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
-from sqlalchemy.orm import Query as DbQuery
+from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.sql import Select, select, func
 
 __all__ = ["Base", "Page", "Paginate", "Session", "open_session", "setup"]
 
@@ -30,7 +32,7 @@ def setup(app: FastAPI):
 
 
 def startup():
-    engine = engine_from_config(os.environ, prefix="sqlalchemy_")
+    engine = sa.engine_from_config(os.environ, prefix="sqlalchemy_")
     Base.metadata.bind = engine
     Base.prepare(engine)
     _Session.configure(bind=engine)
@@ -147,43 +149,108 @@ class Page(Collection, Generic[T]):
     meta: Meta
 
 
-def _query_count(session: Session, query: DbQuery) -> int:
-    """Default function used to count items returned by a query.
-
-    Default Query.count is slower than a manually written query could be: It runs the
-    query in a subquery, and count the number of elements returned:
-
-    See https://gist.github.com/hest/8798884
-    """
-    return query.count()
-
-
+DbQuery = Union[LegacyQuery, Select]
+QueryCount = Callable[[DbQuery], int]
+QueryCountDependency = Callable[..., QueryCount]
 PaginateSignature = Callable[[DbQuery], Page[T]]
+
+
+def query_count_dependency(session: Session = Depends()) -> QueryCount:
+    @singledispatch
+    def _query_count(query: DbQuery):  # pragma no cover
+        "Dispatch on registered functions based on `query` type."
+        raise NotImplementedError(
+            f"not _query_count registered for type {type(query)!r}"
+        )
+
+    @_query_count.register
+    def sqla13_query_count(query: LegacyQuery) -> int:
+        """Default legacy function used to count items returned by a query.
+
+        Default Query.count is slower than a manually written query could be: It runs the
+        query in a subquery, and count the number of elements returned:
+
+        See https://gist.github.com/hest/8798884
+        """
+        return query.count()
+
+    @_query_count.register
+    def sqla14_query_count(query: Select) -> int:
+        return session.execute(select(func.count()).select_from(query)).scalar()
+
+    return _query_count
+
+
+@singledispatch
+def paginate_query(
+    query: DbQuery,
+    session: Session,
+    total_items: int,
+    offset: int,
+    limit: int,
+) -> Page[T]:  # pragma no cover
+    "Dispatch on registered functions based on `query` type"
+    raise NotImplementedError(f"no paginate_query registered for type {type(query)!r}")
+
+
+@paginate_query.register
+def _paginate_legacy(
+    query: LegacyQuery,
+    session: Session,
+    total_items: int,
+    offset: int,
+    limit: int,
+) -> Page[T]:
+    total_pages = math.ceil(total_items / limit)
+    page_number = offset / limit + 1
+    return Page[T](
+        data=query.offset(offset).limit(limit).all(),
+        meta={
+            "offset": offset,
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "page_number": page_number,
+        },
+    )
+
+
+@paginate_query.register
+def _paginate(
+    query: Select,
+    session: Session,
+    total_items: int,
+    offset: int,
+    limit: int,
+) -> Page[T]:
+    total_pages = math.ceil(total_items / limit)
+    page_number = offset / limit + 1
+    query = query.offset(offset).limit(limit)
+    result = session.execute(query)
+    return Page[T](
+        data=iter(result.unique().scalars()),
+        meta={
+            "offset": offset,
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "page_number": page_number,
+        },
+    )
 
 
 def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count: Callable[[Session, DbQuery], int] = _query_count,
+    query_count_dependency: QueryCountDependency = query_count_dependency,
 ) -> Callable[[Session, int, int], PaginateSignature]:
     def dependency(
         session: Session = Depends(),
+        query_count: QueryCount = Depends(query_count_dependency),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
         def paginate(query: DbQuery) -> Page[T]:
-            total_items = query_count(session, query)
-            total_pages = math.ceil(total_items / limit)
-            page_number = offset / limit + 1
-            return Page[T](
-                data=query.offset(offset).limit(limit).all(),
-                meta={
-                    "offset": offset,
-                    "total_items": total_items,
-                    "total_pages": total_pages,
-                    "page_number": page_number,
-                },
-            )
+            total_items = query_count(query)
+            return paginate_query(query, session, total_items, offset, limit)
 
         return paginate
 
