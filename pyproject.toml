@@ -102,5 +102,5 @@ deps =
     sqlalchemy1.4: sqlalchemy>=1.4,<2
 extras =
     tests
-commands = pytest --cov={envsitepackagesdir}/fastapi_sqla --cov-report xml --cov-report html --junitxml=test-reports/pytest/junit.xml
+commands = pytest -vv --cov={envsitepackagesdir}/fastapi_sqla --cov-report xml --cov-report html --junitxml=test-reports/pytest/junit.xml
 """
