@@ -10,7 +10,11 @@ pytest_plugins = ["fastapi_sqla._pytest_plugin", "pytester"]
 
 def pytest_configure(config):
     config.addinivalue_line(
-        "markers", "sqlalchemy: mark test to run only against sqlalchemy1.3"
+        "markers",
+        (
+            "sqlalchemy(major.minor): skip test if tests run without the expected "
+            "sqlalchemy version"
+        ),
     )
 
 
@@ -52,5 +56,8 @@ def check_sqlalchemy_version(request):
     if marker:
         major, minor, _ = __version__.split(".")
         expected = marker.args[0]
-        if expected != f"{major}.{minor}":
-            skip()
+        current = f"{major}.{minor}"
+        if expected != current:
+            skip(
+                f"Skipping as it runs against sqlalchemy^={expected}.0, got {__version__}"
+            )
