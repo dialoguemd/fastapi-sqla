@@ -86,7 +86,11 @@ async def test_commit_error_returns_500(client, user_1):
         )
 
     assert res.status_code == 500
-    assert {"event": "commit failed, rolling back", "log_level": "exception"} in caplog
+    assert {
+        "event": "commit failed, rolling back",
+        "log_level": "error",
+        "exc_info": True,
+    } in caplog
 
 
 async def test_rollback_on_http_exception(client):

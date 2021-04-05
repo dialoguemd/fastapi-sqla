@@ -62,11 +62,15 @@ jobs:
     steps:
       - base/setup
       - python/setup
-      - python/install_deps
+      - run:
+          name: "install tox"
+          command: |
+            poetry run pip install -U tox
       - run:
           name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.*"
           command: |
             poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>
+
       - utils/send_coverage_to_codecov:
           codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>
 
