@@ -41,7 +41,7 @@ fastapi = ">=0.61"
 pydantic = "<2"
 sqlalchemy = "<2"
 structlog = ">=20"
-# Why are test dependencies as extras rather than dev-depencies section?
+# Test dependencies as extras so that tox can install
 # read https://github.com/python-poetry/poetry/issues/1941
 alembic = { version = "^1.4.3", optional = true}
 asgi_lifespan = { version = "^1.0.1", optional = true}
@@ -62,7 +62,7 @@ tox = { version = "^3.23.0", optional = true}
 tests = [
     "alembic",
     "asgi_lifespan",
-    "blac",
+    "black",
     "Faker",
     "httpx",
     "isort",
