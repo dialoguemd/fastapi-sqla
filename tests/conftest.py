@@ -59,5 +59,5 @@ def check_sqlalchemy_version(request):
         current = f"{major}.{minor}"
         if expected != current:
             skip(
-                f"Skipping as it runs against sqlalchemy^={expected}.0, got {__version__}"
+                f"Skipping as it runs against sqlalchemy=^{expected}.0, got {__version__}"
             )
