@@ -761,12 +761,12 @@ docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "pytest-enabler", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [extras]
-tests = ["alembic", "asgi_lifespan", "Faker", "httpx", "isort", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox"]
+tests = ["alembic", "asgi_lifespan", "black", "Faker", "httpx", "isort", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "b6d3f4c0d207ca8660737bacbbb05bf8401038d59c48f5d3ee0041a734266a47"
+content-hash = "641d0e6bcaba590434c653b3edc8a8f0cb25b507f9609c258360ca82020c3545"
 
 [metadata.files]
 alembic = [
