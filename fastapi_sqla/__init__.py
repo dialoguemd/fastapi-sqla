@@ -160,7 +160,7 @@ def query_count_dependency(session: Session = Depends()) -> QueryCount:
     def _query_count(query: DbQuery):  # pragma no cover
         "Dispatch on registered functions based on `query` type."
         raise NotImplementedError(
-            f"not _query_count registered for type {type(query)!r}"
+            f"no _query_count registered for type {type(query)!r}"
         )
 
     @_query_count.register
