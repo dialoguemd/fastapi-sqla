@@ -5,12 +5,12 @@ from contextlib import contextmanager
 from functools import singledispatch
 from typing import Callable, Generic, List, TypeVar, Union
 
-import sqlalchemy as sa
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
+from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
@@ -32,7 +32,7 @@ def setup(app: FastAPI):
 
 
 def startup():
-    engine = sa.engine_from_config(os.environ, prefix="sqlalchemy_")
+    engine = engine_from_config(os.environ, prefix="sqlalchemy_")
     Base.metadata.bind = engine
     Base.prepare(engine)
     _Session.configure(bind=engine)
