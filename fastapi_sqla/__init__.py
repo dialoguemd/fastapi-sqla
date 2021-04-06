@@ -5,17 +5,17 @@ from contextlib import contextmanager
 from functools import singledispatch
 from typing import Callable, Generic, List, TypeVar, Union
 
+import sqlalchemy as sa
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
-import sqlalchemy as sa
 from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
-from sqlalchemy.sql import Select, select, func
+from sqlalchemy.sql import Select, func, select
 
 __all__ = ["Base", "Page", "Paginate", "Session", "open_session", "setup"]
 
