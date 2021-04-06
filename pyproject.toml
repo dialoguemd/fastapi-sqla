@@ -37,26 +37,46 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-sqlalchemy = "<2"
 fastapi = ">=0.61"
-structlog = ">=20"
 pydantic = "<2"
+sqlalchemy = "<2"
+structlog = ">=20"
 
-[tool.poetry.dev-dependencies]
-pytest = "^6.0.2"
-pytest-watch = "^4.2.0"
-black = "^20.8b1"
-pylama = "^7.7.1"
-isort = "^5.5.3"
-pytest-cov = "^2.10.1"
-pdbpp = "^0.10.2"
-asgi_lifespan = "^1.0.1"
-httpx = "^0.15.4"
-pytest-asyncio = "^0.14.0"
-Faker = "^4.5.0"
-alembic = "^1.4.3"
-psycopg2 = "^2.8.6"
-tox = "^3.23.0"
+alembic = { version = "^1.4.3", optional = true}
+asgi_lifespan = { version = "^1.0.1", optional = true}
+black = { version = "^20.8b1", optional = true}
+Faker = { version = "^4.5.0", optional = true}
+httpx = { version = "^0.15.4", optional = true}
+isort = { version = "^5.5.3", optional = true}
+pdbpp = { version = "^0.10.2", optional = true}
+psycopg2 = { version = "^2.8.6", optional = true}
+pylama = { version = "^7.7.1", optional = true}
+pytest = { version = "^6.0.2", optional = true}
+pytest-asyncio = { version = "^0.14.0", optional = true}
+pytest-cov = { version = "^2.10.1", optional = true}
+pytest-watch = { version = "^4.2.0", optional = true}
+tox = { version = "^3.23.0", optional = true}
+
+[tool.poetry.extras]
+# Test dependencies as extras so they can be set as extras in tox config
+# More info on https://github.com/python-poetry/poetry/issues/1941
+tests = [
+    "alembic",
+    "asgi_lifespan",
+    "black",
+    "Faker",
+    "httpx",
+    "isort",
+    "pdbpp",
+    "psycopg2",
+    "pylama",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-watch",
+    "tox",
+]
+
 
 [build-system]
 requires = ["poetry>=0.12"]
@@ -77,10 +97,11 @@ isolated_build = True
 envlist = sqlalchemy{1.3,1.4}
 
 [testenv]
-passenv = *
+passenv = CI
 deps =
     sqlalchemy1.3: sqlalchemy<1.4
     sqlalchemy1.4: sqlalchemy>=1.4,<2
-
-commands = pytest -vv --showlocals --cov-report xml --cov-report html --junitxml=test-reports/pytest/junit.xml
+extras =
+    tests
+commands = pytest -vv --cov={envsitepackagesdir}/fastapi_sqla --cov-report xml --cov-report html --junitxml=test-reports/pytest/junit.xml
 """

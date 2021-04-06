@@ -86,6 +86,7 @@ def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
     assert result.meta.page_number == page_number
 
 
+@mark.sqlalchemy("1.3")
 @mark.parametrize(
     "offset,limit,total_pages,page_number",
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],

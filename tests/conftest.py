@@ -1,11 +1,21 @@
 import importlib
 from unittest.mock import patch
 
-from pytest import fixture
+from pytest import fixture, skip
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import close_all_sessions
 
 pytest_plugins = ["fastapi_sqla._pytest_plugin", "pytester"]
+
+
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        (
+            "sqlalchemy(major.minor): skip test if tests run without the expected "
+            "sqlalchemy version"
+        ),
+    )
 
 
 @fixture(scope="session", autouse=True)
@@ -35,3 +45,19 @@ def tear_down():
 @fixture
 def sqla_modules():
     pass
+
+
+@fixture(autouse=True)
+def check_sqlalchemy_version(request):
+    "When test is marked with `mark.sqlalchemy('x.y')`, skip if unexpected sqla version."
+    from sqlalchemy import __version__
+
+    marker = request.node.get_closest_marker("sqlalchemy")
+    if marker:
+        major, minor, _ = __version__.split(".")
+        expected = marker.args[0]
+        current = f"{major}.{minor}"
+        if expected != current:
+            skip(
+                f"Marked to run against sqlalchemy=^{expected}.0, but got {__version__}"
+            )
