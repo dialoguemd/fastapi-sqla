@@ -164,22 +164,15 @@ def query_count(session: Session, query: DbQuery) -> int:
     See https://gist.github.com/hest/8798884
     """
     if isinstance(query, LegacyQuery):
-        """
-        Default legacy function used to count items returned by a query.
-
-        Default Query.count is slower than a manually written query could be: It runs the
-        query in a subquery, and count the number of elements returned:
-
-        See https://gist.github.com/hest/8798884
-        """
-        return query.count()
+        result = query.count()
 
     elif isinstance(query, Select):
-        return session.execute(select(func.count()).select_from(query)).scalar()
+        result = session.execute(select(func.count()).select_from(query)).scalar()
 
-    raise NotImplementedError(  # pragma no cover
-        f"Query type {type(query)!r} is not supported"
-    )
+    else:  # pragma no cover
+        raise NotImplementedError(f"Query type {type(query)!r} is not supported")
+
+    return result
 
 
 @singledispatch
