@@ -123,7 +123,7 @@ By default:
 * It returns pages of 10 items, up to 100 items;
 * Total number of items in the collection is queried using [`Query.count`] for legacy
   orm queries and the equivalent for 2.0 style queries.
-* Response example:
+* Response example for `/users?offset=40&limit=10`:
 
     ```json
     {
