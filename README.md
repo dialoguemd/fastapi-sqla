@@ -128,15 +128,14 @@ You can customize:
 - Minimum and maximum number of items per pages;
 - How the total number of items in the collection is queried;
 
-To customize pagination, write a dependency that returns a callable that counts total
-items in collection, and a `Paginate` dependency using `fastapi_sqla.Pagination`:
+To customize pagination, create a dependency using `fastapi_sqla.Pagination`
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import Base, Page, Pagination, QueryCount, Session
+from fastapi_sqla import Base, Page, Pagination, Session
 from pydantic import BaseModel
-from sqlalchemy import func, select
-from sqlalchemy.sql import Select
+from sqlalchemy import func
+from sqlalchemy.orm import Query
 
 router = APIRouter()
 
@@ -150,16 +149,14 @@ class User(BaseModel):
     name: str
 
 
-def query_count_dependency(session: Session = Depends()) -> QueryCount:
-    def query_count(query: Select):
-        return session.execute(select(func.count()).select_from(UserEntity)).scalar()
-    return query_count
+def query_count(session: Session, query: Query):
+    return query.statement.with_only_columns([func.count()]).scalar()
 
 
 Paginate = Pagination(
     min_page_size=5,
     max_page_size=500,
-    query_count_dependency=query_count_dependency,
+    query_count=query_count,
 )
 
 
@@ -168,7 +165,7 @@ def all_users(
     session: Session = Depends(),
     paginate: Paginate = Depends(),
 ):
-    query = select(UserEntity)
+    query = session.query(UserEntity)
     return paginate(query)
 ```
 

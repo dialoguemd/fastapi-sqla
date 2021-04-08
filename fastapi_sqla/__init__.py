@@ -150,12 +150,12 @@ class Page(Collection, Generic[T]):
 
 
 DbQuery = Union[LegacyQuery, Select]
-QueryCount = Callable[[DbQuery], int]
+QueryCount = Callable[[SqlaSession, DbQuery], int]
 QueryCountDependency = Callable[..., QueryCount]
 PaginateSignature = Callable[[DbQuery], Page[T]]
 
 
-def query_count_dependency(session: Session = Depends()) -> QueryCount:
+def query_count(session: SqlaSession, query: DbQuery) -> int:
     @singledispatch
     def _query_count(query: DbQuery):  # pragma no cover
         "Dispatch on registered functions based on `query` type."
@@ -178,7 +178,7 @@ def query_count_dependency(session: Session = Depends()) -> QueryCount:
     def sqla14_query_count(query: Select) -> int:
         return session.execute(select(func.count()).select_from(query)).scalar()
 
-    return _query_count
+    return _query_count(query)
 
 
 @singledispatch
@@ -240,16 +240,15 @@ def _paginate(
 def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count_dependency: QueryCountDependency = query_count_dependency,
+    query_count: QueryCount = query_count,
 ) -> Callable[[Session, int, int], PaginateSignature]:
     def dependency(
         session: Session = Depends(),
-        query_count: QueryCount = Depends(query_count_dependency),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
         def paginate(query: DbQuery) -> Page[T]:
-            total_items = query_count(query)
+            total_items = query_count(session, query)
             return paginate_query(query, session, total_items, offset, limit)
 
         return paginate
