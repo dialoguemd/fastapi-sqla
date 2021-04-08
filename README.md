@@ -114,14 +114,36 @@ class UserModel(BaseModel):
 
 @router.get("/users", response_model=Page[UserModel])
 def all_users(paginate: Paginate = Depends()):
-    query = select(User)
-    return paginate(query)
+    return paginate(select(User))
 ```
 
 By default:
 
 * It returns pages of 10 items, up to 100 items;
-* Total number of items in the collection is queried using [`Query.count`]
+* Total number of items in the collection is queried using [`Query.count`] for legacy
+  orm queries and the equivalent for 2.0 style queries.
+* Response example for `/users?offset=40&limit=10`:
+
+    ```json
+    {
+        "data": [
+            {
+                "id": 41,
+                "name": "Pat Thomas"
+            },
+            {
+                "id": 42,
+                "name": "Mulatu Astatke"
+            }
+        ],
+        "meta": {
+            "offset": 40,
+            "total_items": 42,
+            "total_pages": 5,
+            "page_number": 5
+        }
+    }
+    ```
 
 #### Customize pagination
 
@@ -154,17 +176,12 @@ def query_count(session: Session, query: Select) -> int:
     return session.execute(select(func.count()).select_from(User)).scalar()
 
 
-Paginate = Pagination(
-    min_page_size=5,
-    max_page_size=500,
-    query_count=query_count,
-)
+Paginate = Pagination(min_page_size=5, max_page_size=500, query_count=query_count)
 
 
 @router.get("/users", response_model=Page[UserModel])
 def all_users(paginate: Paginate = Depends()):
-    query = select(User)
-    return paginate(query)
+    return paginate(select(User))
 ```
 
 ## Pytest fixtures
