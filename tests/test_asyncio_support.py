@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from pytest import fixture, mark
 
 pytestmark = [mark.asyncio, mark.sqlalchemy("1.4")]
