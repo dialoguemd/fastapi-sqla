@@ -114,8 +114,7 @@ class UserModel(BaseModel):
 
 @router.get("/users", response_model=Page[UserModel])
 def all_users(paginate: Paginate = Depends()):
-    query = select(User)
-    return paginate(query)
+    return paginate(select(User))
 ```
 
 By default:
@@ -177,17 +176,12 @@ def query_count(session: Session, query: Select) -> int:
     return session.execute(select(func.count()).select_from(User)).scalar()
 
 
-Paginate = Pagination(
-    min_page_size=5,
-    max_page_size=500,
-    query_count=query_count,
-)
+Paginate = Pagination(min_page_size=5, max_page_size=500, query_count=query_count)
 
 
 @router.get("/users", response_model=Page[UserModel])
 def all_users(paginate: Paginate = Depends()):
-    query = select(User)
-    return paginate(query)
+    return paginate(select(User))
 ```
 
 ## Pytest fixtures
