@@ -82,7 +82,7 @@ async def client(app):
 @mark.parametrize(
     "path", [param("/users"), param("/async/users", marks=mark.sqlalchemy("1.4"))]
 )
-async def test_session_dependency(client, faker, path, session, sqla_transaction):
+async def test_session_dependency(client, faker, path, session):
     userid = faker.unique.random_int()
     first_name = faker.first_name()
     last_name = faker.last_name()
