@@ -156,16 +156,16 @@ PaginateSignature = Callable[[DbQuery], Page[T]]
 
 
 def query_count(session: Session, query: DbQuery) -> int:
-    @singledispatch
-    def _query_count(query: DbQuery):  # pragma no cover
-        "Dispatch on registered functions based on `query` type."
-        raise NotImplementedError(
-            f"no _query_count registered for type {type(query)!r}"
-        )
+    """Default function used to count items returned by a query.
 
-    @_query_count.register
-    def sqla13_query_count(query: LegacyQuery) -> int:
-        """Default legacy function used to count items returned by a query.
+    It is slower than a manually written query could be: It runs the query in a subquery,
+    and count the number of elements returned.
+
+    See https://gist.github.com/hest/8798884
+    """
+    if isinstance(query, LegacyQuery):
+        """
+        Default legacy function used to count items returned by a query.
 
         Default Query.count is slower than a manually written query could be: It runs the
         query in a subquery, and count the number of elements returned:
@@ -174,11 +174,12 @@ def query_count(session: Session, query: DbQuery) -> int:
         """
         return query.count()
 
-    @_query_count.register
-    def sqla14_query_count(query: Select) -> int:
+    elif isinstance(query, Select):
         return session.execute(select(func.count()).select_from(query)).scalar()
 
-    return _query_count(query)
+    raise NotImplementedError(  # pragma no cover
+        f"Query type {type(query)!r} is not supported"
+    )
 
 
 @singledispatch
