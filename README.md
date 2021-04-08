@@ -139,7 +139,7 @@ By default:
         ],
         "meta": {
             "offset": 40,
-            "total_items": 42
+            "total_items": 42,
             "total_pages": 5,
             "page_number": 5
         }
