@@ -4,7 +4,7 @@ import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
-from pytest import fixture, mark
+from pytest import fixture, mark, param
 from structlog.testing import capture_logs
 
 pytestmark = mark.asyncio
@@ -39,6 +39,11 @@ def User():
 def app(User):
     from fastapi_sqla import Session, setup
 
+    try:
+        from fastapi_sqla import AsyncSession
+    except ImportError:
+        AsyncSession = False
+
     app = FastAPI()
     setup(app)
 
@@ -51,6 +56,14 @@ def app(User):
     def create_user(user: UserIn, session: Session = Depends()):
         session.add(User(**user.dict()))
         return {}
+
+    if AsyncSession:
+
+        @app.post("/async/users")
+        def create_user_with_async_session(
+            user: UserIn, session: AsyncSession = Depends()
+        ):
+            session.add(User(**user.dict()))
 
     return app
 
@@ -66,11 +79,20 @@ async def client(app):
             yield client
 
 
-async def test_session_dependency(client):
+@mark.parametrize(
+    "path", [param("/users"), param("/async/users", marks=mark.sqlalchemy("1.4"))]
+)
+async def test_session_dependency(client, faker, path, session, sqla_transaction):
+    userid = faker.unique.random_int()
+    first_name = faker.first_name()
+    last_name = faker.last_name()
     res = await client.post(
-        "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
+        path,
+        json={"id": userid, "first_name": first_name, "last_name": last_name},
     )
-    assert res.status_code == 200
+    assert res.status_code == 200, res.json()
+    row = session.execute(f"select * from public.user where id = {userid}").fetchone()
+    assert row == (userid, first_name, last_name)
 
 
 @fixture
