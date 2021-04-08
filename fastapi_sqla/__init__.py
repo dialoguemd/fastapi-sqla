@@ -155,7 +155,7 @@ QueryCountDependency = Callable[..., QueryCount]
 PaginateSignature = Callable[[DbQuery], Page[T]]
 
 
-def query_count(session: SqlaSession, query: DbQuery) -> int:
+def query_count(session: Session, query: DbQuery) -> int:
     @singledispatch
     def _query_count(query: DbQuery):  # pragma no cover
         "Dispatch on registered functions based on `query` type."
