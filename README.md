@@ -121,7 +121,30 @@ def all_users(paginate: Paginate = Depends()):
 By default:
 
 * It returns pages of 10 items, up to 100 items;
-* Total number of items in the collection is queried using [`Query.count`]
+* Total number of items in the collection is queried using [`Query.count`] for legacy
+  orm queries and the equivalent for 2.0 style queries.
+* Response example:
+
+    ```json
+    {
+        "data": [
+            {
+                "id": 41,
+                "name": "Pat Thomas"
+            },
+            {
+                "id": 42,
+                "name": "Mulatu Astatke"
+            }
+        ],
+        "meta": {
+            "offset": 40,
+            "total_items": 42
+            "total_pages": 5,
+            "page_number": 5
+        }
+    }
+    ```
 
 #### Customize pagination
 
