@@ -3,7 +3,8 @@ from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import Request
-from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
 
 logger = structlog.get_logger(__name__)
