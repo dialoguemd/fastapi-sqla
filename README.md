@@ -96,24 +96,25 @@ def run_bg():
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import Base, Page, Paginate, Session
+from fastapi_sqla import Base, Page, Paginate
 from pydantic import BaseModel
+from sqlalchemy import select
 
 router = APIRouter()
 
 
-class UserEntity(Base):
+class User(Base):
     __tablename__ = "user"
 
 
-class User(BaseModel):
+class UserModel(BaseModel):
     id: int
     name: str
 
 
-@router.get("/users", response_model=Page[User])
-def all_users(session: Session = Depends(), paginate: Paginate = Depends()):
-    query = session.query(UserEntity)
+@router.get("/users", response_model=Page[UserModel])
+def all_users(paginate: Paginate = Depends()):
+    query = select(User)
     return paginate(query)
 ```
 
@@ -134,23 +135,23 @@ To customize pagination, create a dependency using `fastapi_sqla.Pagination`
 from fastapi import APIRouter, Depends
 from fastapi_sqla import Base, Page, Pagination, Session
 from pydantic import BaseModel
-from sqlalchemy import func
-from sqlalchemy.orm import Query
+from sqlalchemy import func, select
+from sqlalchemy.sql import Select
 
 router = APIRouter()
 
 
-class UserEntity(Base):
+class User(Base):
     __tablename__ = "user"
 
 
-class User(BaseModel):
+class UserModel(BaseModel):
     id: int
     name: str
 
 
-def query_count(session: Session, query: Query):
-    return query.statement.with_only_columns([func.count()]).scalar()
+def query_count(session: Session, query: Select) -> int:
+    return session.execute(select(func.count()).select_from(User)).scalar()
 
 
 Paginate = Pagination(
@@ -160,12 +161,9 @@ Paginate = Pagination(
 )
 
 
-@router.get("/users", response_model=Page[User])
-def all_users(
-    session: Session = Depends(),
-    paginate: Paginate = Depends(),
-):
-    query = session.query(UserEntity)
+@router.get("/users", response_model=Page[UserModel])
+def all_users(paginate: Paginate = Depends()):
+    query = select(User)
     return paginate(query)
 ```
 
