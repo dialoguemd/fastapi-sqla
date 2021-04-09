@@ -6,6 +6,13 @@ from alembic.config import Config
 from pytest import fixture
 from sqlalchemy import create_engine
 
+try:
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    asyncio_support = True
+except ImportError:
+    asyncio_support = False
+
 
 @fixture(scope="session")
 def db_url():
@@ -18,6 +25,12 @@ def db_url():
     """
     host = "postgres" if "CI" in os.environ else "localhost"
     return f"postgresql://postgres@{host}/postgres"
+
+
+@fixture(scope="session")
+def asyncpg_url(db_url):
+    scheme, parts = db_url.split(":")
+    return f"{scheme}+asyncpg:{parts}"
 
 
 @fixture(scope="session")
@@ -93,3 +106,30 @@ def session(sqla_transaction, sqla_connection):
     session = fastapi_sqla._Session(bind=sqla_connection)
     yield session
     session.close()
+
+
+if asyncio_support:
+
+    @fixture
+    async def async_sqla_connection(asyncpg_url, event_loop):
+        engine = create_async_engine(asyncpg_url)
+        async with engine.begin() as connection:
+            yield connection
+            connection.rollback()
+
+    @fixture(autouse=True)
+    async def patch_async_sessionmaker(asyncpg_url, async_sqla_connection):
+        """So that all async DB operations are never written to db for real."""
+        with patch(
+            "fastapi_sqla.asyncio_support.create_async_engine"
+        ) as create_async_engine:
+            create_async_engine.return_value = async_sqla_connection
+            yield create_async_engine
+
+    @fixture
+    async def async_session(async_sqla_connection):
+        from fastapi_sqla.asyncio_support import _AsyncSession
+
+        session = _AsyncSession(bind=async_sqla_connection)
+        yield session
+        await session.close()

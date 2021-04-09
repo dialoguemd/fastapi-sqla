@@ -17,7 +17,24 @@ from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
-__all__ = ["Base", "Page", "Paginate", "Session", "open_session", "setup"]
+try:
+    from . import asyncio_support
+    from .asyncio_support import AsyncSession
+    from .asyncio_support import open_session as open_async_session
+except ImportError as err:
+    asyncio_support = False
+    asyncio_support_err = str(err)
+
+__all__ = [
+    "AsyncSession",
+    "Base",
+    "Page",
+    "Paginate",
+    "Session",
+    "open_async_session",
+    "open_session",
+    "setup",
+]
 
 logger = structlog.get_logger(__name__)
 
@@ -29,6 +46,12 @@ _Session = sessionmaker()
 def setup(app: FastAPI):
     app.add_event_handler("startup", startup)
     app.middleware("http")(add_session_to_request)
+
+    asyncpg_url = os.getenv("asyncpg_url")
+    if asyncpg_url:
+        assert asyncio_support, asyncio_support_err
+        app.add_event_handler("startup", asyncio_support.startup)
+        app.middleware("http")(asyncio_support.add_session_to_request)
 
 
 def startup():
@@ -104,8 +127,8 @@ async def add_session_to_request(request: Request, call_next):
         fastapi_sqla.setup(app)  # includes middleware
 
         @app.get("/users")
-        def get_users(session: sqla.Session = Depends(sqla.new_session)):
-            return session.query(...) # use your session here
+        def get_users(session: fastapi_sqla.Session = Depends()):
+            return session.execute(...) # use your session here
     """
     async with contextmanager_in_threadpool(open_session()) as session:
         request.scope[_SESSION_KEY] = session
