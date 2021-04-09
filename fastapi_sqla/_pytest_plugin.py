@@ -115,7 +115,7 @@ if asyncio_support:
         engine = create_async_engine(asyncpg_url)
         async with engine.begin() as connection:
             yield connection
-            connection.rollback()
+            await connection.rollback()
 
     @fixture(autouse=True)
     async def patch_async_sessionmaker(asyncpg_url, async_sqla_connection):
