@@ -15,10 +15,7 @@ _AsyncSession = sessionmaker(class_=SqlaAsyncSession)
 def startup():
     asyncpg_url = os.environ["asyncpg_url"]
     async_engine = create_async_engine(asyncpg_url)
-    _AsyncSession.configure(
-        bind=async_engine,
-        expire_on_commit=False,
-    )
+    _AsyncSession.configure(bind=async_engine, expire_on_commit=False)
 
 
 class AsyncSession(SqlaAsyncSession):
