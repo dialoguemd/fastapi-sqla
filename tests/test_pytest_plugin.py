@@ -54,7 +54,6 @@ async def test_async_session_fixture_does_not_write_in_db(
         ).scalar() == 0
 
 
-@mark.sqlalchemy("1.4")
 def test_all_opened_sessions_are_within_the_same_transaction(
     sqla_connection, session, singer_cls
 ):
@@ -63,9 +62,8 @@ def test_all_opened_sessions_are_within_the_same_transaction(
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
 
-    other_session = _Session(bind=sqla_connection)
-
-    assert other_session.get(singer_cls, 1)
+    other_session = _Session()
+    assert other_session.query(singer_cls).get(1)
 
 
 @mark.asyncio
@@ -82,7 +80,20 @@ async def test_all_opened_async_sessions_are_within_the_same_transaction(
     assert await other_session.get(singer_cls, 1)
 
 
-def test_sqla_modules(testdir):
+@fixture
+def conftest(db_url, testdir):
+    testdir.makeconftest(
+        f"""
+        from pytest import fixture
+
+        @fixture(scope="session")
+        def db_url():
+            return "{db_url}"
+        """
+    )
+
+
+def test_sqla_modules(testdir, conftest):
     testdir.makepyfile(
         """
         from pytest import fixture
@@ -102,7 +113,7 @@ def test_sqla_modules(testdir):
     result.assert_outcomes(passed=1)
 
 
-def test_sqla_modules_fixture_raises_exception_when_not_overriden(testdir):
+def test_sqla_modules_fixture_raises_exception_when_not_overriden(testdir, conftest):
     testdir.makepyfile(
         """
         from sqlalchemy import text
