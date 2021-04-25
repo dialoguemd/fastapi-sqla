@@ -11,11 +11,16 @@ from fastapi.concurrency import contextmanager_in_threadpool
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config
-from sqlalchemy.ext.declarative import DeferredReflection, declarative_base
+from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
+
+try:
+    from sqlalchemy.orm import declarative_base
+except ImportError:
+    from sqlalchemy.ext.declarative import declarative_base
 
 try:
     from . import asyncio_support
@@ -47,8 +52,8 @@ def setup(app: FastAPI):
     app.add_event_handler("startup", startup)
     app.middleware("http")(add_session_to_request)
 
-    asyncpg_url = os.getenv("asyncpg_url")
-    if asyncpg_url:
+    async_sqlalchemy_url = os.getenv("async_sqlalchemy_url")
+    if async_sqlalchemy_url:
         assert asyncio_support, asyncio_support_err
         app.add_event_handler("startup", asyncio_support.startup)
         app.middleware("http")(asyncio_support.add_session_to_request)

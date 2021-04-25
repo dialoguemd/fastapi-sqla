@@ -2,6 +2,7 @@ import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from pytest import mark
+from sqlalchemy import text
 
 
 def test_startup():
@@ -11,7 +12,7 @@ def test_startup():
 
     session = _Session()
 
-    assert session.execute("SELECT 1").scalar() == 1
+    assert session.execute(text("SELECT 1")).scalar() == 1
 
 
 @mark.asyncio
@@ -24,7 +25,7 @@ async def test_fastapi_integration():
     @app.get("/one")
     def now():
         session = _Session()
-        result = session.execute("SELECT 1").scalar()
+        result = session.execute(text("SELECT 1")).scalar()
         session.close()
         return result
 

@@ -28,11 +28,11 @@ def sqla_version_tuple():
 
 @fixture(scope="session", autouse=True)
 def environ(db_url, sqla_version_tuple):
-    values = {"sqlalchemy_url": db_url}
+    values = {"sqlalchemy_url": db_url, "PYTHONASYNCIODEBUG": "1"}
 
     if sqla_version_tuple >= (1, 4, 0):
         scheme, parts = db_url.split(":")
-        values["asyncpg_url"] = f"{scheme}+asyncpg:{parts}"
+        values["async_sqlalchemy_url"] = f"{scheme}+asyncpg:{parts}"
 
     with patch.dict("os.environ", values=values, clear=True):
         yield values

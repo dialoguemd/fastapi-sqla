@@ -1,4 +1,6 @@
 from pytest import fixture, mark
+from sqlalchemy import text
+
 
 pytestmark = mark.usefixtures("db_migration")
 
@@ -9,4 +11,4 @@ def alembic_ini_path():
 
 
 def test_it(session):
-    session.execute("select * from testuser")
+    session.execute(text("select * from testuser"))

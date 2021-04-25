@@ -8,11 +8,15 @@ A highly opinionated [SQLAlchemy] extension for [FastAPI]:
 
 * Setup using environment variables to connect on DB;
 * `fastapi_sqla.Base` a declarative base class to reflect DB tables at startup;
-* `fastapi_sqla.with_session` a dependency to get an sqla session;
+* `fastapi_sqla.Session` a dependency to get an sqla session;
+* `fastapi_sqla.open_session` a context manager to get an sqla session;
+* `fastapi_sqla.async_support.AsyncSession` a dependency to get an async sqla session ;
+* `fastapi_sqla.async_support.open_session` a context manager to get an async sqla
+  session;
 * Automated commit/rollback of sqla session at the end of request before returning
   response;
 * Pagination utilities;
-* Pytest fixtures to easy writing test;
+* Pytest fixtures;
 
 ## Configuration
 
@@ -24,6 +28,21 @@ corresponding keyword argument to [`sqlalchemy.create_engine`]
 call.
 
 The only required key is `sqlalchemy_url`, which provides the database URL.
+
+#### `asyncio` support using [`asyncpg`]
+
+SQLAlchemy `>= 1.4` supports `asyncio`.
+To enable `asyncio` support, install `asyncpg` extra to install [`asyncpg`]:
+
+```bash
+pip install fastapi-sqla[asyncpg]
+```
+
+And define environment variable `async_sqlalchemy_url` with `postgres+asyncpg` scheme:
+
+```bash
+export async_sqlalchemy_url=postgresql+asyncpg://postgres@localhost
+```
 
 ### Setup the app:
 
@@ -59,6 +78,7 @@ exception occurred:
 ```python
 from fastapi import APIRouter, Depends
 from fastapi_sqla import Session
+from fastapi_sqla.asyncio_support import AsyncSession
 
 router = APIRouter()
 
@@ -66,6 +86,11 @@ router = APIRouter()
 @router.get("/example")
 def example(session: Session = Depends()):
     return session.execute("SELECT now()").scalar()
+
+
+@router.get("/async_example")
+async def async_example(session: AsyncSession = Depends()):
+    return await session.execute("SELECT now()").scalar()
 ```
 
 #### Using a context manager
@@ -78,6 +103,7 @@ occurred:
 ```python
 from fastapi import APIRouter, BackgroundTasks
 from fastapi_sqla import open_session
+from fastapi_sqla import asyncio_support
 
 router = APIRouter()
 
@@ -85,11 +111,17 @@ router = APIRouter()
 @router.get("/example")
 def example(bg: BackgroundTasks):
     bg.add_task(run_bg)
+    bg.add_task(run_async_bg)
 
 
 def run_bg():
     with open_session() as session:
         session.execute("SELECT now()").scalar()
+
+
+async def run_async_bg():
+    async with asyncio_support.open_session() as session:
+        await session.execute("SELECT now()").scalar()
 ```
 
 ### Pagination
@@ -238,13 +270,23 @@ def db_url():
     return "postgresql://postgres@localhost/test_database"
 ```
 
+### `async_sqlalchemy_url`
 
-### `session`
+DB url to use when using `asyncio` support. Defaults to `db_url` fixture with
+`postgresql+asyncpg://` scheme.
 
-Sqla session to create db fixture:
+
+### `session` & `async_session`
+
+Sqla sessions to create db fixture:
 * All changes done at test setup or during the test are rollbacked at test tear down;
 * No record will actually be written in the database;
-* Changes in one session need to be committed to be available from other sessions;
+* Changes in one regular session need to be committed to be available from other regular
+  sessions;
+* Changes in one async session need to be committed to be available from other async
+  sessions;
+* Changes from regular sessions are not available from `async` session and vice-versa
+  even when committed;
 
 Example:
 ```python
@@ -258,6 +300,15 @@ def patient(session):
     session.add(patient)
     session.commit()
     return patient
+
+
+@fixture
+async def doctor(async_session):
+    from er.sqla import Doctor
+    doctor = Doctor(name="who")
+    async_session.add(doctor)
+    await async_session.commit()
+    return doctor
 ```
 
 ### `db_migration`
@@ -307,3 +358,4 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 [FastAPI dependency injection]: https://fastapi.tiangolo.com/tutorial/dependencies/
 [FastAPI background tasks]: https://fastapi.tiangolo.com/tutorial/background-tasks/
 [SQLAlchemy]: http://sqlalchemy.org/
+[`asyncpg`]: https://magicstack.github.io/asyncpg/current/
