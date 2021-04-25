@@ -5,9 +5,8 @@ from asgi_lifespan import LifespanManager
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark
-from structlog.testing import capture_logs
 from sqlalchemy import text
-
+from structlog.testing import capture_logs
 
 pytestmark = mark.asyncio
 

@@ -28,16 +28,6 @@ def db_url():
 
 
 @fixture(scope="session")
-def async_sqlalchemy_url(db_url):
-    """Default async db url.
-
-    It is the same as `db_url` with `postgresql+asynpg://` as scheme.
-    """
-    scheme, parts = db_url.split(":")
-    return f"{scheme}+asyncpg:{parts}"
-
-
-@fixture(scope="session")
 def sqla_connection(db_url):
     engine = create_engine(db_url)
     connection = engine.connect()
@@ -113,6 +103,15 @@ def session(sqla_transaction, sqla_connection):
 
 
 if asyncio_support:
+
+    @fixture(scope="session")
+    def async_sqlalchemy_url(db_url):
+        """Default async db url.
+
+        It is the same as `db_url` with `postgresql+asynpg://` as scheme.
+        """
+        scheme, parts = db_url.split(":")
+        return f"{scheme}+asyncpg:{parts}"
 
     @fixture
     async def async_engine(async_sqlalchemy_url):

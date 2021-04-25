@@ -1,7 +1,6 @@
 from pytest import fixture, mark
 from sqlalchemy import text
 
-
 pytestmark = mark.usefixtures("db_migration")
 
 
