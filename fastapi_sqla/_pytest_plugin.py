@@ -4,7 +4,7 @@ from unittest.mock import patch
 from alembic import command
 from alembic.config import Config
 from pytest import fixture
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 try:
     from sqlalchemy.ext.asyncio import create_async_engine
@@ -25,12 +25,6 @@ def db_url():
     """
     host = "postgres" if "CI" in os.environ else "localhost"
     return f"postgresql://postgres@{host}/postgres"
-
-
-@fixture(scope="session")
-def asyncpg_url(db_url):
-    scheme, parts = db_url.split(":")
-    return f"{scheme}+asyncpg:{parts}"
 
 
 @fixture(scope="session")
@@ -56,7 +50,7 @@ def db_migration(db_url, sqla_connection, alembic_ini_path):
     alembic_config = Config(file_=alembic_ini_path)
     alembic_config.set_main_option("sqlalchemy.url", db_url)
 
-    sqla_connection.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+    sqla_connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
 
     command.upgrade(alembic_config, "head")
     yield
@@ -110,15 +104,27 @@ def session(sqla_transaction, sqla_connection):
 
 if asyncio_support:
 
+    @fixture(scope="session")
+    def async_sqlalchemy_url(db_url):
+        """Default async db url.
+
+        It is the same as `db_url` with `postgresql+asynpg://` as scheme.
+        """
+        scheme, parts = db_url.split(":")
+        return f"{scheme}+asyncpg:{parts}"
+
     @fixture
-    async def async_sqla_connection(asyncpg_url, event_loop):
-        engine = create_async_engine(asyncpg_url)
-        async with engine.begin() as connection:
+    async def async_engine(async_sqlalchemy_url):
+        return create_async_engine(async_sqlalchemy_url)
+
+    @fixture
+    async def async_sqla_connection(async_engine, event_loop):
+        async with async_engine.begin() as connection:
             yield connection
             await connection.rollback()
 
     @fixture(autouse=True)
-    async def patch_async_sessionmaker(asyncpg_url, async_sqla_connection):
+    async def patch_async_sessionmaker(async_sqlalchemy_url, async_sqla_connection):
         """So that all async DB operations are never written to db for real."""
         with patch(
             "fastapi_sqla.asyncio_support.create_async_engine"

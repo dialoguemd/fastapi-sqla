@@ -5,6 +5,7 @@ from asgi_lifespan import LifespanManager
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark
+from sqlalchemy import text
 from structlog.testing import capture_logs
 
 pytestmark = mark.asyncio
@@ -12,17 +13,20 @@ pytestmark = mark.asyncio
 
 @fixture(scope="module", autouse=True)
 def setup_tear_down(engine):
-    engine.execute(
-        """
-        CREATE TABLE IF NOT EXISTS public.user (
-           id integer primary key,
-           first_name varchar,
-           last_name varchar
+    with engine.connect() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS public.user (
+                   id integer primary key,
+                   first_name varchar,
+                   last_name varchar
+                )
+                """
+            )
         )
-    """
-    )
-    yield
-    engine.execute("DROP TABLE public.user")
+        yield
+        connection.execute(text("DROP TABLE public.user"))
 
 
 @fixture
@@ -108,8 +112,10 @@ async def test_async_session_dependency(client, faker, async_session):
 
 
 @fixture
-def user_1(engine):
-    engine.execute("INSERT INTO public.user VALUES (1, 'bob', 'morane') ")
+def user_1(sqla_connection):
+    sqla_connection.execute(
+        text("INSERT INTO public.user VALUES (1, 'bob', 'morane') ")
+    )
     yield
 
 

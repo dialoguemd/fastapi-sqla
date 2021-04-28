@@ -7,19 +7,23 @@ from faker import Faker
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark, param
-from sqlalchemy import MetaData, Table, func, select
+from sqlalchemy import MetaData, Table, func, select, text
 from sqlalchemy.orm import joinedload, relationship
 from sqlalchemy.sql import Select
 
 
 @fixture(scope="module", autouse=True)
-def setup_tear_down(engine):
+def setup_tear_down(sqla_connection):
     faker = Faker(seed=0)
-    engine.execute(
-        "create table if not exists public.user (id integer primary key, name varchar)"
+    sqla_connection.execute(
+        text(
+            "create table if not exists public.user "
+            "(id integer primary key, name varchar)"
+        )
     )
-    engine.execute(
-        """
+    sqla_connection.execute(
+        text(
+            """
         create table if not exists note (
             user_id integer,
             id integer,
@@ -27,21 +31,22 @@ def setup_tear_down(engine):
             primary key (user_id, id),
             foreign key (user_id) references public.user (id)
         )
-    """
+        """
+        )
     )
-    metadata = MetaData(bind=engine)
-    user = Table("user", metadata, autoload=True, autoload_with=engine)
-    note = Table("note", metadata, autoload=True, autoload_with=engine)
+    metadata = MetaData()
+    user = Table("user", metadata, autoload_with=sqla_connection)
+    note = Table("note", metadata, autoload_with=sqla_connection)
     user_params = [{"id": i, "name": faker.name()} for i in range(1, 43)]
     note_params = [
         {"user_id": i % 42 + 1, "id": math.ceil(i / 42), "content": faker.text()}
         for i in range(0, 84)
     ]
-    engine.execute(user.insert(), *user_params)
-    engine.execute(note.insert(), *note_params)
+    sqla_connection.execute(user.insert(), *user_params)
+    sqla_connection.execute(note.insert(), *note_params)
     yield
-    engine.execute("drop table note cascade")
-    engine.execute("drop table public.user cascade")
+    sqla_connection.execute(text("drop table note cascade"))
+    sqla_connection.execute(text("drop table public.user cascade"))
 
 
 @fixture
