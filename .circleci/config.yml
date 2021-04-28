@@ -89,7 +89,7 @@ jobs:
       - run:
           name: "publish package on pypi"
           command: |
-            poetry config http-basic.pypi $PYPI_USER $PYPI_PASSWORD
+            poetry config http-basic.pypi __token__ $PYPI_TOKEN
             poetry publish --build --no-interaction
 
 executors:
