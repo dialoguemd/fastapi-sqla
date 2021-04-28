@@ -35,7 +35,7 @@ SQLAlchemy `>= 1.4` supports `asyncio`.
 To enable `asyncio` support, install `asyncpg` extra to install [`asyncpg`]:
 
 ```bash
-pip install fastapi-sqla[asyncpg]
+pip install asyncpg
 ```
 
 And define environment variable `async_sqlalchemy_url` with `postgres+asyncpg` scheme:
