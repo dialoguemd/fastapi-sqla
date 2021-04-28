@@ -32,7 +32,7 @@ The only required key is `sqlalchemy_url`, which provides the database URL.
 #### `asyncio` support using [`asyncpg`]
 
 SQLAlchemy `>= 1.4` supports `asyncio`.
-To enable `asyncio` support, install `asyncpg` extra to install [`asyncpg`]:
+To enable `asyncio` support against a Postgres DB, install `asyncpg`:
 
 ```bash
 pip install asyncpg
