@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-sqla"
-version = "1.2.1"
+version = "1.2.2"
 description = "A highly opinionated SQLAlchemy extension for FastAPI."
 authors = [
     "Hadrien David <hadrien.david@dialogue.co>",
