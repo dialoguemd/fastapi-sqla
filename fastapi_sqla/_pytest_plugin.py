@@ -7,8 +7,8 @@ from pytest import fixture
 from sqlalchemy import create_engine, text
 
 try:
-    from sqlalchemy.ext.asyncio import create_async_engine
     import asyncpg  # noqa
+    from sqlalchemy.ext.asyncio import create_async_engine
 
     asyncio_support = True
 except ImportError:
