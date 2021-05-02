@@ -95,6 +95,7 @@ async def test_session_dependency(client, faker, session):
     assert row == (userid, first_name, last_name)
 
 
+@mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 async def test_async_session_dependency(client, faker, async_session):
     userid = faker.unique.random_int()

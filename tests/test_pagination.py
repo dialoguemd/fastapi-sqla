@@ -222,6 +222,7 @@ async def client(app):
             yield client
 
 
+@mark.require_asyncpg
 @mark.asyncio
 @mark.parametrize(
     "offset,items_number,path",
