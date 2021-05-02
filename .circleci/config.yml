@@ -79,7 +79,7 @@ jobs:
             - run:
                 name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* and -<<parameters.asyncpg>>"
                 command: |
-                  poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>"
+                  poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>
       - utils/send_coverage_to_codecov:
           codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>
 
