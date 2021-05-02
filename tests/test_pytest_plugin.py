@@ -128,3 +128,16 @@ def test_sqla_modules_fixture_raises_exception_when_not_overriden(testdir, conft
     result = testdir.runpytest()
     result.assert_outcomes(errors=1)
     result.stdout.fnmatch_lines(["*sqla_modules fixture is not defined*"])
+
+
+@mark.parametrize(
+    "url,expected",
+    [
+        ("postgresql://localhost/db", "postgresql+asyncpg://localhost/db"),
+        ("postgresql://u:p@localhost/db", "postgresql+asyncpg://u:p@localhost/db"),
+    ],
+)
+def test_format_async_sqlalchemy_url(monkeypatch, conftest, testdir, url, expected):
+    from fastapi_sqla._pytest_plugin import format_async_async_sqlalchemy_url
+
+    assert format_async_async_sqlalchemy_url(url) == expected
