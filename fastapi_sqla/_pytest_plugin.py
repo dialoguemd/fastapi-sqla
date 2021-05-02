@@ -113,7 +113,7 @@ def format_async_async_sqlalchemy_url(url):
 def async_sqlalchemy_url(db_url):
     """Default async db url.
 
-    It is the same as `db_url` with `postgresql+asynpg://` as scheme.
+    It is the same as `db_url` with `postgresql+asyncpg://` as scheme.
     """
     return format_async_async_sqlalchemy_url(db_url)
 
