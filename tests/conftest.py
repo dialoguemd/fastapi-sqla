@@ -89,7 +89,7 @@ def check_sqlalchemy_version(request, sqla_version_tuple):
 
 @fixture(autouse=True)
 def check_asyncpg(request):
-    "Skip test marked with mark.asyncpg if asyncpg is not installed."
+    "Skip test marked with mark.require_asyncpg if asyncpg is not installed."
     marker = request.node.get_closest_marker("require_asyncpg")
     if marker and not is_asyncpg_installed():
         skip("This test requires asyncpg. Skipping as asyncpg is not installed.")
