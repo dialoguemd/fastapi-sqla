@@ -23,6 +23,7 @@ workflows:
           matrix:
             parameters:
               sqlalchemy_version: ["1.3", "1.4"]
+              asyncpg: ["asyncpg", "noasyncpg"]
       - release/release:
           name: release
           requires:
@@ -49,7 +50,13 @@ workflows:
 jobs:
 
   test:
+    environment:
+      CACHE_VERSION: "2021-05-02T10:18:17.640582"
     parameters:
+      asyncpg:
+        type: enum
+        enum: ["asyncpg", "noasyncpg"]
+        description: To run tests with and without asyncpg installed.
       sqlalchemy_version:
         type: enum
         enum: ["1.4", "1.3"]
@@ -61,7 +68,7 @@ jobs:
       - base/setup
       - python/setup
       - utils/with_cache:
-          key: 'sqlalchemy<<parameters.sqlalchemy_version>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
+          key: 'sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
           namespace: tox
           path: ~/project/.tox
           steps:
@@ -70,11 +77,11 @@ jobs:
                 command: |
                   poetry run pip install -U tox
             - run:
-                name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.*"
+                name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* and -<<parameters.asyncpg>>"
                 command: |
                   poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>
       - utils/send_coverage_to_codecov:
-          codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>
+          codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>
 
   publish:
     docker:
