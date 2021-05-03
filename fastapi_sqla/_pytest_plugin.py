@@ -1,5 +1,6 @@
 import os
 from unittest.mock import patch
+from urllib.parse import urlsplit, urlunsplit
 
 from alembic import command
 from alembic.config import Config
@@ -7,6 +8,7 @@ from pytest import fixture
 from sqlalchemy import create_engine, text
 
 try:
+    import asyncpg  # noqa
     from sqlalchemy.ext.asyncio import create_async_engine
 
     asyncio_support = True
@@ -102,16 +104,21 @@ def session(sqla_transaction, sqla_connection):
     session.close()
 
 
+def format_async_async_sqlalchemy_url(url):
+    scheme, location, path, query, fragment = urlsplit(url)
+    return urlunsplit([f"{scheme}+asyncpg", location, path, query, fragment])
+
+
+@fixture(scope="session")
+def async_sqlalchemy_url(db_url):
+    """Default async db url.
+
+    It is the same as `db_url` with `postgresql+asyncpg://` as scheme.
+    """
+    return format_async_async_sqlalchemy_url(db_url)
+
+
 if asyncio_support:
-
-    @fixture(scope="session")
-    def async_sqlalchemy_url(db_url):
-        """Default async db url.
-
-        It is the same as `db_url` with `postgresql+asynpg://` as scheme.
-        """
-        scheme, parts = db_url.split(":")
-        return f"{scheme}+asyncpg:{parts}"
 
     @fixture
     async def async_engine(async_sqlalchemy_url):

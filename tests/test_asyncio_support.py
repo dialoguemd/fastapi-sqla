@@ -1,7 +1,7 @@
 from pytest import fixture, mark
 from sqlalchemy import text
 
-pytestmark = [mark.asyncio, mark.sqlalchemy("1.4")]
+pytestmark = [mark.asyncio, mark.sqlalchemy("1.4"), mark.require_asyncpg]
 
 
 @fixture(autouse=True)

@@ -17,6 +17,9 @@ def pytest_configure(config):
             "sqlalchemy version"
         ),
     )
+    config.addinivalue_line(
+        "markers", "require_asyncpg: skip test if asyncpg is not installed"
+    )
 
 
 @fixture(scope="session")
@@ -26,13 +29,21 @@ def sqla_version_tuple():
     return tuple(int(i) for i in __version__.split("."))
 
 
+def is_asyncpg_installed():
+    try:
+        import asyncpg  # noqa
+    except ImportError:
+        return False
+    else:
+        return True
+
+
 @fixture(scope="session", autouse=True)
-def environ(db_url, sqla_version_tuple):
+def environ(db_url, sqla_version_tuple, async_sqlalchemy_url):
     values = {"sqlalchemy_url": db_url, "PYTHONASYNCIODEBUG": "1"}
 
-    if sqla_version_tuple >= (1, 4, 0):
-        scheme, parts = db_url.split(":")
-        values["async_sqlalchemy_url"] = f"{scheme}+asyncpg:{parts}"
+    if sqla_version_tuple >= (1, 4, 0) and is_asyncpg_installed():
+        values["async_sqlalchemy_url"] = async_sqlalchemy_url
 
     with patch.dict("os.environ", values=values, clear=True):
         yield values
@@ -74,6 +85,14 @@ def check_sqlalchemy_version(request, sqla_version_tuple):
             skip(
                 f"Marked to run against sqlalchemy=^{expected}.0, but got {__version__}"
             )
+
+
+@fixture(autouse=True)
+def check_asyncpg(request):
+    "Skip test marked with mark.require_asyncpg if asyncpg is not installed."
+    marker = request.node.get_closest_marker("require_asyncpg")
+    if marker and not is_asyncpg_installed():
+        skip("This test requires asyncpg. Skipping as asyncpg is not installed.")
 
 
 @fixture(scope="session")

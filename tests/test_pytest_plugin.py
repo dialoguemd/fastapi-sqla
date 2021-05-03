@@ -41,6 +41,7 @@ def test_session_fixture_does_not_write_in_db(session, singer_cls, engine):
         assert connection.execute(text("select count(*) from singer")).scalar() == 0
 
 
+@mark.require_asyncpg
 @mark.asyncio
 @mark.sqlalchemy("1.4")
 async def test_async_session_fixture_does_not_write_in_db(
@@ -66,6 +67,7 @@ def test_all_opened_sessions_are_within_the_same_transaction(
     assert other_session.query(singer_cls).get(1)
 
 
+@mark.require_asyncpg
 @mark.asyncio
 @mark.sqlalchemy("1.4")
 async def test_all_opened_async_sessions_are_within_the_same_transaction(
@@ -126,3 +128,16 @@ def test_sqla_modules_fixture_raises_exception_when_not_overriden(testdir, conft
     result = testdir.runpytest()
     result.assert_outcomes(errors=1)
     result.stdout.fnmatch_lines(["*sqla_modules fixture is not defined*"])
+
+
+@mark.parametrize(
+    "url,expected",
+    [
+        ("postgresql://localhost/db", "postgresql+asyncpg://localhost/db"),
+        ("postgresql://u:p@localhost/db", "postgresql+asyncpg://u:p@localhost/db"),
+    ],
+)
+def test_format_async_sqlalchemy_url(monkeypatch, conftest, testdir, url, expected):
+    from fastapi_sqla._pytest_plugin import format_async_async_sqlalchemy_url
+
+    assert format_async_async_sqlalchemy_url(url) == expected
