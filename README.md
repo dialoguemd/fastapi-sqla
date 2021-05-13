@@ -182,7 +182,7 @@ By default:
 
 #### Paginating non-scalar results
 
-When query doesn't returned scalars, specify `scalars=False` when invoking `paginate`:
+To paginate a query which doesn't return scalars, specify `scalars=False` when invoking `paginate`:
 
 ```python
 from fastapi import APIRouter, Depends
