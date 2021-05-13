@@ -183,7 +183,7 @@ QueryCountDependency = Callable[..., QueryCount]
 PaginateSignature = Callable[[DbQuery], Page[T]]
 
 
-def query_count(session: Session, query: DbQuery) -> int:
+def default_query_count(session: Session, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
     It is slower than a manually written query could be: It runs the query in a subquery,
@@ -264,25 +264,46 @@ def _paginate(
     )
 
 
+DefaultDependancy = Callable[[Session, int, int], PaginateSignature]
+WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
+PaginationResult = Union[DefaultDependancy, WithQueryCountDependency]
+
+
 def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count: QueryCount = query_count,
-) -> Callable[[Session, int, int], PaginateSignature]:
+    query_count: QueryCountDependency = None,
+) -> PaginationResult:
     def dependency(
         session: Session = Depends(),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
         def paginate(query: DbQuery, scalars=True) -> Page[T]:
-            total_items = query_count(session, query)
+            total_items = default_query_count(session, query)
             return paginate_query(
                 query, session, total_items, offset, limit, scalars=scalars
             )
 
         return paginate
 
-    return dependency
+    def with_query_count_dependency(
+        session: Session = Depends(),
+        offset: int = Query(0, ge=0),
+        limit: int = Query(min_page_size, ge=1, le=max_page_size),
+        total_items: int = Depends(query_count),
+    ) -> PaginateSignature:
+        def paginate(query: DbQuery, scalars=True) -> Page[T]:
+            return paginate_query(
+                query, session, total_items, offset, limit, scalars=scalars
+            )
+
+        return paginate
+
+    if query_count:
+        return with_query_count_dependency
+    else:
+        return dependency
 
 
 Paginate: PaginateSignature = Pagination()
