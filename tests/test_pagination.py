@@ -188,6 +188,11 @@ def app(user_cls, note_cls):
         class Config:
             orm_mode = True
 
+    class UserWithNotesCount(BaseModel):
+        id: int
+        name: str
+        notes_count: int
+
     @app.get("/v1/users", response_model=Page[User])
     def sqla_13_all_users(session: Session = Depends(), paginate: Paginate = Depends()):
         query = (
@@ -199,6 +204,18 @@ def app(user_cls, note_cls):
     def sqla_14_all_users(paginate: Paginate = Depends()):
         query = select(user_cls).options(joinedload("notes")).order_by(user_cls.id)
         return paginate(query)
+
+    @app.get("/v2/users-with-notes-count", response_model=Page[UserWithNotesCount])
+    def sqla_14_all_users_with_notes_count(paginate: Paginate = Depends()):
+        query = (
+            select(
+                user_cls.id, user_cls.name, func.count(note_cls.id).label("notes_count")
+            )
+            .join(note_cls)
+            .order_by(user_cls.id)
+            .group_by(user_cls)
+        )
+        return paginate(query, scalars=False)
 
     def query_count(session: Session, query: Select) -> int:
         return session.execute(select(func.count()).select_from(user_cls)).scalar()
@@ -236,6 +253,9 @@ async def client(app):
         param(0, 10, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
         param(10, 10, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
         param(40, 2, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
+        param(0, 10, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
+        param(10, 10, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
+        param(40, 2, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
     ],
 )
 async def test_functional(client, offset, items_number, path):

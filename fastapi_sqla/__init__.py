@@ -210,6 +210,7 @@ def paginate_query(
     total_items: int,
     offset: int,
     limit: int,
+    scalars: bool = True,
 ) -> Page[T]:  # pragma no cover
     "Dispatch on registered functions based on `query` type"
     raise NotImplementedError(f"no paginate_query registered for type {type(query)!r}")
@@ -222,6 +223,7 @@ def _paginate_legacy(
     total_items: int,
     offset: int,
     limit: int,
+    scalars: bool = True,
 ) -> Page[T]:
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
@@ -243,13 +245,16 @@ def _paginate(
     total_items: int,
     offset: int,
     limit: int,
+    *,
+    scalars: bool = True,
 ) -> Page[T]:
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
     query = query.offset(offset).limit(limit)
     result = session.execute(query)
+    data = iter(result.unique().scalars() if scalars else result.unique().mappings())
     return Page[T](
-        data=iter(result.unique().scalars()),
+        data=data,
         meta={
             "offset": offset,
             "total_items": total_items,
@@ -269,9 +274,11 @@ def Pagination(
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
-        def paginate(query: DbQuery) -> Page[T]:
+        def paginate(query: DbQuery, scalars=True) -> Page[T]:
             total_items = query_count(session, query)
-            return paginate_query(query, session, total_items, offset, limit)
+            return paginate_query(
+                query, session, total_items, offset, limit, scalars=scalars
+            )
 
         return paginate
 
