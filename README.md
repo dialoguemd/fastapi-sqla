@@ -143,6 +143,9 @@ class UserModel(BaseModel):
     id: int
     name: str
 
+    class Config:
+        orm_mode = True
+
 
 @router.get("/users", response_model=Page[UserModel])
 def all_users(paginate: Paginate = Depends()):
@@ -176,6 +179,47 @@ By default:
         }
     }
     ```
+
+#### Paginating non-scalar results
+
+To paginate a query which doesn't return [scalars], specify `scalars=False` when invoking
+`paginate`:
+
+```python
+from fastapi import APIRouter, Depends
+from fastapi_sqla import Base, Page, Paginate
+from pydantic import BaseModel
+from sqlalchemy import func, select
+from sqlalchemy.orm import relationship
+
+router = APIRouter()
+
+
+class User(Base):
+    __tablename__ = "user"
+    notes = relationship("Note")
+
+
+class Note(Base):
+    __tablename__ = "note"
+
+
+class UserModel(BaseModel):
+    id: int
+    name: str
+    notes_count: int
+
+
+@router.get("/users", response_model=Page[UserModel])
+def all_users(paginate: Paginate = Depends()):
+    query = (
+        select(User.id, User.name, func.count(Note.id).label("notes_count"))
+        .join(Note)
+        .group_by(User)
+    )
+    return paginate(query, scalars=False)
+```
+
 
 #### Customize pagination
 
@@ -359,3 +403,4 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 [FastAPI background tasks]: https://fastapi.tiangolo.com/tutorial/background-tasks/
 [SQLAlchemy]: http://sqlalchemy.org/
 [`asyncpg`]: https://magicstack.github.io/asyncpg/current/
+[scalars]: (https://docs.sqlalchemy.org/en/14/core/connections.html?highlight=scalars#sqlalchemy.engine.Result.scalars),
