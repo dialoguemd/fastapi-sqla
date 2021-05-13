@@ -182,7 +182,8 @@ By default:
 
 #### Paginating non-scalar results
 
-To paginate a query which doesn't return scalars, specify `scalars=False` when invoking `paginate`:
+To paginate a query which doesn't return [scalars], specify `scalars=False` when invoking
+`paginate`:
 
 ```python
 from fastapi import APIRouter, Depends
@@ -402,3 +403,4 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 [FastAPI background tasks]: https://fastapi.tiangolo.com/tutorial/background-tasks/
 [SQLAlchemy]: http://sqlalchemy.org/
 [`asyncpg`]: https://magicstack.github.io/asyncpg/current/
+[scalars]: (https://docs.sqlalchemy.org/en/14/core/connections.html?highlight=scalars#sqlalchemy.engine.Result.scalars),
