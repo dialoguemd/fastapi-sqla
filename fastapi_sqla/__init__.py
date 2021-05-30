@@ -273,7 +273,7 @@ def Pagination(
     max_page_size: int = 100,
     query_count: QueryCountDependency = None,
 ) -> PaginateDependency:
-    def dependency(
+    def default_dependency(
         session: Session = Depends(),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
@@ -302,7 +302,7 @@ def Pagination(
     if query_count:
         return with_query_count_dependency
     else:
-        return dependency
+        return default_dependency
 
 
 Paginate: PaginateDependency = Pagination()
