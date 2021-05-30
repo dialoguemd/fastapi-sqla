@@ -1,4 +1,3 @@
-import math
 from typing import List
 
 import httpx
@@ -9,7 +8,6 @@ from pydantic import BaseModel
 from pytest import fixture, mark, param
 from sqlalchemy import MetaData, Table, func, select, text
 from sqlalchemy.orm import joinedload, relationship
-from sqlalchemy.sql import Select
 
 
 @fixture(scope="module", autouse=True)
@@ -18,7 +16,7 @@ def setup_tear_down(sqla_connection):
     sqla_connection.execute(
         text(
             "create table if not exists public.user "
-            "(id integer primary key, name varchar)"
+            "(id serial primary key, name varchar)"
         )
     )
     sqla_connection.execute(
@@ -26,7 +24,7 @@ def setup_tear_down(sqla_connection):
             """
         create table if not exists note (
             user_id integer,
-            id integer,
+            id serial,
             content text,
             primary key (user_id, id),
             foreign key (user_id) references public.user (id)
@@ -37,10 +35,9 @@ def setup_tear_down(sqla_connection):
     metadata = MetaData()
     user = Table("user", metadata, autoload_with=sqla_connection)
     note = Table("note", metadata, autoload_with=sqla_connection)
-    user_params = [{"id": i, "name": faker.name()} for i in range(1, 43)]
+    user_params = [{"name": faker.name()} for _ in range(1, 43)]
     note_params = [
-        {"user_id": i % 42 + 1, "id": math.ceil(i / 42), "content": faker.text()}
-        for i in range(0, 84)
+        {"user_id": i % 42 + 1, "content": faker.text()} for i in range(0, 22 * 42)
     ]
     sqla_connection.execute(user.insert(), *user_params)
     sqla_connection.execute(note.insert(), *note_params)
@@ -111,54 +108,6 @@ def test_pagination_with_legacy_query_count(
     assert result.meta.page_number == page_number
 
 
-@mark.sqlalchemy("1.3")
-@mark.parametrize(
-    "offset,limit,total_pages,page_number",
-    [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
-)
-def test_Pagination_with_custom_sqla13_compliant_count(
-    session, user_cls, offset, limit, total_pages, page_number
-):
-    from fastapi_sqla import DbQuery, Pagination, Session
-
-    def query_count(session: Session, query: DbQuery) -> int:
-        return (
-            session.query(user_cls).statement.with_only_columns([func.count()]).scalar()
-        )
-
-    pagination = Pagination(query_count=query_count)
-    query = session.query(user_cls).options(joinedload("notes"))
-    result = pagination(session, offset, limit)(query)
-
-    assert result.meta.total_items == 42
-    assert result.meta.offset == offset
-    assert result.meta.total_pages == total_pages
-    assert result.meta.page_number == page_number
-
-
-@mark.sqlalchemy("1.4")
-@mark.parametrize(
-    "offset,limit,total_pages,page_number",
-    [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
-)
-def test_Pagination_with_custom_sqla14_compliant_count(
-    session, user_cls, offset, limit, total_pages, page_number
-):
-    from fastapi_sqla import DbQuery, Pagination, Session
-
-    def query_count(session: Session, query: DbQuery) -> int:
-        return session.execute(select(func.count(user_cls.id))).scalar()
-
-    pagination = Pagination(query_count=query_count)
-    query = session.query(user_cls).options(joinedload("notes"))
-    result = pagination(session, offset, limit)(query)
-
-    assert result.meta.total_items == 42
-    assert result.meta.offset == offset
-    assert result.meta.total_pages == total_pages
-    assert result.meta.page_number == page_number
-
-
 @fixture
 def app(user_cls, note_cls):
     from fastapi_sqla import (
@@ -217,15 +166,18 @@ def app(user_cls, note_cls):
         )
         return paginate(query, scalars=False)
 
-    def query_count(session: Session, query: Select) -> int:
-        return session.execute(select(func.count()).select_from(user_cls)).scalar()
+    def count_user_notes(user_id: int, session: Session = Depends()) -> int:
+        return session.execute(
+            select(func.count(note_cls.id)).where(note_cls.user_id == user_id)
+        ).scalar()
 
-    CustomPaginate: PaginateSignature = Pagination(query_count=query_count)
+    CustomPaginate: PaginateSignature = Pagination(query_count=count_user_notes)
 
-    @app.get("/v2/custom/users", response_model=Page[User])
-    def sqla_14_all_users_custom_pagination(paginate: CustomPaginate = Depends()):
-        query = select(user_cls).options(joinedload("notes")).order_by(user_cls.id)
-        return paginate(query)
+    @app.get("/v2/users/{user_id}/notes", response_model=Page[Note])
+    def list_user_notes_with_custom_pagination(
+        user_id: int, paginate: CustomPaginate = Depends()
+    ):
+        return paginate(select(note_cls).where(note_cls.user_id == user_id))
 
     return app
 
@@ -239,7 +191,6 @@ async def client(app):
             yield client
 
 
-@mark.require_asyncpg
 @mark.asyncio
 @mark.parametrize(
     "offset,items_number,path",
@@ -250,9 +201,6 @@ async def client(app):
         param(0, 10, "/v2/users", marks=mark.sqlalchemy("1.4")),
         param(10, 10, "/v2/users", marks=mark.sqlalchemy("1.4")),
         param(40, 2, "/v2/users", marks=mark.sqlalchemy("1.4")),
-        param(0, 10, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
-        param(10, 10, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
-        param(40, 2, "/v2/custom/users", marks=mark.sqlalchemy("1.4")),
         param(0, 10, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
         param(10, 10, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
         param(40, 2, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
@@ -269,3 +217,23 @@ async def test_functional(client, offset, items_number, path):
 
     meta = result.json()["meta"]
     assert meta["total_items"] == 42
+
+
+@mark.asyncio
+@mark.parametrize(
+    "offset,items_number,path",
+    [
+        param(0, 10, "/v2/users/1/notes", marks=mark.sqlalchemy("1.4")),
+        param(10, 10, "/v2/users/1/notes", marks=mark.sqlalchemy("1.4")),
+        param(20, 2, "/v2/users/1/notes", marks=mark.sqlalchemy("1.4")),
+    ],
+)
+async def test_custom_pagination(client, offset, items_number, path):
+    result = await client.get(path, params={"offset": offset})
+
+    assert result.status_code == 200, result.json()
+    notes = result.json()["data"]
+    assert len(notes) == items_number
+
+    meta = result.json()["meta"]
+    assert meta["total_items"] == 22

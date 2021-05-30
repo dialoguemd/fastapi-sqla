@@ -3,7 +3,7 @@ import math
 import os
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Callable, Generic, List, TypeVar, Union
+from typing import Callable, Generic, List, Optional, TypeVar, Union
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
@@ -178,12 +178,11 @@ class Page(Collection, Generic[T]):
 
 
 DbQuery = Union[LegacyQuery, Select]
-QueryCount = Callable[[SqlaSession, DbQuery], int]
-QueryCountDependency = Callable[..., QueryCount]
-PaginateSignature = Callable[[DbQuery], Page[T]]
+QueryCountDependency = Callable[..., int]
+PaginateSignature = Callable[[DbQuery, Optional[bool]], Page[T]]
 
 
-def query_count(session: Session, query: DbQuery) -> int:
+def default_query_count(session: Session, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
     It is slower than a manually written query could be: It runs the query in a subquery,
@@ -264,25 +263,46 @@ def _paginate(
     )
 
 
+DefaultDependency = Callable[[Session, int, int], PaginateSignature]
+WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
+PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
+
+
 def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count: QueryCount = query_count,
-) -> Callable[[Session, int, int], PaginateSignature]:
-    def dependency(
+    query_count: QueryCountDependency = None,
+) -> PaginateDependency:
+    def default_dependency(
         session: Session = Depends(),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
         def paginate(query: DbQuery, scalars=True) -> Page[T]:
-            total_items = query_count(session, query)
+            total_items = default_query_count(session, query)
             return paginate_query(
                 query, session, total_items, offset, limit, scalars=scalars
             )
 
         return paginate
 
-    return dependency
+    def with_query_count_dependency(
+        session: Session = Depends(),
+        offset: int = Query(0, ge=0),
+        limit: int = Query(min_page_size, ge=1, le=max_page_size),
+        total_items: int = Depends(query_count),
+    ) -> PaginateSignature:
+        def paginate(query: DbQuery, scalars=True) -> Page[T]:
+            return paginate_query(
+                query, session, total_items, offset, limit, scalars=scalars
+            )
+
+        return paginate
+
+    if query_count:
+        return with_query_count_dependency
+    else:
+        return default_dependency
 
 
-Paginate: PaginateSignature = Pagination()
+Paginate: PaginateDependency = Pagination()
