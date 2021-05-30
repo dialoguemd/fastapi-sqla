@@ -264,9 +264,9 @@ def _paginate(
     )
 
 
-DefaultDependancy = Callable[[Session, int, int], PaginateSignature]
+DefaultDependency = Callable[[Session, int, int], PaginateSignature]
 WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
-PaginationResult = Union[DefaultDependancy, WithQueryCountDependency]
+PaginationResult = Union[DefaultDependency, WithQueryCountDependency]
 
 
 def Pagination(
