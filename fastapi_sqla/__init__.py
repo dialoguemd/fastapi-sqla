@@ -3,7 +3,7 @@ import math
 import os
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Callable, Generic, List, TypeVar, Union
+from typing import Callable, Generic, List, Optional, TypeVar, Union
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
@@ -178,9 +178,8 @@ class Page(Collection, Generic[T]):
 
 
 DbQuery = Union[LegacyQuery, Select]
-QueryCount = Callable[[SqlaSession, DbQuery], int]
-QueryCountDependency = Callable[..., QueryCount]
-PaginateSignature = Callable[[DbQuery], Page[T]]
+QueryCountDependency = Callable[..., int]
+PaginateSignature = Callable[[DbQuery, Optional[bool]], Page[T]]
 
 
 def default_query_count(session: Session, query: DbQuery) -> int:
@@ -266,14 +265,14 @@ def _paginate(
 
 DefaultDependency = Callable[[Session, int, int], PaginateSignature]
 WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
-PaginationResult = Union[DefaultDependency, WithQueryCountDependency]
+PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
 def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
     query_count: QueryCountDependency = None,
-) -> PaginationResult:
+) -> PaginateDependency:
     def dependency(
         session: Session = Depends(),
         offset: int = Query(0, ge=0),
@@ -306,4 +305,4 @@ def Pagination(
         return dependency
 
 
-Paginate: PaginateSignature = Pagination()
+Paginate: PaginateDependency = Pagination()
