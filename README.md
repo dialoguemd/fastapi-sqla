@@ -227,7 +227,7 @@ You can customize:
 - Minimum and maximum number of items per pages;
 - How the total number of items in the collection is queried;
 
-To customize pagination, create a dependency using `fastapi_sqla.Pagination`.
+To customize pagination, create a dependency using `fastapi_sqla.Pagination`:
 
 ```python
 from fastapi import APIRouter, Depends
