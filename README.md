@@ -90,7 +90,8 @@ def example(session: Session = Depends()):
 
 @router.get("/async_example")
 async def async_example(session: AsyncSession = Depends()):
-    return await session.execute("SELECT now()").scalar()
+    result = await session.execute("SELECT now()")
+    return result.scalar()
 ```
 
 #### Using a context manager
