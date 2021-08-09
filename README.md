@@ -121,7 +121,7 @@ def run_bg():
 
 async def run_async_bg():
     async with asyncio_support.open_session() as session:
-        await session.scalar("SELECT now()") # or async session.execute(...)
+        await session.scalar("SELECT now()")
 ```
 
 ### Pagination
