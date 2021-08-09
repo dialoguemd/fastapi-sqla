@@ -90,7 +90,7 @@ def example(session: Session = Depends()):
 
 @router.get("/async_example")
 async def async_example(session: AsyncSession = Depends()):
-    return await session.execute("SELECT now()").scalar()
+    return await session.scalar("SELECT now()")
 ```
 
 #### Using a context manager
@@ -121,7 +121,7 @@ def run_bg():
 
 async def run_async_bg():
     async with asyncio_support.open_session() as session:
-        await session.execute("SELECT now()").scalar()
+        await session.scalar("SELECT now()")
 ```
 
 ### Pagination
