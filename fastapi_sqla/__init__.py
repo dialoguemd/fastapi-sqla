@@ -53,16 +53,19 @@ def open_session() -> Session:
 
     try:
         yield session
+
+    except Exception:
+        logger.warning("context failed, rolling back", exc_info=True)
+        session.rollback()
+        raise
+
+    else:
         try:
             session.commit()
         except Exception:
             logger.exception("commit failed, rolling back")
+            session.rollback()
             raise
-
-    except Exception:
-        logger.warning("rolling back due to error", exc_info=True)
-        session.rollback()
-        raise
 
     finally:
         session.close()
@@ -115,22 +118,22 @@ async def add_session_to_request(request: Request, call_next):
 
         loop = asyncio.get_running_loop()
 
-        # try to commit after response, so that
-        # we can return a proper 500 response
-        # and not raise an true internal server error
+        # try to commit after response, so that we can return a proper 500 response
+        # and not raise a true internal server error
         if response.status_code < 400:
+
             try:
                 await loop.run_in_executor(None, session.commit)
             except Exception:
-                logger.exception("commit failed, rolling back")
+                logger.exception("commit failed, returning http error")
                 response = PlainTextResponse(
-                    content="[fastapi-sqla] failed to commit", status_code=500
+                    content="Internal Server Error", status_code=500
                 )
 
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
-            logger.warning("rolling back due to http error")
+            logger.warning("http error, rolling back", status_code=response.status_code)
             await loop.run_in_executor(None, session.rollback)
 
     return response

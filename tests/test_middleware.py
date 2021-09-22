@@ -109,7 +109,19 @@ async def test_commit_error_returns_500(client, user_1, mock_middleware):
         )
 
     assert res.status_code == 500
-    assert {"event": "commit failed, rolling back", "log_level": "exception"} in caplog
+
+    assert {
+        "event": "commit failed, returning http error",
+        "exc_info": True,
+        "log_level": "error",
+    } in caplog
+
+    assert {
+        "event": "http error, rolling back",
+        "log_level": "warning",
+        "status_code": 500,
+    } in caplog
+
     mock_middleware.assert_called_once()
 
 

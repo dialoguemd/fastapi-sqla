@@ -7,7 +7,7 @@ from faker import Faker
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark
-from sqlalchemy import MetaData, Table, func
+from sqlalchemy import MetaData, Table, func, select
 from sqlalchemy.orm import joinedload, relationship
 
 
@@ -94,11 +94,9 @@ def test_Pagination_with_custom_count(
 ):
     from fastapi_sqla import Pagination
 
-    query_count = (
-        lambda sess, _: session.query(user_cls)
-        .statement.with_only_columns([func.count()])
-        .scalar()
-    )
+    query_count = lambda sess, _: session.execute(  # noqa
+        select(func.count()).select_from(user_cls)
+    ).scalar()
     with_pagination = Pagination(query_count=query_count)
     query = session.query(user_cls).options(joinedload("notes"))
     result = with_pagination(session, offset, limit)(query)
