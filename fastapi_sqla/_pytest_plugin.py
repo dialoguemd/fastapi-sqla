@@ -1,10 +1,19 @@
 import os
 from unittest.mock import patch
+from urllib.parse import urlsplit, urlunsplit
 
 from alembic import command
 from alembic.config import Config
 from pytest import fixture
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+
+try:
+    import asyncpg  # noqa
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    asyncio_support = True
+except ImportError:
+    asyncio_support = False
 
 
 @fixture(scope="session")
@@ -43,7 +52,7 @@ def db_migration(db_url, sqla_connection, alembic_ini_path):
     alembic_config = Config(file_=alembic_ini_path)
     alembic_config.set_main_option("sqlalchemy.url", db_url)
 
-    sqla_connection.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+    sqla_connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
 
     command.upgrade(alembic_config, "head")
     yield
@@ -93,3 +102,47 @@ def session(sqla_transaction, sqla_connection):
     session = fastapi_sqla._Session(bind=sqla_connection)
     yield session
     session.close()
+
+
+def format_async_async_sqlalchemy_url(url):
+    scheme, location, path, query, fragment = urlsplit(url)
+    return urlunsplit([f"{scheme}+asyncpg", location, path, query, fragment])
+
+
+@fixture(scope="session")
+def async_sqlalchemy_url(db_url):
+    """Default async db url.
+
+    It is the same as `db_url` with `postgresql+asyncpg://` as scheme.
+    """
+    return format_async_async_sqlalchemy_url(db_url)
+
+
+if asyncio_support:
+
+    @fixture
+    async def async_engine(async_sqlalchemy_url):
+        return create_async_engine(async_sqlalchemy_url)
+
+    @fixture
+    async def async_sqla_connection(async_engine, event_loop):
+        async with async_engine.begin() as connection:
+            yield connection
+            await connection.rollback()
+
+    @fixture(autouse=True)
+    async def patch_async_sessionmaker(async_sqlalchemy_url, async_sqla_connection):
+        """So that all async DB operations are never written to db for real."""
+        with patch(
+            "fastapi_sqla.asyncio_support.create_async_engine"
+        ) as create_async_engine:
+            create_async_engine.return_value = async_sqla_connection
+            yield create_async_engine
+
+    @fixture
+    async def async_session(async_sqla_connection):
+        from fastapi_sqla.asyncio_support import _AsyncSession
+
+        session = _AsyncSession(bind=async_sqla_connection)
+        yield session
+        await session.close()
