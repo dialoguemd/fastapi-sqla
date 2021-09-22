@@ -69,7 +69,7 @@ def app(User):
             session.add(User(**user.dict()))
 
     @app.get("/404")
-    def get_users(session: Session = Depends(with_session)):
+    def get_users(session: Session = Depends(Session)):
         raise HTTPException(status_code=404, detail="YOLO")
 
     return app
