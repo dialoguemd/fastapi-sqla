@@ -1,4 +1,4 @@
-from pytest import fixture, raises
+from pytest import fixture, mark, raises
 from sqlalchemy import insert, select, text
 from sqlalchemy.exc import IntegrityError
 
@@ -31,6 +31,7 @@ def TestTable(module_setup_tear_down):
     return TestTable
 
 
+@mark.sqlalchemy("1.4")
 def test_open_session():
     from fastapi_sqla import open_session
 
@@ -40,6 +41,7 @@ def test_open_session():
     assert res == "OK"
 
 
+@mark.sqlalchemy("1.4")
 def test_open_session_rollback_when_error_occurs_in_context(TestTable, session):
     from fastapi_sqla import open_session
 
