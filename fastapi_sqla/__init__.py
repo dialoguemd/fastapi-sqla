@@ -8,6 +8,7 @@ from typing import Callable, Generic, List, Optional, TypeVar, Union
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config
@@ -106,12 +107,19 @@ def open_session() -> Session:
 
     try:
         yield session
-        session.commit()
 
     except Exception:
-        logger.exception("commit failed, rolling back")
+        logger.warning("context failed, rolling back", exc_info=True)
         session.rollback()
         raise
+
+    else:
+        try:
+            session.commit()
+        except Exception:
+            logger.exception("commit failed, rolling back")
+            session.rollback()
+            raise
 
     finally:
         session.close()
@@ -137,11 +145,27 @@ async def add_session_to_request(request: Request, call_next):
     """
     async with contextmanager_in_threadpool(open_session()) as session:
         request.scope[_SESSION_KEY] = session
+
         response = await call_next(request)
+
+        loop = asyncio.get_running_loop()
+
+        # try to commit after response, so that we can return a proper 500 response
+        # and not raise a true internal server error
+        if response.status_code < 400:
+
+            try:
+                await loop.run_in_executor(None, session.commit)
+            except Exception:
+                logger.exception("commit failed, returning http error")
+                response = PlainTextResponse(
+                    content="Internal Server Error", status_code=500
+                )
+
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
-            loop = asyncio.get_running_loop()
+            logger.warning("http error, rolling back", status_code=response.status_code)
             await loop.run_in_executor(None, session.rollback)
 
     return response

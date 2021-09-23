@@ -1,8 +1,8 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import httpx
 from asgi_lifespan import LifespanManager
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from pytest import fixture, mark
 from sqlalchemy import text
@@ -68,7 +68,24 @@ def app(User):
         ):
             session.add(User(**user.dict()))
 
+    @app.get("/404")
+    def get_users(session: Session = Depends(Session)):
+        raise HTTPException(status_code=404, detail="YOLO")
+
     return app
+
+
+@fixture
+def mock_middleware(app: FastAPI):
+    mock_middleware = Mock()
+
+    @app.middleware("http")
+    async def a_middleware(request, call_next):
+        res = await call_next(request)
+        mock_middleware()
+        return res
+
+    return mock_middleware
 
 
 @fixture
@@ -120,24 +137,36 @@ def user_1(sqla_connection):
     yield
 
 
-async def test_commit_error_returns_500(client, user_1):
+async def test_commit_error_returns_500(client, user_1, mock_middleware):
     with capture_logs() as caplog:
         res = await client.post(
-            "/users", json={"id": 1, "first_name": "Bob", "last_name": "Morane"}
+            "/users",
+            json={"id": 1, "first_name": "Bob", "last_name": "Morane"},
+            headers={"origin": "localhost"},
         )
 
     assert res.status_code == 500
+
     assert {
-        "event": "commit failed, rolling back",
-        "log_level": "error",
+        "event": "commit failed, returning http error",
         "exc_info": True,
+        "log_level": "error",
     } in caplog
 
+    assert {
+        "event": "http error, rolling back",
+        "log_level": "warning",
+        "status_code": 500,
+    } in caplog
 
-async def test_rollback_on_http_exception(client):
+    mock_middleware.assert_called_once()
+
+
+async def test_rollback_on_http_exception(client, mock_middleware):
     with patch("fastapi_sqla.open_session") as open_session:
         session = open_session.return_value.__enter__.return_value
 
         await client.get("/404")
 
         session.rollback.assert_called_once_with()
+        mock_middleware.assert_called_once()
