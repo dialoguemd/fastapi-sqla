@@ -1,11 +1,23 @@
+from unittest.mock import patch
+
 import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
-from pytest import mark
+from pytest import fixture, mark
 from sqlalchemy import text
 
 
-def test_startup():
+@fixture(params=[True, False])
+def case_sensitive_environ(environ, request):
+    values = (
+        {k.upper(): v for k, v in environ.items()} if request.param else environ.copy()
+    )
+    with patch.dict("os.environ", values=values, clear=True):
+        yield values
+
+
+@mark.dont_patch_engine_from_config
+def test_startup(case_sensitive_environ):
     from fastapi_sqla import _Session, startup
 
     startup()

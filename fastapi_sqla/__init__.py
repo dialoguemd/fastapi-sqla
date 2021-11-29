@@ -61,7 +61,8 @@ def setup(app: FastAPI):
 
 
 def startup():
-    engine = engine_from_config(os.environ, prefix="sqlalchemy_")
+    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
+    engine = engine_from_config(lowercase_environ, prefix="sqlalchemy_")
     Base.metadata.bind = engine
     Base.prepare(engine)
     _Session.configure(bind=engine)
