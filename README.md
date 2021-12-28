@@ -282,7 +282,7 @@ from pytest import fixture
 
 @fixture
 def sqla_modules():
-    from er import sqla  # noqa
+    from app import sqla  # noqa
 ```
 
 ### `db_url`
@@ -293,7 +293,7 @@ When `CI` key is set in environment variables, it defaults to using `postgres` a
 host name:
 
 ```
-postgresql://postgres@posgres/postgres
+postgresql://postgres@postgres/postgres
 ```
 
 In other cases, the host is set to `localhost`:
