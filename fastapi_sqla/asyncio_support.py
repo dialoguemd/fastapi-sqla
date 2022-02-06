@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import Request
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -21,7 +21,7 @@ async def startup():
     # Fail early:
     try:
         async with open_session() as session:
-            await session.execute(select(text("'OK'")))
+            await session.execute(text("select 'ok'"))
     except Exception:
         logger.critical(
             "Fail querying db: is async_sqlalchemy_url envvar correctly configured?"

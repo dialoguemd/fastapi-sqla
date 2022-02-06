@@ -70,7 +70,7 @@ def startup():
     # Fail early:
     try:
         with open_session() as session:
-            session.execute(select(text("'OK'")))
+            session.execute(text("select 'ok'"))
     except Exception:
         logger.critical(
             "Fail querying db: is sqlalchemy_url envvar correctly configured?"
