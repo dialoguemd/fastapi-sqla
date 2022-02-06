@@ -66,6 +66,17 @@ def startup():
     Base.metadata.bind = engine
     Base.prepare(engine)
     _Session.configure(bind=engine)
+
+    # Fail early:
+    try:
+        with open_session() as session:
+            session.execute("select 'OK'")
+    except Exception:
+        logger.critical(
+            "Fail querying db: is sqlalchemy_url envvar correctly configured?"
+        )
+        raise
+
     logger.info("startup", engine=engine)
 
 

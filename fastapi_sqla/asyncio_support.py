@@ -28,6 +28,8 @@ async def startup():
         )
         raise
 
+    logger.info("startup", async_engine=engine)
+
 
 class AsyncSession(SqlaAsyncSession):
     def __new__(cls, request: Request) -> SqlaAsyncSession:
