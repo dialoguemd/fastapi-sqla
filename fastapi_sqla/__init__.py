@@ -16,7 +16,7 @@ from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
-from sqlalchemy.sql import Select, func, select
+from sqlalchemy.sql import Select, func, select, text
 
 try:
     from sqlalchemy.orm import declarative_base
@@ -66,6 +66,17 @@ def startup():
     Base.metadata.bind = engine
     Base.prepare(engine)
     _Session.configure(bind=engine)
+
+    # Fail early:
+    try:
+        with open_session() as session:
+            session.execute(select(text("'OK'")))
+    except Exception:
+        logger.critical(
+            "Fail querying db: is sqlalchemy_url envvar correctly configured?"
+        )
+        raise
+
     logger.info("startup", engine=engine)
 
 

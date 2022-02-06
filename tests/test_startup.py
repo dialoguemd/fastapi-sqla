@@ -3,7 +3,7 @@ from unittest.mock import patch
 import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 from sqlalchemy import text
 
 
@@ -48,3 +48,24 @@ async def test_fastapi_integration():
             res = await client.get("/one")
 
     assert res.json() == 1
+
+
+@mark.dont_patch_engine_from_config
+def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
+    from fastapi_sqla import startup
+
+    monkeypatch.setenv("sqlalchemy_url", "not a valid url")
+
+    with raises(Exception):
+        startup()
+
+
+@mark.asyncio
+@mark.dont_patch_engine_from_config
+async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
+    from fastapi_sqla import asyncio_support
+
+    monkeypatch.setenv("async_sqlalchemy_url", "not a valid url")
+
+    with raises(Exception):
+        await asyncio_support.startup()

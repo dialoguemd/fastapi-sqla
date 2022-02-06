@@ -135,13 +135,19 @@ if asyncio_support:
             await connection.rollback()
 
     @fixture(autouse=True)
-    async def patch_async_sessionmaker(async_sqlalchemy_url, async_sqla_connection):
+    async def patch_async_sessionmaker(
+        async_sqlalchemy_url, async_sqla_connection, request
+    ):
         """So that all async DB operations are never written to db for real."""
-        with patch(
-            "fastapi_sqla.asyncio_support.create_async_engine"
-        ) as create_async_engine:
-            create_async_engine.return_value = async_sqla_connection
-            yield create_async_engine
+        if "dont_patch_engine_from_config" in request.keywords:
+            yield
+
+        else:
+            with patch(
+                "fastapi_sqla.asyncio_support.create_async_engine"
+            ) as create_async_engine:
+                create_async_engine.return_value = async_sqla_connection
+                yield create_async_engine
 
     @fixture
     async def async_session(async_sqla_connection):
