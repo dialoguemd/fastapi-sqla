@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import Request
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -12,10 +13,22 @@ _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
 _AsyncSession = sessionmaker(class_=SqlaAsyncSession)
 
 
-def startup():
+async def startup():
     async_sqlalchemy_url = os.environ["async_sqlalchemy_url"]
-    async_engine = create_async_engine(async_sqlalchemy_url)
-    _AsyncSession.configure(bind=async_engine, expire_on_commit=False)
+    engine = create_async_engine(async_sqlalchemy_url)
+    _AsyncSession.configure(bind=engine, expire_on_commit=False)
+
+    # Fail early:
+    try:
+        async with open_session() as session:
+            await session.execute(text("select 'ok'"))
+    except Exception:
+        logger.critical(
+            "Fail querying db: is async_sqlalchemy_url envvar correctly configured?"
+        )
+        raise
+
+    logger.info("startup", async_engine=engine)
 
 
 class AsyncSession(SqlaAsyncSession):

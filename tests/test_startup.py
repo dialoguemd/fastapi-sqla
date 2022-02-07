@@ -3,7 +3,7 @@ from unittest.mock import patch
 import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 from sqlalchemy import text
 
 
@@ -16,7 +16,7 @@ def case_sensitive_environ(environ, request):
         yield values
 
 
-@mark.dont_patch_engine_from_config
+@mark.dont_patch_engines
 def test_startup(case_sensitive_environ):
     from fastapi_sqla import _Session, startup
 
@@ -48,3 +48,26 @@ async def test_fastapi_integration():
             res = await client.get("/one")
 
     assert res.json() == 1
+
+
+@mark.dont_patch_engines
+def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
+    from fastapi_sqla import startup
+
+    monkeypatch.setenv("sqlalchemy_url", "postgresql://postgres@localhost/notexisting")
+
+    with raises(Exception):
+        startup()
+
+
+@mark.asyncio
+@mark.dont_patch_engines
+async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
+    from fastapi_sqla import asyncio_support
+
+    monkeypatch.setenv(
+        "async_sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
+    )
+
+    with raises(Exception):
+        await asyncio_support.startup()

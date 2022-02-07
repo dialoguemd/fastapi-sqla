@@ -5,17 +5,17 @@ pytestmark = [mark.asyncio, mark.sqlalchemy("1.4"), mark.require_asyncpg]
 
 
 @fixture(autouse=True)
-def setup(environ):
+async def setup(environ):
     from fastapi_sqla.asyncio_support import startup
 
-    startup()
+    await startup()
     yield
 
 
 async def test_startup_configure_async_session():
     from fastapi_sqla.asyncio_support import _AsyncSession, startup
 
-    startup()
+    await startup()
 
     async with _AsyncSession() as session:
         res = await session.execute(text("SELECT 123"))
