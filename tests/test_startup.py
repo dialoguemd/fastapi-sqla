@@ -92,6 +92,7 @@ def test_sync_startup_with_dynamic_password(monkeypatch, case_sensitive_environ)
 @mark.dont_patch_engines
 async def test_async_startup_with_dynamic_password(monkeypatch):
     import os
+
     from fastapi_sqla.asyncio_support import startup
 
     monkeypatch.setenv("RDS_ENDPOINT", "https://rds.amazonaws.com")
