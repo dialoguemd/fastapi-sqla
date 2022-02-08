@@ -18,7 +18,7 @@ from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
-from fastapi_sqla.utils import set_connection_token
+from fastapi_sqla.aws_rds_iam_support import set_connection_token
 
 try:
     from sqlalchemy.orm import declarative_base

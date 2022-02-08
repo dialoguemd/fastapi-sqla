@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
 
-from fastapi_sqla.utils import set_connection_token
+from fastapi_sqla.aws_rds_iam_support import set_connection_token
 
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"

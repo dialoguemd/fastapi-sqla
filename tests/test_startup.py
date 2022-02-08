@@ -77,9 +77,9 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 def test_sync_startup_with_dynamic_password(monkeypatch, case_sensitive_environ):
     from fastapi_sqla import startup
 
-    monkeypatch.setenv("RDS_ENDPOINT", "https://rds.amazonaws.com")
+    monkeypatch.setenv("aws_rds_iam_enabled", True)
     with patch(
-        "fastapi_sqla.utils.get_authentication_token", return_value="pass"
+        "fastapi_sqla.aws_rds_iam_support.get_authentication_token", return_value="pass"
     ) as boto_patch:
         startup()
 
@@ -93,10 +93,11 @@ def test_sync_startup_with_dynamic_password(monkeypatch, case_sensitive_environ)
 async def test_async_startup_with_dynamic_password(monkeypatch, async_sqlalchemy_url):
     from fastapi_sqla.asyncio_support import startup
 
+    monkeypatch.setenv("aws_rds_iam_enabled", True)
     monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
 
     with patch(
-        "fastapi_sqla.utils.get_authentication_token", return_value=None
+        "fastapi_sqla.aws_rds_iam_support.get_authentication_token", return_value=None
     ) as boto_patch:
         await startup()
 
