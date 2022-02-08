@@ -26,7 +26,7 @@ def db_url():
     Else, host used is `localhost`: postgresql://postgres@localhost/postgres
     """
     host = "postgres" if "CI" in os.environ else "localhost"
-    return f"postgresql://postgres@{host}/postgres"
+    return f"postgresql://postgres@{host}:5432/postgres"
 
 
 @fixture(scope="session")
