@@ -99,7 +99,7 @@ async def test_async_startup_with_dynamic_password(monkeypatch):
     )
 
     with patch(
-        "fastapi_sqla.utils.get_authentication_token", return_value="pass"
+        "fastapi_sqla.utils.get_authentication_token", return_value=None
     ) as boto_patch:
         await startup()
 
