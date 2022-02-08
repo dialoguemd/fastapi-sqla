@@ -90,16 +90,10 @@ def test_sync_startup_with_dynamic_password(monkeypatch, case_sensitive_environ)
 @mark.sqlalchemy("1.4")
 @mark.asyncio
 @mark.dont_patch_engines
-async def test_async_startup_with_dynamic_password(monkeypatch):
-    import os
-
+async def test_async_startup_with_dynamic_password(monkeypatch, async_sqlalchemy_url):
     from fastapi_sqla.asyncio_support import startup
 
-    monkeypatch.setenv("RDS_ENDPOINT", "https://rds.amazonaws.com")
-    host = "postgres" if "CIRCLECI" in os.environ else "localhost"
-    monkeypatch.setenv(
-        "async_sqlalchemy_url", f"postgresql+asyncpg://postgres@{host}/postgres"
-    )
+    monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
 
     with patch(
         "fastapi_sqla.utils.get_authentication_token", return_value=None
