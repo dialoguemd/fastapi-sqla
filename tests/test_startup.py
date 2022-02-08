@@ -84,3 +84,23 @@ def test_sync_startup_with_dynamic_password(monkeypatch, case_sensitive_environ)
         startup()
 
     boto_patch.assert_called_once()
+
+
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
+@mark.asyncio
+@mark.dont_patch_engines
+async def test_async_startup_with_dynamic_password(monkeypatch):
+    from fastapi_sqla.asyncio_support import startup
+
+    monkeypatch.setenv("RDS_ENDPOINT", "https://rds.amazonaws.com")
+    monkeypatch.setenv(
+        "async_sqlalchemy_url", "postgresql+asyncpg://postgres:pass@localhost/postgres"
+    )
+
+    with patch(
+        "fastapi_sqla.utils.get_authentication_token", return_value="pass"
+    ) as boto_patch:
+        await startup()
+
+    boto_patch.assert_called_once()
