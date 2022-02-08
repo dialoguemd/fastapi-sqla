@@ -95,7 +95,7 @@ async def test_async_startup_with_dynamic_password(monkeypatch):
 
     monkeypatch.setenv("RDS_ENDPOINT", "https://rds.amazonaws.com")
     monkeypatch.setenv(
-        "async_sqlalchemy_url", "postgresql+asyncpg://postgres:pass@localhost/postgres"
+        "async_sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/postgres"
     )
 
     with patch(
