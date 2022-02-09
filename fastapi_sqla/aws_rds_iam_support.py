@@ -1,7 +1,6 @@
 try:
     import boto3
     boto3_installed = True
-    boto3_installed_err = None
 except ImportError as err:
     boto3_installed = False
     boto3_installed_err = str(err)
