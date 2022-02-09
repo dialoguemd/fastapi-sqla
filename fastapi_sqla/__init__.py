@@ -18,6 +18,8 @@ from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
+from . import aws_rds_iam_support
+
 try:
     from sqlalchemy.orm import declarative_base
 except ImportError:
@@ -63,6 +65,8 @@ def setup(app: FastAPI):
 def startup():
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     engine = engine_from_config(lowercase_environ, prefix="sqlalchemy_")
+    aws_rds_iam_support.setup(engine.engine)
+
     Base.metadata.bind = engine
     Base.prepare(engine)
     _Session.configure(bind=engine)
