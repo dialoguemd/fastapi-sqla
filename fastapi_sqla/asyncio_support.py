@@ -18,7 +18,7 @@ _AsyncSession = sessionmaker(class_=SqlaAsyncSession)
 async def startup():
     async_sqlalchemy_url = os.environ["async_sqlalchemy_url"]
     engine = create_async_engine(async_sqlalchemy_url)
-    aws_rds_iam_support.startup(engine.sync_engine)
+    aws_rds_iam_support.setup(engine.sync_engine)
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
 
     # Fail early:

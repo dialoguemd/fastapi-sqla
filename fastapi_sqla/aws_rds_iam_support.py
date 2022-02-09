@@ -3,7 +3,7 @@ from pydantic import BaseSettings
 from sqlalchemy import event
 
 
-def startup(engine):
+def setup(engine):
     config = Config()
 
     if config.aws_rds_iam_enabled:

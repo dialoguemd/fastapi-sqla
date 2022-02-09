@@ -908,12 +908,13 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 
 [extras]
 asyncpg = ["asyncpg"]
-tests = ["alembic", "asgi_lifespan", "black", "Faker", "httpx", "isort", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox", "boto3"]
+aws_rds_iam = ["boto3"]
+tests = ["alembic", "asgi_lifespan", "black", "Faker", "httpx", "isort", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "bb7f40afb96616bd2d90a4d9ffddff3b4ff8165009edb8a093c1e56556937d4c"
+content-hash = "e7de267204f6a831ad10cca3a73f1fe7b9ff6d22fd89683f1ac07a90a5b3fb12"
 
 [metadata.files]
 alembic = [
