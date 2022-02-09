@@ -112,7 +112,7 @@ def check_bobo3(request):
     "Skip test marked with mark.require_boto3 if boto3  is not installed."
     marker = request.node.get_closest_marker("require_boto3")
     if marker and not is_boto3_installed():
-        skip("This test requires boto3. Skipping as asyncpg is not installed.")
+        skip("This test requires boto3. Skipping as boto3 is not installed.")
 
 
 @fixture(scope="session")
