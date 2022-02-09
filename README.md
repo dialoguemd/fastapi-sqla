@@ -406,7 +406,7 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 ## Setup
 
 ```bash
-$ poetry install --extras tests --extras asyncpg
+$ poetry install --extras tests --extras asyncpg --extras aws_rds_iam
 ```
 
 ## Running tests
