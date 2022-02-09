@@ -20,6 +20,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "require_asyncpg: skip test if asyncpg is not installed"
     )
+    config.addinivalue_line(
+        "markers", "require_boto3: skip test if boto3 is not installed"
+    )
 
 
 @fixture(scope="session")
@@ -32,6 +35,15 @@ def sqla_version_tuple():
 def is_asyncpg_installed():
     try:
         import asyncpg  # noqa
+    except ImportError:
+        return False
+    else:
+        return True
+
+
+def is_boto3_installed():
+    try:
+        import boto3  # noqa
     except ImportError:
         return False
     else:
@@ -93,6 +105,14 @@ def check_asyncpg(request):
     marker = request.node.get_closest_marker("require_asyncpg")
     if marker and not is_asyncpg_installed():
         skip("This test requires asyncpg. Skipping as asyncpg is not installed.")
+
+
+@fixture(autouse=True)
+def check_bobo3(request):
+    "Skip test marked with mark.require_boto3 if boto3  is not installed."
+    marker = request.node.get_closest_marker("require_boto3")
+    if marker and not is_boto3_installed():
+        skip("This test requires boto3. Skipping as asyncpg is not installed.")
 
 
 @fixture(scope="session")

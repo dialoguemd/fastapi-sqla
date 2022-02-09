@@ -86,8 +86,9 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
         await asyncio_support.startup()
 
 
+@mark.require_boto3
 @mark.dont_patch_engines
-def test_sync_startup_with_dynamic_password(
+def test_sync_startup_with_aws_rds_iam_enabled(
     monkeypatch, boto_session, boto_client, db_host, db_user
 ):
     from fastapi_sqla import startup
@@ -102,11 +103,12 @@ def test_sync_startup_with_dynamic_password(
     )
 
 
+@mark.require_boto3
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 @mark.asyncio
 @mark.dont_patch_engines
-async def test_async_startup_with_dynamic_password(
+async def test_async_startup_with_aws_rds_iam_enabled(
     monkeypatch, async_sqlalchemy_url, boto_session, boto_client, db_host, db_user
 ):
     from fastapi_sqla.asyncio_support import startup
