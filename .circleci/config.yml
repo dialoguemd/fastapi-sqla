@@ -24,6 +24,7 @@ workflows:
             parameters:
               sqlalchemy_version: ["1.3", "1.4"]
               asyncpg: ["asyncpg", "noasyncpg"]
+              aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
       - release/release:
           name: release
           requires:
@@ -62,13 +63,17 @@ jobs:
         type: enum
         enum: ["asyncpg", "noasyncpg"]
         description: To run tests with and without asyncpg installed.
+      aws_rds_iam:
+        type: enum
+        enum: ["aws_rds_iam", "noaws_rds_iam"]
+        description: To run tests with and without asyncpg installed.
     executor: python-postgres
     working_directory: ~/project/.
     steps:
       - base/setup
       - python/setup
       - utils/with_cache:
-          key: 'sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
+          key: 'sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
           namespace: tox
           path: ~/project/.tox
           steps:
@@ -77,13 +82,13 @@ jobs:
                 command: |
                   poetry run pip install -U tox
             - run:
-                name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* and -<<parameters.asyncpg>>"
+                name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* and -<<parameters.asyncpg>> and -<<parameters.aws_rds_iam>>"
                 command: |
-                  poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>
+                  poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
       - store_test_results:
           path: test-reports
       - utils/send_coverage_to_codecov:
-          codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>
+          codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
 
   publish:
     docker:

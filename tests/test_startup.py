@@ -17,15 +17,16 @@ def case_sensitive_environ(environ, request):
 
 
 @fixture()
-def boto_session(boto_client):
+def boto_session(boto_client_mock):
     boto_session_mock = Mock()
-    boto_session_mock.client.return_value = boto_client
+    boto_session_mock.client.return_value = boto_client_mock
 
-    return boto_session_mock
+    with patch("boto3.Session", return_value=boto_session_mock):
+        yield boto_session_mock
 
 
 @fixture()
-def boto_client():
+def boto_client_mock():
     return Mock()
 
 
@@ -89,16 +90,15 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 @mark.require_boto3
 @mark.dont_patch_engines
 def test_sync_startup_with_aws_rds_iam_enabled(
-    monkeypatch, boto_session, boto_client, db_host, db_user
+    monkeypatch, boto_session, boto_client_mock, db_host, db_user
 ):
     from fastapi_sqla import startup
 
     monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
 
-    with patch("boto3.Session", return_value=boto_session):
-        startup()
+    startup()
 
-    boto_client.generate_db_auth_token.assert_called_once_with(
+    boto_client_mock.generate_db_auth_token.assert_called_once_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )
 
@@ -109,16 +109,15 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 @mark.asyncio
 @mark.dont_patch_engines
 async def test_async_startup_with_aws_rds_iam_enabled(
-    monkeypatch, async_sqlalchemy_url, boto_session, boto_client, db_host, db_user
+    monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user
 ):
     from fastapi_sqla.asyncio_support import startup
 
     monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
     monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
 
-    with patch("boto3.Session", return_value=boto_session):
-        await startup()
+    await startup()
 
-    boto_client.generate_db_auth_token.assert_called_once_with(
+    boto_client_mock.generate_db_auth_token.assert_called_once_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )
