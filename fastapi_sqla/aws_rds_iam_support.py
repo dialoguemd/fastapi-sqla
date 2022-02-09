@@ -1,7 +1,8 @@
 try:
     import boto3
+
     boto3_installed = True
-except ImportError as err:
+except ImportError as err: # pragma: no cover
     boto3_installed = False
     boto3_installed_err = str(err)
 
