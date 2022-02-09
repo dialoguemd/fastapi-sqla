@@ -14,12 +14,12 @@ def set_connection_token(dialect, conn_rec, cargs, cparams):
 
     if config.aws_rds_iam_enabled:
         cparams["password"] = get_authentication_token(
-            host=cparams["host"], port=cparams["port"], user=cparams["user"]
+            host=cparams["host"], port=cparams.get("port", 5432), user=cparams["user"]
         )
 
 
 class Config(BaseSettings):
     aws_rds_iam_enabled: bool = False
 
-    def __init__(self):
-        return super().__init__()
+    class Config:
+        env_prefix = "fastapi_sqla_"

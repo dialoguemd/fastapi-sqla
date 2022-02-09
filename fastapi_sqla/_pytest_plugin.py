@@ -17,16 +17,33 @@ except ImportError:
 
 
 @fixture(scope="session")
-def db_url():
+def db_host():
+    """Default db host used by depending fixtures.
+
+    When CI key is set in environment variables, it uses `postgres` as host name else, host used is `localhost`
+    """
+
+    return "postgres" if "CI" in os.environ else "localhost"
+
+
+@fixture(scope="session")
+def db_user():
+    """Default db user used by depending fixtures.
+
+    postgres
+    """
+
+    return "postgres"
+
+
+@fixture(scope="session")
+def db_url(db_host, db_user):
     """Default db url used by depending fixtures.
 
-    When CI key is set in environment variables, it uses `postgres` as host name:
-    postgresql://postgres@posgres/postgres
-
-    Else, host used is `localhost`: postgresql://postgres@localhost/postgres
+    db url example postgresql://{db_user}@{db_host}/postgres
     """
-    host = "postgres" if "CI" in os.environ else "localhost"
-    return f"postgresql://postgres@{host}:5432/postgres"
+
+    return f"postgresql://{db_user}@{db_host}/postgres"
 
 
 @fixture(scope="session")

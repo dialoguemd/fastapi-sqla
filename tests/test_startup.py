@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import httpx
 from asgi_lifespan import LifespanManager
@@ -14,6 +14,19 @@ def case_sensitive_environ(environ, request):
     )
     with patch.dict("os.environ", values=values, clear=True):
         yield values
+
+
+@fixture()
+def boto_session(boto_client):
+    boto_session_mock = Mock()
+    boto_session_mock.client.return_value = boto_client
+
+    return boto_session_mock
+
+
+@fixture()
+def boto_client():
+    return Mock()
 
 
 @mark.dont_patch_engines
@@ -74,31 +87,36 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 
 
 @mark.dont_patch_engines
-def test_sync_startup_with_dynamic_password(monkeypatch, case_sensitive_environ):
+def test_sync_startup_with_dynamic_password(
+    monkeypatch, boto_session, boto_client, db_host, db_user
+):
     from fastapi_sqla import startup
 
-    monkeypatch.setenv("aws_rds_iam_enabled", True)
-    with patch(
-        "fastapi_sqla.aws_rds_iam_support.get_authentication_token", return_value="pass"
-    ) as boto_patch:
+    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
+
+    with patch("boto3.Session", return_value=boto_session):
         startup()
 
-    boto_patch.assert_called_once()
+    boto_client.generate_db_auth_token.assert_called_once_with(
+        DBHostname=db_host, Port=5432, DBUsername=db_user
+    )
 
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 @mark.asyncio
 @mark.dont_patch_engines
-async def test_async_startup_with_dynamic_password(monkeypatch, async_sqlalchemy_url):
+async def test_async_startup_with_dynamic_password(
+    monkeypatch, async_sqlalchemy_url, boto_session, boto_client, db_host, db_user
+):
     from fastapi_sqla.asyncio_support import startup
 
-    monkeypatch.setenv("aws_rds_iam_enabled", True)
+    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
     monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
 
-    with patch(
-        "fastapi_sqla.aws_rds_iam_support.get_authentication_token", return_value=None
-    ) as boto_patch:
+    with patch("boto3.Session", return_value=boto_session):
         await startup()
 
-    boto_patch.assert_called_once()
+    boto_client.generate_db_auth_token.assert_called_once_with(
+        DBHostname=db_host, Port=5432, DBUsername=db_user
+    )
