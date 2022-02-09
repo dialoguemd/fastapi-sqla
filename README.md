@@ -18,9 +18,9 @@ A highly opinionated [SQLAlchemy] extension for [FastAPI]:
 * Pagination utilities;
 * Pytest fixtures;
 
-## Configuration
+# Configuration
 
-### Environment variables:
+## Environment variables:
 
 The keys of interest in `os.environ` are prefixed with `sqlalchemy_`.
 Each matching key (after the prefix is stripped) is treated as though it were the
@@ -29,7 +29,7 @@ call.
 
 The only required key is `sqlalchemy_url`, which provides the database URL.
 
-#### `asyncio` support using [`asyncpg`]
+### `asyncio` support using [`asyncpg`]
 
 SQLAlchemy `>= 1.4` supports `asyncio`.
 To enable `asyncio` support against a Postgres DB, install `asyncpg`:
@@ -44,7 +44,7 @@ And define environment variable `async_sqlalchemy_url` with `postgres+asyncpg` s
 export async_sqlalchemy_url=postgresql+asyncpg://postgres@localhost
 ```
 
-### Setup the app:
+## Setup the app:
 
 ```python
 import fastapi_sqla
@@ -54,9 +54,9 @@ app = FastAPI()
 fastapi_sqla.setup(app)
 ```
 
-## SQLAlchemy
+# SQLAlchemy
 
-### Adding a new entity class:
+## Adding a new entity class:
 
 ```python
 from fastapi_sqla import Base
@@ -66,9 +66,9 @@ class Entity(Base):
     __tablename__ = "table-name-in-db"
 ```
 
-### Getting an sqla session
+## Getting an sqla session
 
-#### Using dependency injection
+### Using dependency injection
 
 Use [FastAPI dependency injection] to get a session as a parameter of a path operation
 function.
@@ -93,7 +93,7 @@ async def async_example(session: AsyncSession = Depends()):
     return await session.scalar("SELECT now()")
 ```
 
-#### Using a context manager
+### Using a context manager
 
 When needing a session outside of a path operation, like when using
 [FastAPI background tasks], use `fastapi_sqla.open_session` context manager.
@@ -124,7 +124,7 @@ async def run_async_bg():
         await session.scalar("SELECT now()")
 ```
 
-### Pagination
+## Pagination
 
 ```python
 from fastapi import APIRouter, Depends
@@ -180,7 +180,7 @@ By default:
     }
     ```
 
-#### Paginating non-scalar results
+### Paginating non-scalar results
 
 To paginate a query which doesn't return [scalars], specify `scalars=False` when invoking
 `paginate`:
@@ -221,7 +221,7 @@ def all_users(paginate: Paginate = Depends()):
 ```
 
 
-#### Customize pagination
+### Customize pagination
 
 You can customize:
 - Minimum and maximum number of items per pages;
@@ -259,7 +259,7 @@ def all_users(paginate: Paginate = Depends()):
     return paginate(select(User))
 ```
 
-## Pytest fixtures
+# Pytest fixtures
 
 This library provides a set of utility fixtures, through its PyTest plugin, which is
 automatically installed with the library.
@@ -267,7 +267,7 @@ automatically installed with the library.
 By default, no records are actually written to the database when running tests.
 There currently is no way to change this behaviour.
 
-### `sqla_modules`
+## `sqla_modules`
 
 You must define this fixture, in order for the plugin to reflect table metadata in your
 SQLAlchemy entities. It should just import all of the application's modules which contain
@@ -285,7 +285,7 @@ def sqla_modules():
     from app import sqla  # noqa
 ```
 
-### `db_url`
+## `db_url`
 
 The DB url to use.
 
@@ -313,13 +313,13 @@ def db_url():
     return "postgresql://postgres@localhost/test_database"
 ```
 
-### `async_sqlalchemy_url`
+## `async_sqlalchemy_url`
 
 DB url to use when using `asyncio` support. Defaults to `db_url` fixture with
 `postgresql+asyncpg://` scheme.
 
 
-### `session` & `async_session`
+## `session` & `async_session`
 
 Sqla sessions to create db fixture:
 * All changes done at test setup or during the test are rollbacked at test tear down;
@@ -354,7 +354,7 @@ async def doctor(async_session):
     return doctor
 ```
 
-### `db_migration`
+## `db_migration`
 
 A session scope fixture that runs `alembic upgrade` at test session setup and
 `alembic downgrade` at tear down.
@@ -388,11 +388,37 @@ def db_migration(db_migration):
     pass
 ```
 
-### `alembic_ini_path`
+## `alembic_ini_path`
 
 It returns the path of  `alembic.ini` configuration file. By default, it returns
 `./alembic.ini`.
 
+
+# Development
+
+## Prerequisites
+
+- **Python ^3.9**
+- [**Poetry**](https://poetry.eustace.io/) to install package dependencies.
+
+
+## Setup
+
+```bash
+$ poetry install --extras tests --extras asyncpg
+```
+
+## Running tests
+
+```bash
+$ poetry run pytest
+```
+
+#### Runing tests on multiple environments
+
+```bash
+$ poetry run tox
+```
 
 [`sqlalchemy.create_engine`]: https://docs.sqlalchemy.org/en/13/core/engines.html?highlight=create_engine#sqlalchemy.create_engine
 [`Query.count`]: https://docs.sqlalchemy.org/en/13/orm/query.html#sqlalchemy.orm.query.Query.count
