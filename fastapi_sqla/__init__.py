@@ -18,7 +18,7 @@ from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
-from fastapi_sqla.aws_rds_iam_support import set_connection_token
+from . import aws_rds_iam_support
 
 try:
     from sqlalchemy.orm import declarative_base
@@ -65,7 +65,7 @@ def setup(app: FastAPI):
 def startup():
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     engine = engine_from_config(lowercase_environ, prefix="sqlalchemy_")
-    event.listen(engine.engine, "do_connect", set_connection_token)
+    aws_rds_iam_support.startup(engine.engine)
 
     Base.metadata.bind = engine
     Base.prepare(engine)

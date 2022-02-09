@@ -1,5 +1,13 @@
 import boto3
 from pydantic import BaseSettings
+from sqlalchemy import event
+
+
+def startup(engine):
+    config = Config()
+
+    if config.aws_rds_iam_enabled:
+        event.listen(engine, "do_connect", set_connection_token)
 
 
 def get_authentication_token(host, port, user):
@@ -10,12 +18,9 @@ def get_authentication_token(host, port, user):
 
 
 def set_connection_token(dialect, conn_rec, cargs, cparams):
-    config = Config()
-
-    if config.aws_rds_iam_enabled:
-        cparams["password"] = get_authentication_token(
-            host=cparams["host"], port=cparams.get("port", 5432), user=cparams["user"]
-        )
+    cparams["password"] = get_authentication_token(
+        host=cparams["host"], port=cparams.get("port", 5432), user=cparams["user"]
+    )
 
 
 class Config(BaseSettings):
