@@ -6,7 +6,7 @@ from pytest import fixture, mark
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
-pytestmark = [mark.dont_patch_engines, mark.require_boto3]
+pytestmark = [mark.dont_patch_engines, mark.dont_patch_sqla_event, mark.require_boto3]
 
 
 @fixture

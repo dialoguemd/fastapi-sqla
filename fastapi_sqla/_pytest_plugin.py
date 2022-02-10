@@ -104,6 +104,17 @@ def engine_from_config(request, db_url, sqla_connection, sqla_transaction):
             yield engine_from_config
 
 
+@fixture(autouse=True)
+def patch_sqla_event_listen(request):
+    """So that aws_rds_iam_support does not interfere when running tests."""
+    if "dont_patch_sqla_event" in request.keywords:
+        yield
+
+    else:
+        with patch("fastapi_sqla.aws_rds_iam_support.event") as mock_event:
+            yield mock_event
+
+
 @fixture
 def sqla_transaction(sqla_connection):
     transaction = sqla_connection.begin()
