@@ -16,20 +16,6 @@ def case_sensitive_environ(environ, request):
         yield values
 
 
-@fixture()
-def boto_session(boto_client_mock):
-    boto_session_mock = Mock()
-    boto_session_mock.client.return_value = boto_client_mock
-
-    with patch("boto3.Session", return_value=boto_session_mock):
-        yield boto_session_mock
-
-
-@fixture()
-def boto_client_mock():
-    return Mock()
-
-
 @mark.dont_patch_engines
 def test_startup(case_sensitive_environ):
     from fastapi_sqla import _Session, startup
@@ -85,39 +71,3 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 
     with raises(Exception):
         await asyncio_support.startup()
-
-
-@mark.require_boto3
-@mark.dont_patch_engines
-def test_sync_startup_with_aws_rds_iam_enabled(
-    monkeypatch, boto_session, boto_client_mock, db_host, db_user
-):
-    from fastapi_sqla import startup
-
-    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
-
-    startup()
-
-    boto_client_mock.generate_db_auth_token.assert_called_once_with(
-        DBHostname=db_host, Port=5432, DBUsername=db_user
-    )
-
-
-@mark.require_boto3
-@mark.require_asyncpg
-@mark.sqlalchemy("1.4")
-@mark.asyncio
-@mark.dont_patch_engines
-async def test_async_startup_with_aws_rds_iam_enabled(
-    monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user
-):
-    from fastapi_sqla.asyncio_support import startup
-
-    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
-    monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
-
-    await startup()
-
-    boto_client_mock.generate_db_auth_token.assert_called_once_with(
-        DBHostname=db_host, Port=5432, DBUsername=db_user
-    )

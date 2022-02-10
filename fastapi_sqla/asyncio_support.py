@@ -8,8 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
 
-from . import aws_rds_iam_support
-
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
 _AsyncSession = sessionmaker(class_=SqlaAsyncSession)
@@ -18,7 +16,6 @@ _AsyncSession = sessionmaker(class_=SqlaAsyncSession)
 async def startup():
     async_sqlalchemy_url = os.environ["async_sqlalchemy_url"]
     engine = create_async_engine(async_sqlalchemy_url)
-    aws_rds_iam_support.setup(engine.sync_engine)
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
 
     # Fail early:

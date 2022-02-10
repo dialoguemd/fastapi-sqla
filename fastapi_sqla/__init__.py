@@ -9,7 +9,7 @@ import structlog
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BaseSettings, Field
 from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -51,12 +51,22 @@ _SESSION_KEY = "fastapi_sqla_session"
 _Session = sessionmaker()
 
 
+class Config(BaseSettings):
+    aws_rds_iam_enabled: bool = Field(False, env="fastapi_sqla_aws_rds_iam_enabled")
+    sqlalchemy_url: str
+    async_sqlalchemy_url: Optional[str]
+
+
 def setup(app: FastAPI):
+    config = Config()
+
+    if config.aws_rds_iam_enabled:
+        app.add_event_handler("startup", aws_rds_iam_support.startup)
+
     app.add_event_handler("startup", startup)
     app.middleware("http")(add_session_to_request)
 
-    async_sqlalchemy_url = os.getenv("async_sqlalchemy_url")
-    if async_sqlalchemy_url:
+    if config.async_sqlalchemy_url:
         assert asyncio_support, asyncio_support_err
         app.add_event_handler("startup", asyncio_support.startup)
         app.middleware("http")(asyncio_support.add_session_to_request)
@@ -65,7 +75,6 @@ def setup(app: FastAPI):
 def startup():
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     engine = engine_from_config(lowercase_environ, prefix="sqlalchemy_")
-    aws_rds_iam_support.setup(engine.engine)
 
     Base.metadata.bind = engine
     Base.prepare(engine)

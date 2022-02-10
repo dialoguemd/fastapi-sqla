@@ -6,16 +6,13 @@ except ImportError as err:
     boto3_installed = False
     boto3_installed_err = str(err)
 
-from pydantic import BaseSettings
 from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 
-def setup(engine):
-    config = Config()
-
-    if config.aws_rds_iam_enabled:
-        assert boto3_installed, boto3_installed_err
-        event.listen(engine, "do_connect", set_connection_token)
+def startup():
+    assert boto3_installed, boto3_installed_err
+    event.listen(Engine, "do_connect", set_connection_token)
 
 
 def get_authentication_token(host, port, user):
@@ -29,10 +26,3 @@ def set_connection_token(dialect, conn_rec, cargs, cparams):
     cparams["password"] = get_authentication_token(
         host=cparams["host"], port=cparams.get("port", 5432), user=cparams["user"]
     )
-
-
-class Config(BaseSettings):
-    aws_rds_iam_enabled: bool = False
-
-    class Config:
-        env_prefix = "fastapi_sqla_"
