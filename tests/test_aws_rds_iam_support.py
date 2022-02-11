@@ -3,8 +3,6 @@ from unittest.mock import call, patch
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from pytest import fixture, mark
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
 
 pytestmark = [mark.dont_patch_engines, mark.dont_patch_sqla_event, mark.require_boto3]
 
