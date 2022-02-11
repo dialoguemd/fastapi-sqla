@@ -10,15 +10,7 @@ pytestmark = [mark.dont_patch_engines, mark.dont_patch_sqla_event, mark.require_
 
 
 @fixture
-def tear_down():
-    from fastapi_sqla.aws_rds_iam_support import set_connection_token
-
-    yield
-    event.remove(Engine, "do_connect", set_connection_token)
-
-
-@fixture
-async def app(monkeypatch, tear_down):
+async def app(monkeypatch):
     from fastapi_sqla import setup
 
     app = FastAPI()

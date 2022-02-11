@@ -61,7 +61,8 @@ def setup(app: FastAPI):
     config = Config()
 
     if config.aws_rds_iam_enabled:
-        app.add_event_handler("startup", aws_rds_iam_support.startup)
+        app.add_event_handler("startup", aws_rds_iam_support.setup)
+        app.add_event_handler("shutdown", aws_rds_iam_support.tear_down)
 
     app.add_event_handler("startup", startup)
     app.middleware("http")(add_session_to_request)
