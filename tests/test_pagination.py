@@ -6,7 +6,7 @@ from faker import Faker
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark, param
-from sqlalchemy import MetaData, Table, func, select, text
+from sqlalchemy import MetaData, JSON, Table, cast, func, select, text
 from sqlalchemy.orm import joinedload, relationship
 
 
@@ -132,24 +132,33 @@ def app(user_cls, note_cls):
     class User(BaseModel):
         id: int
         name: str
+
+        class Config:
+            orm_mode = True
+
+    class UserWithNotes(User):
         notes: List[Note]
 
         class Config:
             orm_mode = True
 
-    class UserWithNotesCount(BaseModel):
-        id: int
-        name: str
+    class UserWithNotesCount(User):
         notes_count: int
 
-    @app.get("/v1/users", response_model=Page[User])
+    class Meta(BaseModel):
+        notes_count: int
+
+    class UserWithMeta(User):
+        meta: Meta
+
+    @app.get("/v1/users", response_model=Page[UserWithNotes])
     def sqla_13_all_users(session: Session = Depends(), paginate: Paginate = Depends()):
         query = (
             session.query(user_cls).options(joinedload("notes")).order_by(user_cls.id)
         )
         return paginate(query)
 
-    @app.get("/v2/users", response_model=Page[User])
+    @app.get("/v2/users", response_model=Page[UserWithNotes])
     def sqla_14_all_users(paginate: Paginate = Depends()):
         query = select(user_cls).options(joinedload("notes")).order_by(user_cls.id)
         return paginate(query)
@@ -159,6 +168,23 @@ def app(user_cls, note_cls):
         query = (
             select(
                 user_cls.id, user_cls.name, func.count(note_cls.id).label("notes_count")
+            )
+            .join(note_cls)
+            .order_by(user_cls.id)
+            .group_by(user_cls)
+        )
+        return paginate(query, scalars=False)
+
+    @app.get("/v2/query-with-json-result", response_model=Page[UserWithMeta])
+    def query_with_JSON_result(paginate: Paginate = Depends()):
+        query = (
+            select(
+                user_cls.id,
+                user_cls.name,
+                cast(
+                    func.format('{"notes_count": %s}', func.count(note_cls.id)),
+                    JSON,
+                ).label("meta"),
             )
             .join(note_cls)
             .order_by(user_cls.id)
@@ -237,3 +263,11 @@ async def test_custom_pagination(client, offset, items_number, path):
 
     meta = result.json()["meta"]
     assert meta["total_items"] == 22
+
+
+@mark.asyncio
+@mark.sqlalchemy("1.4")
+async def test_json_result(client):
+    result = await client.get("/v2/query-with-json-result")
+
+    assert result.status_code == 200, result.json()
