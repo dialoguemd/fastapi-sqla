@@ -6,7 +6,7 @@ from faker import Faker
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark, param
-from sqlalchemy import MetaData, JSON, Table, cast, func, select, text
+from sqlalchemy import JSON, MetaData, Table, cast, func, select, text
 from sqlalchemy.orm import joinedload, relationship
 
 
