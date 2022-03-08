@@ -291,7 +291,7 @@ def _paginate(
     page_number = offset / limit + 1
     query = query.offset(offset).limit(limit)
     result = session.execute(query)
-    data = iter(result.unique().scalars() if scalars else result.unique().mappings())
+    data = iter(result.unique().scalars() if scalars else result.mappings())
     return Page[T](
         data=data,
         meta={
