@@ -17,6 +17,13 @@ except ImportError:
 
 
 @fixture(scope="session")
+def sqla_version_tuple():
+    from sqlalchemy import __version__
+
+    return tuple(int(i) for i in __version__.split("."))
+
+
+@fixture(scope="session")
 def db_host():
     """Default db host used by depending fixtures.
 
@@ -112,7 +119,7 @@ def sqla_transaction(sqla_connection):
 
 
 @fixture
-def session(sqla_transaction, sqla_connection):
+def session(sqla_transaction, sqla_connection, sqla_version_tuple):
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
@@ -121,10 +128,15 @@ def session(sqla_transaction, sqla_connection):
     import fastapi_sqla
 
     session = fastapi_sqla._Session(bind=sqla_connection)
-    with session.begin():
-        session.begin_nested()
-        yield session
-        session.rollback()
+
+    if sqla_version_tuple >= (1, 4, 0):
+        with session.begin():
+            yield session
+            session.rollback()
+    else:
+        with session.begin(subtransactions=True):
+            session.begin_nested()
+            yield session
 
 
 def format_async_async_sqlalchemy_url(url):
