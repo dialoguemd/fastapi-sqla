@@ -23,6 +23,7 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "require_boto3: skip test if boto3 is not installed"
     )
+    config.addinivalue_line("markers", "dont_patch_engines: do not patch engines")
 
 
 @fixture(scope="session")
@@ -52,7 +53,11 @@ def is_boto3_installed():
 
 @fixture(scope="session", autouse=True)
 def environ(db_url, sqla_version_tuple, async_sqlalchemy_url):
-    values = {"sqlalchemy_url": db_url, "PYTHONASYNCIODEBUG": "1"}
+    values = {
+        "PYTHONASYNCIODEBUG": "1",
+        "sqlalchemy_url": db_url,
+        "SQLALCHEMY_WARN_20": "true",
+    }
 
     if sqla_version_tuple >= (1, 4, 0) and is_asyncpg_installed():
         values["async_sqlalchemy_url"] = async_sqlalchemy_url

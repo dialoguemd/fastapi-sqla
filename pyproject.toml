@@ -110,3 +110,7 @@ extras =
     tests
 commands = pytest -vv --cov={envsitepackagesdir}/fastapi_sqla --cov-report xml --cov-report html --junitxml=test-reports/pytest/junit.xml
 """
+
+[tool.black]
+exclude = ".mypy_cache|.pytest_cache|.vscode|.eggs|venv"
+--skip-magic-trailing-comma = true

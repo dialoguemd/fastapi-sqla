@@ -20,7 +20,8 @@ except ImportError:
 def db_host():
     """Default db host used by depending fixtures.
 
-    When CI key is set in environment variables, it uses `postgres` as host name else, host used is `localhost`
+    When CI key is set in environment variables, it uses `postgres` as host name else,
+    host used is `localhost`
     """
 
     return "postgres" if "CI" in os.environ else "localhost"
@@ -49,9 +50,8 @@ def db_url(db_host, db_user):
 @fixture(scope="session")
 def sqla_connection(db_url):
     engine = create_engine(db_url)
-    connection = engine.connect()
-    yield connection
-    connection.close()
+    with engine.connect() as connection:
+        yield connection
 
 
 @fixture(scope="session")
@@ -121,8 +121,10 @@ def session(sqla_transaction, sqla_connection):
     import fastapi_sqla
 
     session = fastapi_sqla._Session(bind=sqla_connection)
-    yield session
-    session.close()
+    with session.begin():
+        session.begin_nested()
+        yield session
+        session.rollback()
 
 
 def format_async_async_sqlalchemy_url(url):

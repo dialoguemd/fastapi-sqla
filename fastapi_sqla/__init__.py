@@ -11,7 +11,7 @@ from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, text
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
@@ -63,7 +63,9 @@ def setup(app: FastAPI):
 
 
 def startup():
-    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
+    lowercase_environ = {
+        k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
+    }
     engine = engine_from_config(lowercase_environ, prefix="sqlalchemy_")
     aws_rds_iam_support.setup(engine.engine)
 
@@ -74,7 +76,7 @@ def startup():
     # Fail early:
     try:
         with open_session() as session:
-            session.execute("select 'OK'")
+            session.execute(text("select 'OK'"))
     except Exception:
         logger.critical(
             "Fail querying db: is sqlalchemy_url envvar correctly configured?"
@@ -234,7 +236,9 @@ def default_query_count(session: Session, query: DbQuery) -> int:
         result = query.count()
 
     elif isinstance(query, Select):
-        result = session.execute(select(func.count()).select_from(query)).scalar()
+        result = session.execute(
+            select(func.count()).select_from(query.subquery())
+        ).scalar()
 
     else:  # pragma no cover
         raise NotImplementedError(f"Query type {type(query)!r} is not supported")
