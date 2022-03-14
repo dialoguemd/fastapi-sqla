@@ -14,19 +14,21 @@ pytestmark = mark.asyncio
 @fixture(scope="module", autouse=True)
 def setup_tear_down(engine):
     with engine.connect() as connection:
-        connection.execute(
-            text(
-                """
-                CREATE TABLE IF NOT EXISTS public.user (
-                   id integer primary key,
-                   first_name varchar,
-                   last_name varchar
+        with connection.begin():
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS public.user (
+                       id integer primary key,
+                       first_name varchar,
+                       last_name varchar
+                    )
+                    """
                 )
-                """
             )
-        )
         yield
-        connection.execute(text("DROP TABLE public.user"))
+        with connection.begin():
+            connection.execute(text("DROP TABLE public.user"))
 
 
 @fixture
@@ -104,11 +106,12 @@ async def test_session_dependency(client, faker, session):
     first_name = faker.first_name()
     last_name = faker.last_name()
     res = await client.post(
-        "/users",
-        json={"id": userid, "first_name": first_name, "last_name": last_name},
+        "/users", json={"id": userid, "first_name": first_name, "last_name": last_name}
     )
     assert res.status_code == 200, res.json()
-    row = session.execute(f"select * from public.user where id = {userid}").fetchone()
+    row = session.execute(
+        text(f"select * from public.user where id = {userid}")
+    ).fetchone()
     assert row == (userid, first_name, last_name)
 
 
@@ -124,7 +127,9 @@ async def test_async_session_dependency(client, faker, async_session):
     )
     assert res.status_code == 200, res.json()
     row = (
-        await async_session.execute(f"select * from public.user where id = {userid}")
+        await async_session.execute(
+            text(f"select * from public.user where id = {userid}")
+        )
     ).fetchone()
     assert row == (userid, first_name, last_name)
 

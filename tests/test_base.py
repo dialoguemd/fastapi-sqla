@@ -6,11 +6,13 @@ from sqlalchemy.exc import NoSuchTableError
 @fixture(autouse=True, scope="module")
 def setup_tear_down(engine):
     with engine.connect() as connection:
-        connection.execute(
-            text("CREATE TABLE IF NOT EXISTS test_table (id integer primary key)")
-        )
+        with connection.begin():
+            connection.execute(
+                text("CREATE TABLE IF NOT EXISTS test_table (id integer primary key)")
+            )
         yield
-        connection.execute(text("DROP TABLE test_table"))
+        with connection.begin():
+            connection.execute(text("DROP TABLE test_table"))
 
 
 def test_startup_reflect_test_table():

@@ -1,4 +1,5 @@
 import importlib
+import os
 from unittest.mock import patch
 
 from faker import Faker
@@ -7,6 +8,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy.orm.session import close_all_sessions
 
 pytest_plugins = ["fastapi_sqla._pytest_plugin", "pytester"]
+os.environ["SQLALCHEMY_WARN_20"] = "true"
 
 
 def pytest_configure(config):

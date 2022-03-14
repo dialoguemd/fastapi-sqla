@@ -76,7 +76,10 @@ def db_migration(db_url, sqla_connection, alembic_ini_path):
     alembic_config = Config(file_=alembic_ini_path)
     alembic_config.set_main_option("sqlalchemy.url", db_url)
 
-    sqla_connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+        )
 
     command.upgrade(alembic_config, "head")
     yield

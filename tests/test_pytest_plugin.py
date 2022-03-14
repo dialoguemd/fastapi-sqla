@@ -4,19 +4,21 @@ from sqlalchemy import text
 
 @fixture(scope="module", autouse=True)
 def setup_tear_down(sqla_connection):
-    sqla_connection.execute(
-        text(
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS singer (
+                   id integer primary key,
+                   name varchar,
+                   country varchar
+                )
             """
-            CREATE TABLE IF NOT EXISTS singer (
-               id integer primary key,
-               name varchar,
-               country varchar
             )
-        """
         )
-    )
     yield
-    sqla_connection.execute(text("DROP TABLE singer"))
+    with sqla_connection.begin():
+        sqla_connection.execute(text("DROP TABLE singer"))
 
 
 @fixture
@@ -63,7 +65,7 @@ def test_all_opened_sessions_are_within_the_same_transaction(
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
 
-    other_session = _Session()
+    other_session = _Session(bind=sqla_connection)
     assert other_session.query(singer_cls).get(1)
 
 
