@@ -79,6 +79,7 @@ def engine(environ):
 @fixture(autouse=True)
 def tear_down(environ):
     from sqlalchemy.orm.session import close_all_sessions
+
     import fastapi_sqla
 
     yield
