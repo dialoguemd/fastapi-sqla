@@ -4,11 +4,11 @@ from unittest.mock import patch
 
 from faker import Faker
 from pytest import fixture, skip
-from sqlalchemy import engine_from_config
-from sqlalchemy.orm.session import close_all_sessions
+
+# Must be done before importing anything from sqlalchemy:
+os.environ["SQLALCHEMY_WARN_20"] = "true"
 
 pytest_plugins = ["fastapi_sqla._pytest_plugin", "pytester"]
-os.environ["SQLALCHEMY_WARN_20"] = "true"
 
 
 def pytest_configure(config):
@@ -70,12 +70,15 @@ def environ(db_url, sqla_version_tuple, async_sqlalchemy_url):
 
 @fixture(scope="session")
 def engine(environ):
+    from sqlalchemy import engine_from_config
+
     engine = engine_from_config(environ, prefix="sqlalchemy_")
     return engine
 
 
 @fixture(autouse=True)
-def tear_down():
+def tear_down(environ):
+    from sqlalchemy.orm.session import close_all_sessions
     import fastapi_sqla
 
     yield

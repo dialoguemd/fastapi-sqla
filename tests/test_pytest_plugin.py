@@ -66,7 +66,7 @@ def test_all_opened_sessions_are_within_the_same_transaction(
     session.commit()
 
     other_session = _Session(bind=sqla_connection)
-    assert other_session.query(singer_cls).get(1)
+    assert other_session.get(singer_cls, 1)
 
 
 @mark.require_asyncpg
