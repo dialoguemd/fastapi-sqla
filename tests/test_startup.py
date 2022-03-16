@@ -94,7 +94,7 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 ):
     from fastapi_sqla import startup
 
-    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
+    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
 
     startup()
 
@@ -113,7 +113,7 @@ async def test_async_startup_with_aws_rds_iam_enabled(
 ):
     from fastapi_sqla.asyncio_support import startup
 
-    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", True)
+    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
     monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
 
     await startup()

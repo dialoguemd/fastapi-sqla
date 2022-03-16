@@ -17,10 +17,18 @@ except ImportError:
 
 
 @fixture(scope="session")
+def sqla_version_tuple():
+    from sqlalchemy import __version__
+
+    return tuple(int(i) for i in __version__.split("."))
+
+
+@fixture(scope="session")
 def db_host():
     """Default db host used by depending fixtures.
 
-    When CI key is set in environment variables, it uses `postgres` as host name else, host used is `localhost`
+    When CI key is set in environment variables, it uses `postgres` as host name else,
+    host used is `localhost`
     """
 
     return "postgres" if "CI" in os.environ else "localhost"
@@ -49,9 +57,8 @@ def db_url(db_host, db_user):
 @fixture(scope="session")
 def sqla_connection(db_url):
     engine = create_engine(db_url)
-    connection = engine.connect()
-    yield connection
-    connection.close()
+    with engine.connect() as connection:
+        yield connection
 
 
 @fixture(scope="session")
@@ -69,7 +76,10 @@ def db_migration(db_url, sqla_connection, alembic_ini_path):
     alembic_config = Config(file_=alembic_ini_path)
     alembic_config.set_main_option("sqlalchemy.url", db_url)
 
-    sqla_connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+        )
 
     command.upgrade(alembic_config, "head")
     yield
@@ -112,7 +122,7 @@ def sqla_transaction(sqla_connection):
 
 
 @fixture
-def session(sqla_transaction, sqla_connection):
+def session(sqla_transaction, sqla_connection, sqla_version_tuple):
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
@@ -121,8 +131,15 @@ def session(sqla_transaction, sqla_connection):
     import fastapi_sqla
 
     session = fastapi_sqla._Session(bind=sqla_connection)
-    yield session
-    session.close()
+
+    if sqla_version_tuple >= (1, 4, 0):
+        with session.begin():
+            yield session
+            session.rollback()
+    else:
+        with session.begin(subtransactions=True):
+            session.begin_nested()
+            yield session
 
 
 def format_async_async_sqlalchemy_url(url):

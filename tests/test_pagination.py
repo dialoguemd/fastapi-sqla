@@ -13,37 +13,39 @@ from sqlalchemy.orm import joinedload, relationship
 @fixture(scope="module", autouse=True)
 def setup_tear_down(sqla_connection):
     faker = Faker(seed=0)
-    sqla_connection.execute(
-        text(
-            "create table if not exists public.user "
-            "(id serial primary key, name varchar)"
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text(
+                "create table if not exists public.user "
+                "(id serial primary key, name varchar)"
+            )
         )
-    )
-    sqla_connection.execute(
-        text(
+        sqla_connection.execute(
+            text(
+                """
+            create table if not exists note (
+                user_id integer,
+                id serial,
+                content text,
+                primary key (user_id, id),
+                foreign key (user_id) references public.user (id)
+            )
             """
-        create table if not exists note (
-            user_id integer,
-            id serial,
-            content text,
-            primary key (user_id, id),
-            foreign key (user_id) references public.user (id)
+            )
         )
-        """
-        )
-    )
-    metadata = MetaData()
-    user = Table("user", metadata, autoload_with=sqla_connection)
-    note = Table("note", metadata, autoload_with=sqla_connection)
-    user_params = [{"name": faker.name()} for _ in range(1, 43)]
-    note_params = [
-        {"user_id": i % 42 + 1, "content": faker.text()} for i in range(0, 22 * 42)
-    ]
-    sqla_connection.execute(user.insert(), *user_params)
-    sqla_connection.execute(note.insert(), *note_params)
+        metadata = MetaData()
+        user = Table("user", metadata, autoload_with=sqla_connection)
+        note = Table("note", metadata, autoload_with=sqla_connection)
+        user_params = [{"name": faker.name()} for _ in range(1, 43)]
+        note_params = [
+            {"user_id": i % 42 + 1, "content": faker.text()} for i in range(0, 22 * 42)
+        ]
+        sqla_connection.execute(user.insert(), user_params)
+        sqla_connection.execute(note.insert(), note_params)
     yield
-    sqla_connection.execute(text("drop table note cascade"))
-    sqla_connection.execute(text("drop table public.user cascade"))
+    with sqla_connection.begin():
+        sqla_connection.execute(text("drop table note cascade"))
+        sqla_connection.execute(text("drop table public.user cascade"))
 
 
 @fixture
@@ -80,7 +82,7 @@ def note_cls():
 def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
     from fastapi_sqla import Paginate
 
-    query = session.query(user_cls).options(joinedload("notes"))
+    query = session.query(user_cls).options(joinedload(user_cls.notes))
     result = Paginate(session, offset, limit)(query)
 
     assert result.meta.total_items == 42
@@ -99,7 +101,7 @@ def test_pagination_with_legacy_query_count(
 ):
     from fastapi_sqla import Paginate
 
-    query = session.query(user_cls).options(joinedload("notes"))
+    query = session.query(user_cls).options(joinedload(user_cls.notes))
     result = Paginate(session, offset, limit)(query)
 
     assert result.meta.total_items == 42
@@ -154,13 +156,17 @@ def app(user_cls, note_cls):
     @app.get("/v1/users", response_model=Page[UserWithNotes])
     def sqla_13_all_users(session: Session = Depends(), paginate: Paginate = Depends()):
         query = (
-            session.query(user_cls).options(joinedload("notes")).order_by(user_cls.id)
+            session.query(user_cls)
+            .options(joinedload(user_cls.notes))
+            .order_by(user_cls.id)
         )
         return paginate(query)
 
     @app.get("/v2/users", response_model=Page[UserWithNotes])
     def sqla_14_all_users(paginate: Paginate = Depends()):
-        query = select(user_cls).options(joinedload("notes")).order_by(user_cls.id)
+        query = (
+            select(user_cls).options(joinedload(user_cls.notes)).order_by(user_cls.id)
+        )
         return paginate(query)
 
     @app.get("/v2/users-with-notes-count", response_model=Page[UserWithNotesCount])
@@ -182,8 +188,7 @@ def app(user_cls, note_cls):
                 user_cls.id,
                 user_cls.name,
                 cast(
-                    func.format('{"notes_count": %s}', func.count(note_cls.id)),
-                    JSON,
+                    func.format('{"notes_count": %s}', func.count(note_cls.id)), JSON
                 ).label("meta"),
             )
             .join(note_cls)

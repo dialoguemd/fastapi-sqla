@@ -5,11 +5,16 @@ from sqlalchemy.exc import IntegrityError
 
 @fixture(autouse=True, scope="module")
 def module_setup_tear_down(engine, sqla_connection):
-    engine.execute(
-        "CREATE TABLE IF NOT EXISTS test_table (id integer primary key, value varchar)"
-    )
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS test_table   "
+                "(id integer primary key, value varchar) "
+            )
+        )
     yield
-    engine.execute("DROP TABLE test_table")
+    with sqla_connection.begin():
+        sqla_connection.execute(text("DROP TABLE test_table"))
 
 
 @fixture(autouse=True)

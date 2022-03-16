@@ -4,19 +4,21 @@ from sqlalchemy import text
 
 @fixture(scope="module", autouse=True)
 def setup_tear_down(sqla_connection):
-    sqla_connection.execute(
-        text(
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS singer (
+                   id integer primary key,
+                   name varchar,
+                   country varchar
+                )
             """
-            CREATE TABLE IF NOT EXISTS singer (
-               id integer primary key,
-               name varchar,
-               country varchar
             )
-        """
         )
-    )
     yield
-    sqla_connection.execute(text("DROP TABLE singer"))
+    with sqla_connection.begin():
+        sqla_connection.execute(text("DROP TABLE singer"))
 
 
 @fixture
@@ -55,7 +57,8 @@ async def test_async_session_fixture_does_not_write_in_db(
         ).scalar() == 0
 
 
-def test_all_opened_sessions_are_within_the_same_transaction(
+@mark.sqlalchemy("1.4")
+def test_sqla_14_all_opened_sessions_are_within_the_same_transaction(
     sqla_connection, session, singer_cls
 ):
     from fastapi_sqla import _Session
@@ -63,7 +66,22 @@ def test_all_opened_sessions_are_within_the_same_transaction(
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
 
-    other_session = _Session()
+    other_session = _Session(bind=sqla_connection)
+
+    assert other_session.get(singer_cls, 1)
+
+
+@mark.sqlalchemy("1.3")
+def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
+    sqla_connection, session, singer_cls
+):
+    from fastapi_sqla import _Session
+
+    session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
+    session.commit()
+
+    other_session = _Session(bind=sqla_connection)
+
     assert other_session.query(singer_cls).get(1)
 
 
