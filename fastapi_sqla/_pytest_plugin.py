@@ -122,7 +122,7 @@ def sqla_transaction(sqla_connection):
 
 
 @fixture
-def session(sqla_transaction, sqla_connection, sqla_version_tuple):
+def session(sqla_transaction, sqla_connection):
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
@@ -130,16 +130,7 @@ def session(sqla_transaction, sqla_connection, sqla_version_tuple):
     """
     import fastapi_sqla
 
-    session = fastapi_sqla._Session(bind=sqla_connection)
-
-    if sqla_version_tuple >= (1, 4, 0):
-        with session.begin():
-            yield session
-            session.rollback()
-    else:
-        with session.begin(subtransactions=True):
-            session.begin_nested()
-            yield session
+    yield fastapi_sqla._Session(bind=sqla_connection)
 
 
 def format_async_async_sqlalchemy_url(url):
