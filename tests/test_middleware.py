@@ -171,7 +171,14 @@ async def test_rollback_on_http_exception(client, mock_middleware):
     with patch("fastapi_sqla.open_session") as open_session:
         session = open_session.return_value.__enter__.return_value
 
-        await client.get("/404")
+        with capture_logs() as caplog:
+            await client.get("/404")
 
         session.rollback.assert_called_once_with()
         mock_middleware.assert_called_once()
+
+        assert {
+            "event": "http error, rolling back",
+            "log_level": "warning",
+            "status_code": 500,
+        } not in caplog
