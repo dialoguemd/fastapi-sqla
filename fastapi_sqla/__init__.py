@@ -166,7 +166,7 @@ async def add_session_to_request(request: Request, call_next):
 
         response = await call_next(request)
 
-        is_dirty = bool(session.dirty)
+        is_dirty = bool(session.dirty or session.deleted or session.new)
 
         loop = asyncio.get_running_loop()
 

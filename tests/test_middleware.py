@@ -159,7 +159,7 @@ async def test_commit_error_returns_500(client, user_1, mock_middleware):
     } in caplog
 
     assert {
-        "event": "http error, rolling back",
+        "event": "http error, rolling back possibly uncommitted changes",
         "log_level": "warning",
         "status_code": 500,
     } in caplog
@@ -171,14 +171,20 @@ async def test_rollback_on_http_exception(client, mock_middleware):
     with patch("fastapi_sqla.open_session") as open_session:
         session = open_session.return_value.__enter__.return_value
 
-        with capture_logs() as caplog:
-            await client.get("/404")
+        await client.get("/404")
 
         session.rollback.assert_called_once_with()
         mock_middleware.assert_called_once()
 
-        assert {
-            "event": "http error, rolling back",
-            "log_level": "warning",
-            "status_code": 500,
-        } not in caplog
+
+async def test_rollback_on_http_exception_silent(client, mock_middleware):
+    with capture_logs() as caplog:
+        await client.get("/404")
+
+    mock_middleware.assert_called_once()
+
+    assert {
+        "event": "http error, rolling back possibly uncommitted changes",
+        "log_level": "warning",
+        "status_code": 404,
+    } not in caplog
