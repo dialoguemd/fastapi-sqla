@@ -166,12 +166,13 @@ async def add_session_to_request(request: Request, call_next):
 
         response = await call_next(request)
 
+        is_dirty = bool(session.dirty or session.deleted or session.new)
+
         loop = asyncio.get_running_loop()
 
         # try to commit after response, so that we can return a proper 500 response
         # and not raise a true internal server error
         if response.status_code < 400:
-
             try:
                 await loop.run_in_executor(None, session.commit)
             except Exception:
@@ -183,7 +184,13 @@ async def add_session_to_request(request: Request, call_next):
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
-            logger.warning("http error, rolling back", status_code=response.status_code)
+            if is_dirty:
+                # optimistically only log if there were uncommitted changes
+                logger.warning(
+                    "http error, rolling back possibly uncommitted changes",
+                    status_code=response.status_code,
+                )
+            # since this is no-op if session is not dirty, we can always call it
             await loop.run_in_executor(None, session.rollback)
 
     return response
