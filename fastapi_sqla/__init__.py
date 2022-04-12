@@ -183,7 +183,13 @@ async def add_session_to_request(request: Request, call_next):
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
-            logger.warning("http error, rolling back", status_code=response.status_code)
+            if session.dirty:
+                # optimistically only log if there's uncommited changes
+                logger.warning(
+                    "http error, rolling back possibly uncommitted changes",
+                    status_code=response.status_code,
+                )
+            # since this is no-op if session is not dirty, we can always call it
             await loop.run_in_executor(None, session.rollback)
 
     return response
