@@ -17,17 +17,11 @@ def case_sensitive_environ(environ, request):
 
 
 @fixture()
-def boto_session(boto_client_mock):
-    boto_session_mock = Mock()
-    boto_session_mock.client.return_value = boto_client_mock
+def boto_client():
+    boto_client_mock = Mock()
 
-    with patch("boto3.Session", return_value=boto_session_mock):
-        yield boto_session_mock
-
-
-@fixture()
-def boto_client_mock():
-    return Mock()
+    with patch("boto3.client", return_value=Mock()):
+        yield boto_client_mock
 
 
 @mark.dont_patch_engines
@@ -109,7 +103,7 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 @mark.asyncio
 @mark.dont_patch_engines
 async def test_async_startup_with_aws_rds_iam_enabled(
-    monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user
+    monkeypatch, async_sqlalchemy_url, boto_client, db_host, db_user
 ):
     from fastapi_sqla.asyncio_support import startup
 
@@ -118,6 +112,6 @@ async def test_async_startup_with_aws_rds_iam_enabled(
 
     await startup()
 
-    boto_client_mock.generate_db_auth_token.assert_called_once_with(
+    boto_client.generate_db_auth_token.assert_called_once_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )
