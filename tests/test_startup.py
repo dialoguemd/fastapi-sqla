@@ -16,8 +16,15 @@ def case_sensitive_environ(environ, request):
         yield values
 
 
+@fixture
+def clear_rds_client_cache():
+    from fastapi_sqla.aws_rds_iam_support import get_rds_client
+
+    get_rds_client.cache_clear()
+
+
 @fixture()
-def boto_session(boto_client_mock):
+def boto_session(boto_client_mock, clear_rds_client_cache):
     boto_session_mock = Mock()
     boto_session_mock.client.return_value = boto_client_mock
 

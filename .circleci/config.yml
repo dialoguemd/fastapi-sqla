@@ -110,7 +110,7 @@ executors:
   python-postgres:
     docker:
       - image: cimg/python:3.9
-      - image: postgres:10.12
+      - image: postgres:14.4
         name: postgres
         environment:
           POSTGRES_HOST_AUTH_METHOD: trust
