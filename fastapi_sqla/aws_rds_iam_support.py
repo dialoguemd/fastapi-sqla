@@ -7,7 +7,7 @@ except ImportError as err:
     boto3_installed_err = str(err)
 
 from functools import cache
-from this import d
+
 from pydantic import BaseSettings
 from sqlalchemy import event
 
@@ -18,6 +18,7 @@ def setup(engine):
     if config.aws_rds_iam_enabled:
         assert boto3_installed, boto3_installed_err
         event.listen(engine, "do_connect", set_connection_token)
+
 
 @cache
 def get_rds_client():
