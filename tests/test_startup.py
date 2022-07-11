@@ -23,12 +23,18 @@ def clear_rds_client_cache():
     get_rds_client.cache_clear()
 
 
-@fixture
-def boto_client(clear_rds_client_cache):
-    boto_client_mock = Mock()
+@fixture()
+def boto_session(boto_client_mock, clear_rds_client_cache):
+    boto_session_mock = Mock()
+    boto_session_mock.client.return_value = boto_client_mock
 
-    with patch("boto3.client", return_value=boto_client_mock):
-        yield boto_client_mock
+    with patch("boto3.Session", return_value=boto_session_mock):
+        yield boto_session_mock
+
+
+@fixture()
+def boto_client_mock():
+    return Mock()
 
 
 @mark.dont_patch_engines
@@ -91,7 +97,7 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 @mark.require_boto3
 @mark.dont_patch_engines
 def test_sync_startup_with_aws_rds_iam_enabled(
-    monkeypatch, boto_client, db_host, db_user
+    monkeypatch, boto_session, boto_client_mock, db_host, db_user
 ):
     from fastapi_sqla import startup
 
@@ -99,7 +105,7 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 
     startup()
 
-    boto_client.generate_db_auth_token.assert_called_once_with(
+    boto_client_mock.generate_db_auth_token.assert_called_once_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )
 
@@ -110,7 +116,7 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 @mark.asyncio
 @mark.dont_patch_engines
 async def test_async_startup_with_aws_rds_iam_enabled(
-    monkeypatch, async_sqlalchemy_url, boto_client, db_host, db_user
+    monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user
 ):
     from fastapi_sqla.asyncio_support import startup
 
@@ -119,6 +125,6 @@ async def test_async_startup_with_aws_rds_iam_enabled(
 
     await startup()
 
-    boto_client.generate_db_auth_token.assert_called_once_with(
+    boto_client_mock.generate_db_auth_token.assert_called_once_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )

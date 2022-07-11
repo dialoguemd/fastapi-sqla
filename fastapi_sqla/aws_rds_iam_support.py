@@ -22,7 +22,8 @@ def setup(engine):
 
 @lru_cache
 def get_rds_client():
-    return boto3.client("rds")
+    session = boto3.Session()
+    return session.client("rds")
 
 
 def get_authentication_token(host, port, user):
