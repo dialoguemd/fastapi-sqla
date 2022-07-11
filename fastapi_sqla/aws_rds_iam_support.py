@@ -17,6 +17,8 @@ def setup(engine):
 
     if config.aws_rds_iam_enabled:
         assert boto3_installed, boto3_installed_err
+        # Cache the client at startup
+        get_rds_client()
         event.listen(engine, "do_connect", set_connection_token)
 
 
