@@ -6,6 +6,8 @@ except ImportError as err:
     boto3_installed = False
     boto3_installed_err = str(err)
 
+from functools import cache
+from this import d
 from pydantic import BaseSettings
 from sqlalchemy import event
 
@@ -17,10 +19,13 @@ def setup(engine):
         assert boto3_installed, boto3_installed_err
         event.listen(engine, "do_connect", set_connection_token)
 
+@cache
+def get_rds_client():
+    return boto3.client("rds")
+
 
 def get_authentication_token(host, port, user):
-    session = boto3.Session()
-    client = session.client("rds")
+    client = get_rds_client()
     token = client.generate_db_auth_token(DBHostname=host, Port=port, DBUsername=user)
     return token
 
