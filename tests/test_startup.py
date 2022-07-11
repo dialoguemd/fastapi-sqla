@@ -84,7 +84,7 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 @mark.require_boto3
 @mark.dont_patch_engines
 def test_sync_startup_with_aws_rds_iam_enabled(
-    monkeypatch, boto_session, boto_client_mock, db_host, db_user
+    monkeypatch, boto_client, db_host, db_user
 ):
     from fastapi_sqla import startup
 
@@ -92,7 +92,7 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 
     startup()
 
-    boto_client_mock.generate_db_auth_token.assert_called_once_with(
+    boto_client.generate_db_auth_token.assert_called_once_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )
 
