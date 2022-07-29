@@ -25,7 +25,6 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "require_boto3: skip test if boto3 is not installed"
     )
-    config.addinivalue_line("markers", "dont_patch_engines: do not patch engines")
 
 
 @fixture(scope="session")

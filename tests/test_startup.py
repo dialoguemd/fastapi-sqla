@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from pytest import fixture, mark, raises
 from sqlalchemy import text
 
+pytestmark = mark.usefixtures("engine_from_config")
+
 
 @fixture(params=[True, False])
 def case_sensitive_environ(environ, request):

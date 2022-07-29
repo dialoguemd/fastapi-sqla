@@ -16,11 +16,8 @@ except ImportError:
     asyncio_support = False
 
 
-@fixture(scope="session")
-def sqla_version_tuple():
-    from sqlalchemy import __version__
-
-    return tuple(int(i) for i in __version__.split("."))
+def pytest_configure(config):
+    config.addinivalue_line("markers", "dont_patch_engines: do not patch sqla engines")
 
 
 @fixture(scope="session")
