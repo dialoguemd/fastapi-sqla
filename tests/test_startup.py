@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from pytest import fixture, mark, raises
 from sqlalchemy import text
 
-pytestmark = mark.usefixtures("engine_from_config")
+pytestmark = mark.usefixtures("patch_engine_from_config", "patch_create_async_engine")
 
 
 @fixture(params=[True, False])
