@@ -16,11 +16,8 @@ except ImportError:
     asyncio_support = False
 
 
-@fixture(scope="session")
-def sqla_version_tuple():
-    from sqlalchemy import __version__
-
-    return tuple(int(i) for i in __version__.split("."))
+def pytest_configure(config):
+    config.addinivalue_line("markers", "dont_patch_engines: do not patch sqla engines")
 
 
 @fixture(scope="session")
@@ -94,7 +91,7 @@ def sqla_modules():
     )
 
 
-@fixture(autouse=True)
+@fixture
 def sqla_reflection(sqla_modules, sqla_connection, db_url):
     import fastapi_sqla
 
@@ -102,8 +99,8 @@ def sqla_reflection(sqla_modules, sqla_connection, db_url):
     fastapi_sqla.Base.prepare(sqla_connection)
 
 
-@fixture(autouse=True)
-def engine_from_config(request, db_url, sqla_connection, sqla_transaction):
+@fixture
+def patch_engine_from_config(request, db_url, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
     if "dont_patch_engines" in request.keywords:
         yield
@@ -122,7 +119,9 @@ def sqla_transaction(sqla_connection):
 
 
 @fixture
-def session(sqla_transaction, sqla_connection):
+def session(
+    sqla_transaction, sqla_connection, sqla_reflection, patch_engine_from_config
+):
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
@@ -159,8 +158,8 @@ if asyncio_support:
             yield connection
             await connection.rollback()
 
-    @fixture(autouse=True)
-    async def patch_async_sessionmaker(
+    @fixture
+    async def patch_create_async_engine(
         async_sqlalchemy_url, async_sqla_connection, request
     ):
         """So that all async DB operations are never written to db for real."""
@@ -175,9 +174,18 @@ if asyncio_support:
                 yield create_async_engine
 
     @fixture
-    async def async_session(async_sqla_connection):
+    async def async_session(
+        async_sqla_connection, sqla_reflection, patch_create_async_engine
+    ):
         from fastapi_sqla.asyncio_support import _AsyncSession
 
         session = _AsyncSession(bind=async_sqla_connection)
         yield session
         await session.close()
+
+
+else:
+
+    @fixture
+    async def patch_create_async_engine():
+        pass
