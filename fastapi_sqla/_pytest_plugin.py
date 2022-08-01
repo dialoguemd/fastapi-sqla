@@ -102,12 +102,15 @@ def sqla_reflection(sqla_modules, sqla_connection, db_url):
 @fixture
 def patch_engine_from_config(request, db_url, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
+    from fastapi_sqla import _Session
+
     if "dont_patch_engines" in request.keywords:
         yield
 
     else:
         with patch("fastapi_sqla.engine_from_config") as engine_from_config:
             engine_from_config.return_value = sqla_connection
+            _Session.configure(bind=sqla_connection)
             yield engine_from_config
 
 
@@ -163,6 +166,8 @@ if asyncio_support:
         async_sqlalchemy_url, async_sqla_connection, request
     ):
         """So that all async DB operations are never written to db for real."""
+        from fastapi_sqla.asyncio_support import _AsyncSession
+
         if "dont_patch_engines" in request.keywords:
             yield
 
@@ -171,6 +176,9 @@ if asyncio_support:
                 "fastapi_sqla.asyncio_support.create_async_engine"
             ) as create_async_engine:
                 create_async_engine.return_value = async_sqla_connection
+                _AsyncSession.configure(
+                    bind=async_sqla_connection, expire_on_commit=False
+                )
                 yield create_async_engine
 
     @fixture
