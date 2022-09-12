@@ -1,22 +1,99 @@
-# fastapi-sqla
+# Fastapi-SQLA
 
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
-[![CircleCI](https://circleci.com/gh/dialoguemd/fastapi-sqla.svg?style=svg&circle-token=998482f269270ee521aa54f2accbee2e22943743)](https://circleci.com/gh/dialoguemd/fastapi-sqla)
 [![codecov](https://codecov.io/gh/dialoguemd/fastapi-sqla/branch/master/graph/badge.svg?token=BQHLryClIn)](https://codecov.io/gh/dialoguemd/fastapi-sqla)
+[![CircleCI](https://circleci.com/gh/dialoguemd/fastapi-sqla.svg?style=svg&circle-token=998482f269270ee521aa54f2accbee2e22943743)](https://circleci.com/gh/dialoguemd/fastapi-sqla)
+![PyPI](https://img.shields.io/pypi/v/fastapi-sqla)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A highly opinionated [SQLAlchemy] extension for [FastAPI]:
 
-* Setup using environment variables to connect on DB;
-* `fastapi_sqla.Base` a declarative base class to reflect DB tables at startup;
-* `fastapi_sqla.Session` a dependency to get an sqla session;
-* `fastapi_sqla.open_session` a context manager to get an sqla session;
-* `fastapi_sqla.asyncio_support.AsyncSession` a dependency to get an async sqla session ;
-* `fastapi_sqla.asyncio_support.open_session` a context manager to get an async sqla
-  session;
-* Automated commit/rollback of sqla session at the end of request before returning
-  response;
-* Pagination utilities;
-* Pytest fixtures;
+Fastapi-SQLA is an [SQLAlchemy] extension for [FastAPI] easy to setup with support for
+pagination, asyncio, and [pytest].
+It supports SQLAlchemy>=1.3 and is fully compliant with [SQLAlchemy 2.0] syntax.
+It is developped, maintained and used on production by the team at @dialoguemd with love
+from Montreal 🇨🇦.
+
+# Installing
+
+Using [pip](https://pip.pypa.io/):
+```
+pip install fastapi-sqla
+```
+
+# Quick Example
+
+Assuming it runs against a DB with a table `user` with 3 columns, `id`, `name` and
+unique `email`:
+
+```python
+# main.py
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi_sqla import Base, Item, Page, Paginate, Session, setup
+from pydantic import BaseModel, EmailStr
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+
+app = FastAPI()
+
+setup(app)
+
+
+class User(Base):
+    __tablename__ = "user"
+
+
+class UserIn(BaseModel):
+    name: str
+    email: EmailStr
+
+
+class UserModel(UserIn):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+@app.get("/users", response_model=Page[UserModel])
+def list_users(paginate: Paginate = Depends()):
+    return paginate(select(User))
+
+
+@app.get("/users/{user_id}", response_model=Item[UserModel])
+def get_user(user_id: int, session: Session = Depends()):
+    user = session.get(User, user_id)
+    if user is None:
+        raise HTTPException(404)
+    return {"data": user}
+
+
+@app.post("/users", response_model=Item[UserModel])
+def create_user(new_user: UserIn, session: Session = Depends()):
+    user = User(**new_user.dict())
+    session.add(user)
+    try:
+        session.flush()
+    except IntegrityError:
+        raise HTTPException(409, "Email is already taken.")
+    return {"data": user}
+```
+
+Creating a db using `sqlite3`:
+```bash
+sqlite3 db.sqlite <<EOF
+CREATE TABLE user (
+    id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    name  TEXT NOT NULL
+);
+CREATE UNIQUE INDEX user_email_idx ON user (email);
+EOF
+```
+
+Running the app:
+```bash
+sqlalchemy_url=sqlite:///db.sqlite?check_same_thread=false uvicorn main:app --reload
+```
 
 # Configuration
 
@@ -27,7 +104,11 @@ Each matching key (after the prefix is stripped) is treated as though it were th
 corresponding keyword argument to [`sqlalchemy.create_engine`]
 call.
 
-The only required key is `sqlalchemy_url`, which provides the database URL.
+The only required key is `sqlalchemy_url`, which provides the database URL, example:
+
+```bash
+export sqlalchemy_url=postgresql://postgres@localhost
+```
 
 ### `asyncio` support using [`asyncpg`]
 
@@ -428,5 +509,8 @@ $ poetry run tox
 [FastAPI dependency injection]: https://fastapi.tiangolo.com/tutorial/dependencies/
 [FastAPI background tasks]: https://fastapi.tiangolo.com/tutorial/background-tasks/
 [SQLAlchemy]: http://sqlalchemy.org/
+[SQLAlchemy 2.0]: https://docs.sqlalchemy.org/en/20/changelog/migration_20.html
 [`asyncpg`]: https://magicstack.github.io/asyncpg/current/
 [scalars]: (https://docs.sqlalchemy.org/en/14/core/connections.html?highlight=scalars#sqlalchemy.engine.Result.scalars),
+[alembic]: https://alembic.sqlalchemy.org/
+[pytest]: https://docs.pytest.org/
