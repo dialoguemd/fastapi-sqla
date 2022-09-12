@@ -10,8 +10,8 @@
 Fastapi-SQLA is an [SQLAlchemy] extension for [FastAPI] easy to setup with support for
 pagination, asyncio, and [pytest].
 It supports SQLAlchemy>=1.3 and is fully compliant with [SQLAlchemy 2.0] syntax.
-It is developped, maintained and used on production by the team at @dialoguemd with love
-from Montreal 🇨🇦.
+It is developped, maintained and used on production by the team at [@dialoguemd] with
+love from Montreal 🇨🇦.
 
 # Installing
 
@@ -514,3 +514,4 @@ $ poetry run tox
 [scalars]: (https://docs.sqlalchemy.org/en/14/core/connections.html?highlight=scalars#sqlalchemy.engine.Result.scalars),
 [alembic]: https://alembic.sqlalchemy.org/
 [pytest]: https://docs.pytest.org/
+[@dialoguemd]: https://github.com/dialoguemd
