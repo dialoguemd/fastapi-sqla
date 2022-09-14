@@ -8,8 +8,6 @@ from pytest import fixture, mark
 from sqlalchemy import text
 from structlog.testing import capture_logs
 
-pytestmark = mark.asyncio
-
 
 @fixture(scope="module", autouse=True)
 def setup_tear_down(engine):

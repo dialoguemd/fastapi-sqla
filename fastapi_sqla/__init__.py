@@ -234,8 +234,8 @@ PaginateSignature = Callable[[DbQuery, Optional[bool]], Page[T]]
 def default_query_count(session: Session, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
-    It is slower than a manually written query could be: It runs the query in a subquery,
-    and count the number of elements returned.
+    It is slower than a manually written query could be: It runs the query in a
+    subquery, and count the number of elements returned.
 
     See https://gist.github.com/hest/8798884
     """
