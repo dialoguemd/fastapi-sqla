@@ -119,6 +119,7 @@ norecursedirs = ".git,.venv"
 xfail_strict = "true"
 addopts = """
     -p no:fastapi-sqla
+    --cov-config pyproject.toml
     --cov-report term
     --cov-report term-missing
 """
