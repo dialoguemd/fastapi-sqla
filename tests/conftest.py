@@ -95,7 +95,7 @@ def sqla_modules():
 
 @fixture(autouse=True)
 def check_sqlalchemy_version(request, sqla_version_tuple):
-    "When test is marked with `mark.sqlalchemy('x.y')`, skip if unexpected sqla version."
+    "Mark test with `mark.sqlalchemy('x.y')` to skip on unexpected sqla version."
     from sqlalchemy import __version__
 
     marker = request.node.get_closest_marker("sqlalchemy")

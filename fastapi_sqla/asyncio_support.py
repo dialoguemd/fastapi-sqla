@@ -60,7 +60,7 @@ class AsyncSession(SqlaAsyncSession):
 
 @asynccontextmanager
 async def open_session() -> AsyncSession:
-    """Context manager to open an async session and properly closes session when exiting.
+    """Context manager to open an async session and properly close it when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
     context. If an exception is raised, session is rollbacked.

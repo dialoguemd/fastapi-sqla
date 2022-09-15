@@ -44,7 +44,6 @@ def test_session_fixture_does_not_write_in_db(session, singer_cls, engine):
 
 
 @mark.require_asyncpg
-@mark.asyncio
 @mark.sqlalchemy("1.4")
 async def test_async_session_fixture_does_not_write_in_db(
     async_session, singer_cls, async_engine, session
@@ -86,7 +85,6 @@ def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
 
 
 @mark.require_asyncpg
-@mark.asyncio
 @mark.sqlalchemy("1.4")
 async def test_all_opened_async_sessions_are_within_the_same_transaction(
     async_sqla_connection, async_session, singer_cls

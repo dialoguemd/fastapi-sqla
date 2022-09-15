@@ -222,7 +222,6 @@ async def client(app):
             yield client
 
 
-@mark.asyncio
 @mark.parametrize(
     "offset,items_number,path",
     [
@@ -250,7 +249,6 @@ async def test_functional(client, offset, items_number, path):
     assert meta["total_items"] == 42
 
 
-@mark.asyncio
 @mark.parametrize(
     "offset,items_number,path",
     [
@@ -270,7 +268,6 @@ async def test_custom_pagination(client, offset, items_number, path):
     assert meta["total_items"] == 22
 
 
-@mark.asyncio
 @mark.sqlalchemy("1.4")
 async def test_json_result(client):
     result = await client.get("/v2/query-with-json-result")

@@ -50,7 +50,6 @@ def test_startup(case_sensitive_environ):
     assert session.execute(text("SELECT 1")).scalar() == 1
 
 
-@mark.asyncio
 async def test_fastapi_integration():
     from fastapi_sqla import _Session, setup
 
@@ -83,7 +82,6 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
         startup()
 
 
-@mark.asyncio
 @mark.dont_patch_engines
 async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
     from fastapi_sqla import asyncio_support
@@ -115,7 +113,6 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 @mark.require_boto3
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-@mark.asyncio
 @mark.dont_patch_engines
 async def test_async_startup_with_aws_rds_iam_enabled(
     monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user

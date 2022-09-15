@@ -191,7 +191,6 @@ if asyncio_support:
         yield session
         await session.close()
 
-
 else:
 
     @fixture
