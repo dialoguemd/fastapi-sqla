@@ -4,7 +4,8 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import Request
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession as SqlaAsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.orm.session import sessionmaker
 
 from . import aws_rds_iam_support, new_engine
