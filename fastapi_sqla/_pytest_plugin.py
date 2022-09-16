@@ -162,9 +162,7 @@ if asyncio_support:
             await connection.rollback()
 
     @fixture
-    async def patch_create_async_engine(
-        async_sqlalchemy_url, async_sqla_connection, request
-    ):
+    async def patch_new_engine(async_sqlalchemy_url, async_sqla_connection, request):
         """So that all async DB operations are never written to db for real."""
         from fastapi_sqla.asyncio_support import _AsyncSession
 
@@ -172,19 +170,15 @@ if asyncio_support:
             yield
 
         else:
-            with patch(
-                "fastapi_sqla.asyncio_support.create_async_engine"
-            ) as create_async_engine:
-                create_async_engine.return_value = async_sqla_connection
+            with patch("fastapi_sqla.asyncio_support.new_engine") as new_engine:
+                new_engine.return_value = async_sqla_connection
                 _AsyncSession.configure(
                     bind=async_sqla_connection, expire_on_commit=False
                 )
-                yield create_async_engine
+                yield new_engine
 
     @fixture
-    async def async_session(
-        async_sqla_connection, sqla_reflection, patch_create_async_engine
-    ):
+    async def async_session(async_sqla_connection, sqla_reflection, patch_new_engine):
         from fastapi_sqla.asyncio_support import _AsyncSession
 
         session = _AsyncSession(bind=async_sqla_connection)
@@ -194,5 +188,5 @@ if asyncio_support:
 else:
 
     @fixture
-    async def patch_create_async_engine():
+    async def patch_new_engine():
         pass

@@ -92,7 +92,7 @@ EOF
 
 Running the app:
 ```bash
-sqlalchemy_url=sqlite:///db.sqlite?check_same_thread=false uvicorn main:app --reload
+sqlalchemy_url=sqlite:///db.sqlite?check_same_thread=false uvicorn main:app
 ```
 
 # Configuration

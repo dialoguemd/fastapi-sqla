@@ -12,6 +12,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
@@ -51,22 +52,29 @@ _SESSION_KEY = "fastapi_sqla_session"
 _Session = sessionmaker()
 
 
-def setup(app: FastAPI):
-    app.add_event_handler("startup", startup)
-    app.middleware("http")(add_session_to_request)
+def new_engine(*, envvar_prefix: str = "sqlalchemy_") -> Engine:
+    lowercase_environ = {
+        k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
+    }
+    return engine_from_config(lowercase_environ, prefix=envvar_prefix)
 
-    async_sqlalchemy_url = os.getenv("async_sqlalchemy_url")
-    if async_sqlalchemy_url:
+
+def setup(app: FastAPI):
+    engine = new_engine()
+
+    if not engine.dialect.is_async:
+        app.add_event_handler("startup", startup)
+        app.middleware("http")(add_session_to_request)
+
+    has_async_config = "async_sqlalchemy_url" in os.environ or engine.is_async
+    if has_async_config:
         assert asyncio_support, asyncio_support_err
         app.add_event_handler("startup", asyncio_support.startup)
         app.middleware("http")(asyncio_support.add_session_to_request)
 
 
 def startup():
-    lowercase_environ = {
-        k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
-    }
-    engine = engine_from_config(lowercase_environ, prefix="sqlalchemy_")
+    engine = new_engine()
     aws_rds_iam_support.setup(engine.engine)
 
     Base.metadata.bind = engine
