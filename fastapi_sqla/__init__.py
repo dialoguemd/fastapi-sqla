@@ -77,20 +77,18 @@ def startup():
     engine = new_engine()
     aws_rds_iam_support.setup(engine.engine)
 
-    Base.metadata.bind = engine
-    Base.prepare(engine)
-    _Session.configure(bind=engine)
-
     # Fail early:
     try:
-        with open_session() as session:
-            session.execute(text("select 'OK'"))
+        with engine.connect() as connection:
+            connection.execute(text("select 'OK'"))
     except Exception:
         logger.critical(
             "Fail querying db: is sqlalchemy_url envvar correctly configured?"
         )
         raise
 
+    Base.prepare(engine)
+    _Session.configure(bind=engine)
     logger.info("startup", engine=engine)
 
 
