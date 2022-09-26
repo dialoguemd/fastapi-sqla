@@ -12,6 +12,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
 from sqlalchemy import engine_from_config, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
@@ -51,38 +52,48 @@ _SESSION_KEY = "fastapi_sqla_session"
 _Session = sessionmaker()
 
 
-def setup(app: FastAPI):
-    app.add_event_handler("startup", startup)
-    app.middleware("http")(add_session_to_request)
+def new_engine(*, envvar_prefix: str = None) -> Engine:
+    envvar_prefix = envvar_prefix if envvar_prefix else "sqlalchemy_"
+    lowercase_environ = {
+        k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
+    }
+    return engine_from_config(lowercase_environ, prefix=envvar_prefix)
 
-    async_sqlalchemy_url = os.getenv("async_sqlalchemy_url")
-    if async_sqlalchemy_url:
+
+def is_async_dialect(engine):
+    return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
+
+
+def setup(app: FastAPI):
+    engine = new_engine()
+
+    if not is_async_dialect(engine):
+        app.add_event_handler("startup", startup)
+        app.middleware("http")(add_session_to_request)
+
+    has_async_config = "async_sqlalchemy_url" in os.environ or is_async_dialect(engine)
+    if has_async_config:
         assert asyncio_support, asyncio_support_err
         app.add_event_handler("startup", asyncio_support.startup)
         app.middleware("http")(asyncio_support.add_session_to_request)
 
 
 def startup():
-    lowercase_environ = {
-        k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
-    }
-    engine = engine_from_config(lowercase_environ, prefix="sqlalchemy_")
+    engine = new_engine()
     aws_rds_iam_support.setup(engine.engine)
-
-    Base.metadata.bind = engine
-    Base.prepare(engine)
-    _Session.configure(bind=engine)
 
     # Fail early:
     try:
-        with open_session() as session:
-            session.execute(text("select 'OK'"))
+        with engine.connect() as connection:
+            connection.execute(text("select 'OK'"))
     except Exception:
         logger.critical(
             "Fail querying db: is sqlalchemy_url envvar correctly configured?"
         )
         raise
 
+    Base.prepare(engine)
+    _Session.configure(bind=engine)
     logger.info("startup", engine=engine)
 
 

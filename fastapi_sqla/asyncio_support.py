@@ -4,33 +4,45 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import Request
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
 
-from . import aws_rds_iam_support
+from . import Base, aws_rds_iam_support, new_engine
 
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
 _AsyncSession = sessionmaker(class_=SqlaAsyncSession)
 
 
+def new_async_engine():
+    envvar_prefix = None
+    if "async_sqlalchemy_url" in os.environ:
+        envvar_prefix = "async_sqlalchemy_"
+
+    engine = new_engine(envvar_prefix=envvar_prefix)
+    return AsyncEngine(engine)
+
+
 async def startup():
-    async_sqlalchemy_url = os.environ["async_sqlalchemy_url"]
-    engine = create_async_engine(async_sqlalchemy_url)
+    engine = new_async_engine()
     aws_rds_iam_support.setup(engine.sync_engine)
-    _AsyncSession.configure(bind=engine, expire_on_commit=False)
 
     # Fail early:
     try:
-        async with open_session() as session:
-            await session.execute(text("select 'ok'"))
+        async with engine.connect() as connection:
+            await connection.execute(text("select 'ok'"))
     except Exception:
         logger.critical(
-            "Fail querying db: is async_sqlalchemy_url envvar correctly configured?"
+            "Failed querying db: is sqlalchemy_url or async_sqlalchemy_url envvar "
+            "correctly configured?"
         )
         raise
 
+    async with engine.connect() as connection:
+        await connection.run_sync(Base.prepare)
+
+    _AsyncSession.configure(bind=engine, expire_on_commit=False)
     logger.info("startup", async_engine=engine)
 
 

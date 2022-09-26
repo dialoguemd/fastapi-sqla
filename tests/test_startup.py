@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from pytest import fixture, mark, raises
 from sqlalchemy import text
 
-pytestmark = mark.usefixtures("patch_engine_from_config", "patch_create_async_engine")
+pytestmark = mark.usefixtures("patch_engine_from_config", "patch_new_engine")
 
 
 @fixture(params=[True, False])
@@ -50,6 +50,7 @@ def test_startup(case_sensitive_environ):
     assert session.execute(text("SELECT 1")).scalar() == 1
 
 
+@mark.dont_patch_engines
 async def test_fastapi_integration():
     from fastapi_sqla import _Session, setup
 
