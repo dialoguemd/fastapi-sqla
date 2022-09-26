@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pytest import fixture, mark, raises
 from sqlalchemy import text
@@ -48,6 +48,7 @@ async def test_new_async_engine_without_async_alchemy_url(
 @fixture
 def AsyncSessionMock():
     with patch("fastapi_sqla.asyncio_support._AsyncSession") as AsyncSessionMock:
+        AsyncSessionMock.return_value = AsyncMock()
         yield AsyncSessionMock
 
 
@@ -55,8 +56,9 @@ async def test_context_manager_rollbacks_on_error(AsyncSessionMock):
     from fastapi_sqla.asyncio_support import open_session
 
     session = AsyncSessionMock.return_value
-    with raises(Exception):
+    with raises(Exception) as raise_info:
         async with open_session():
-            raise Exception()
+            raise Exception("boom!")
 
-    session.rollback.assert_called_once_with()
+    session.rollback.assert_awaited_once_with()
+    assert raise_info.value.args == ("boom!",)
