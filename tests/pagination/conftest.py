@@ -83,6 +83,8 @@ def note_cls():
     class Note(Base):
         __tablename__ = "note"
 
+        user = relationship("User", lazy="raise")
+
     return Note
 
 
@@ -133,7 +135,7 @@ def app(user_cls, note_cls):
     )
 
     try:
-        from fastapi_sqla import AsyncPaginate
+        from fastapi_sqla import AsyncPaginate, AsyncPagination, AsyncSession
     except ImportError:
         AsyncPaginate = False
 
@@ -199,9 +201,29 @@ def app(user_cls, note_cls):
 
     if AsyncPaginate:
 
-        @app.get("/v2/notes", response_model=Page[Note])
+        class NoteWithAuthorName(Note):
+            author_name: str
+
+        @app.get("/v1/notes", response_model=Page[Note])
         async def async_paginated_notes(paginate: AsyncPaginate = Depends()):
             return await paginate(select(note_cls))
+
+        async def count_notes(session: AsyncSession = Depends()):
+            result = await session.execute(select(func.count(note_cls.id)))
+            return result.scalar()
+
+        CustomAsyncPaginate = AsyncPagination(query_count=count_notes)
+
+        @app.get("/v2/notes", response_model=Page[NoteWithAuthorName])
+        async def async_paginated_notes_with_author(
+            paginate: CustomAsyncPaginate = Depends(),
+        ):
+            return await paginate(
+                select(
+                    note_cls.id, note_cls.content, user_cls.name.label("author_name")
+                ).join(user_cls),
+                scalars=False,
+            )
 
     return app
 
