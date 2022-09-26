@@ -2,9 +2,9 @@ from unittest.mock import Mock
 
 from pytest import mark
 
-pytestmark = [mark.sqlalchemy("1.4"), mark.require_asyncpg]
 
-
+@mark.sqlalchemy("1.4")
+@mark.require_asyncpg
 def test_setup_with_async_sqlalchemy_url_adds_asyncio_support_startup(
     monkeypatch, async_sqlalchemy_url
 ):
