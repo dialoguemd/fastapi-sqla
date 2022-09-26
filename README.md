@@ -119,10 +119,10 @@ To enable `asyncio` support against a Postgres DB, install `asyncpg`:
 pip install asyncpg
 ```
 
-And define environment variable `async_sqlalchemy_url` with `postgres+asyncpg` scheme:
+And define environment variable `sqlalchemy_url` with `postgres+asyncpg` scheme:
 
 ```bash
-export async_sqlalchemy_url=postgresql+asyncpg://postgres@localhost
+export sqlalchemy_url=postgresql+asyncpg://postgres@localhost
 ```
 
 ## Setup the app:
