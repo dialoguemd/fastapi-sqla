@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from pytest import fixture, mark, raises
 from sqlalchemy import text
