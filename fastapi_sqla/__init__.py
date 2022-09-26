@@ -59,14 +59,18 @@ def new_engine(*, envvar_prefix: str = "sqlalchemy_") -> Engine:
     return engine_from_config(lowercase_environ, prefix=envvar_prefix)
 
 
+def _is_async_dialect(engine):
+    return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
+
+
 def setup(app: FastAPI):
     engine = new_engine()
 
-    if not engine.dialect.is_async:
+    if not _is_async_dialect(engine):
         app.add_event_handler("startup", startup)
         app.middleware("http")(add_session_to_request)
 
-    has_async_config = "async_sqlalchemy_url" in os.environ or engine.is_async
+    has_async_config = "async_sqlalchemy_url" in os.environ or _is_async_dialect(engine)
     if has_async_config:
         assert asyncio_support, asyncio_support_err
         app.add_event_handler("startup", asyncio_support.startup)

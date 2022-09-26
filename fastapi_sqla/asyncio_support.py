@@ -27,7 +27,7 @@ def new_async_engine():
 async def startup():
     engine = new_async_engine()
     aws_rds_iam_support.setup(engine.sync_engine)
- 
+
     # Fail early:
     try:
         async with engine.connect() as connection:
@@ -39,11 +39,10 @@ async def startup():
         )
         raise
 
-    async with engine.connect() as connection: 
+    async with engine.connect() as connection:
         await connection.run_sync(Base.prepare)
 
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
-
     logger.info("startup", async_engine=engine)
 
 
