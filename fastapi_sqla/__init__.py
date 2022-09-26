@@ -52,7 +52,8 @@ _SESSION_KEY = "fastapi_sqla_session"
 _Session = sessionmaker()
 
 
-def new_engine(*, envvar_prefix: str = "sqlalchemy_") -> Engine:
+def new_engine(*, envvar_prefix: str = None) -> Engine:
+    envvar_prefix = envvar_prefix if envvar_prefix else "sqlalchemy_"
     lowercase_environ = {
         k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
     }

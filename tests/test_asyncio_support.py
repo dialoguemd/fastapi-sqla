@@ -1,4 +1,6 @@
-from pytest import fixture, mark
+from unittest.mock import AsyncMock, patch
+
+from pytest import fixture, mark, raises
 from sqlalchemy import text
 
 pytestmark = [mark.sqlalchemy("1.4"), mark.require_asyncpg]
@@ -30,3 +32,31 @@ async def test_open_async_session(setup):
         res = await session.execute(text("select 123"))
 
     assert res.scalar() == 123
+
+
+async def test_new_async_engine_without_async_alchemy_url(
+    monkeypatch, async_sqlalchemy_url
+):
+    from fastapi_sqla.asyncio_support import new_async_engine
+
+    monkeypatch.delenv("async_sqlalchemy_url")
+    monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
+
+    assert new_async_engine()
+
+
+@fixture
+def AsyncSessionMock():
+    with patch("fastapi_sqla.asyncio_support._AsyncSession") as AsyncSessionMock:
+        yield AsyncSessionMock
+
+
+async def test_context_manager_rollbacks_on_error(AsyncSessionMock):
+    from fastapi_sqla.asyncio_support import open_session
+
+    session = AsyncSessionMock.return_value
+    with raises(Exception):
+        async with open_session():
+            raise Exception()
+
+    session.rollback.assert_called_once_with()
