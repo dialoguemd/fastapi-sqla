@@ -28,13 +28,14 @@ except ImportError:
 
 try:
     from . import asyncio_support
-    from .asyncio_support import AsyncSession
+    from .asyncio_support import AsyncPaginate, AsyncPagination, AsyncSession
     from .asyncio_support import open_session as open_async_session
 except ImportError as err:
     asyncio_support = False
     asyncio_support_err = str(err)
 
 __all__ = [
+    "AsyncPaginate",
     "AsyncSession",
     "Base",
     "Page",

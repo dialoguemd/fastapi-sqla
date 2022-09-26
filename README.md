@@ -340,6 +340,69 @@ def all_users(paginate: Paginate = Depends()):
     return paginate(select(User))
 ```
 
+### Async pagination
+
+When using the asyncio support, use the `AsyncPaginate` dependency:
+
+```python
+from fastapi import APIRouter, Depends
+from fastapi_sqla import Base, Page, AsyncPaginate
+from pydantic import BaseModel
+from sqlalchemy import select
+
+router = APIRouter()
+
+
+class User(Base):
+    __tablename__ = "user"
+
+
+class UserModel(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
+@router.get("/users", response_model=Page[UserModel])
+async def all_users(paginate: AsyncPaginate = Depends()):
+    return await paginate(select(User))
+```
+
+Customize pagination by creating a dependency using `fastapi_sqla.AsyncPagination`:
+
+```python
+from fastapi import APIRouter, Depends
+from fastapi_sqla import Base, Page, AsyncPagination, AsyncSession
+from pydantic import BaseModel
+from sqlalchemy import func, select
+
+router = APIRouter()
+
+
+class User(Base):
+    __tablename__ = "user"
+
+
+class UserModel(BaseModel):
+    id: int
+    name: str
+
+
+async def query_count(session: AsyncSession = Depends()) -> int:
+    result = await session.execute(select(func.count()).select_from(User))
+    return result.scalar()
+
+
+Paginate = AsyncPagination(min_page_size=5, max_page_size=500, query_count=query_count)
+
+
+@router.get("/users", response_model=Page[UserModel])
+def all_users(paginate: CustomPaginate = Depends()):
+    return await paginate(select(User))
+```
+
 # Pytest fixtures
 
 This library provides a set of utility fixtures, through its PyTest plugin, which is

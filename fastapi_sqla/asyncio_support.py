@@ -1,14 +1,16 @@
+import math
 import os
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import Request
+from fastapi import Depends, Query, Request
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.sql import Select, func, select
 
-from . import Base, aws_rds_iam_support, new_engine
+from . import Base, Page, T, aws_rds_iam_support, new_engine
 
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
@@ -120,3 +122,71 @@ async def add_session_to_request(request: Request, call_next):
             await session.rollback()
 
     return response
+
+
+async def default_query_count(session: AsyncSession, query: Select) -> int:
+    result = await session.execute(select(func.count()).select_from(query.subquery()))
+    return result.scalar()
+
+
+async def paginate_query(
+    query: Select,
+    session: AsyncSession,
+    total_items: int,
+    offset: int,
+    limit: int,
+    *,
+    scalars: bool = True,
+) -> Page[T]:
+    total_pages = math.ceil(total_items / limit)
+    page_number = offset / limit + 1
+    query = query.offset(offset).limit(limit)
+    result = await session.execute(query)
+    data = iter(result.unique().scalars() if scalars else result.mappings())
+    return Page[T](
+        data=data,
+        meta={
+            "offset": offset,
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "page_number": page_number,
+        },
+    )
+
+
+def AsyncPagination(
+    min_page_size: int = 10, max_page_size: int = 100, query_count=None
+):
+    def default_dependency(
+        session: AsyncSession = Depends(),
+        offset: int = Query(0, ge=0),
+        limit: int = Query(min_page_size, ge=1, le=max_page_size),
+    ):
+        async def paginate(query: Select, scalars=True) -> Page[T]:
+            total_items = await default_query_count(session, query)
+            return await paginate_query(
+                query, session, total_items, offset, limit, scalars=scalars
+            )
+
+        return paginate
+
+    def with_query_count_dependency(
+        session: AsyncSession = Depends(),
+        offset: int = Query(0, ge=0),
+        limit: int = Query(min_page_size, ge=1, le=max_page_size),
+        total_items: int = Depends(query_count),
+    ):
+        async def paginate(query: Select, scalars=True) -> Page[T]:
+            return await paginate_query(
+                query, session, total_items, offset, limit, scalars=scalars
+            )
+
+        return paginate
+
+    if query_count:
+        return with_query_count_dependency
+    else:
+        return default_dependency
+
+
+AsyncPaginate = AsyncPagination()

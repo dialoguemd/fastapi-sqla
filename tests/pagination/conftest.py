@@ -7,6 +7,9 @@ from pytest import fixture
 from sqlalchemy import JSON, MetaData, Table, cast, func, select, text
 from sqlalchemy.orm import joinedload, relationship
 
+NB_USERS = 42
+NB_NOTES = NB_USERS * 22
+
 
 @fixture(scope="session")
 def nb_users():
@@ -129,6 +132,11 @@ def app(user_cls, note_cls):
         setup,
     )
 
+    try:
+        from fastapi_sqla import AsyncPaginate
+    except ImportError:
+        AsyncPaginate = False
+
     app = FastAPI()
     setup(app)
 
@@ -188,6 +196,12 @@ def app(user_cls, note_cls):
         user_id: int, paginate: CustomPaginate = Depends()
     ):
         return paginate(select(note_cls).where(note_cls.user_id == user_id))
+
+    if AsyncPaginate:
+
+        @app.get("/v2/notes", response_model=Page[Note])
+        async def async_paginated_notes(paginate: AsyncPaginate = Depends()):
+            return await paginate(select(note_cls))
 
     return app
 
