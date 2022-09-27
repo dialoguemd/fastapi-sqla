@@ -60,7 +60,7 @@ def app(app, user_cls, note_cls):
 async def test_async_pagination(client, offset, items_number, path, nb_notes):
     result = await client.get(path, params={"offset": offset})
 
-    assert result.status_code == 200, result.json()
+    assert result.status_code == 200, (result.status_code, result.content)
     notes = result.json()["data"]
     assert len(notes) == items_number
 
