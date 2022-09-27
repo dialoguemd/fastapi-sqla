@@ -7,9 +7,6 @@ from pytest import fixture
 from sqlalchemy import JSON, MetaData, Table, cast, func, select, text
 from sqlalchemy.orm import joinedload, relationship
 
-NB_USERS = 42
-NB_NOTES = NB_USERS * 22
-
 
 @fixture(scope="session")
 def nb_users():
@@ -124,7 +121,7 @@ class UserWithMeta(User):
 
 
 @fixture
-def app(user_cls, note_cls):  # noqa
+def app(user_cls, note_cls):
     from fastapi_sqla import (
         Page,
         Paginate,
@@ -133,11 +130,6 @@ def app(user_cls, note_cls):  # noqa
         Session,
         setup,
     )
-
-    try:
-        from fastapi_sqla import AsyncPaginate, AsyncPagination, AsyncSession
-    except ImportError:
-        AsyncPaginate = False
 
     app = FastAPI()
     setup(app)
@@ -198,32 +190,6 @@ def app(user_cls, note_cls):  # noqa
         user_id: int, paginate: CustomPaginate = Depends()
     ):
         return paginate(select(note_cls).where(note_cls.user_id == user_id))
-
-    if AsyncPaginate:
-
-        class NoteWithAuthorName(Note):
-            author_name: str
-
-        @app.get("/v1/notes", response_model=Page[Note])
-        async def async_paginated_notes(paginate: AsyncPaginate = Depends()):
-            return await paginate(select(note_cls))
-
-        async def count_notes(session: AsyncSession = Depends()):
-            result = await session.execute(select(func.count(note_cls.id)))
-            return result.scalar()
-
-        CustomAsyncPaginate = AsyncPagination(query_count=count_notes)
-
-        @app.get("/v2/notes", response_model=Page[NoteWithAuthorName])
-        async def async_paginated_notes_with_author(
-            paginate: CustomAsyncPaginate = Depends(),
-        ):
-            return await paginate(
-                select(
-                    note_cls.id, note_cls.content, user_cls.name.label("author_name")
-                ).join(user_cls),
-                scalars=False,
-            )
 
     return app
 
