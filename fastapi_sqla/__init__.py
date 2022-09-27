@@ -243,6 +243,9 @@ class Page(Collection, Generic[T]):
 DbQuery = Union[LegacyQuery, Select]
 QueryCountDependency = Callable[..., int]
 PaginateSignature = Callable[[DbQuery, Optional[bool]], Page[T]]
+DefaultDependency = Callable[[Session, int, int], PaginateSignature]
+WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
+PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
 def default_query_count(session: Session, query: DbQuery) -> int:
@@ -326,11 +329,6 @@ def _paginate(
             "page_number": page_number,
         },
     )
-
-
-DefaultDependency = Callable[[Session, int, int], PaginateSignature]
-WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
-PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
 def Pagination(

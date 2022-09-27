@@ -126,6 +126,13 @@ async def add_session_to_request(request: Request, call_next):
     return response
 
 
+QueryCountDependency = Callable[..., Awaitable[int]]
+PaginateSignature = Callable[[Select, bool | None], Awaitable[Page[T]]]
+DefaultDependency = Callable[[AsyncSession, int, int], PaginateSignature]
+WithQueryCountDependency = Callable[[AsyncSession, int, int, int], PaginateSignature]
+PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
+
+
 async def default_query_count(session: AsyncSession, query: Select) -> int:
     result = await session.execute(select(func.count()).select_from(query.subquery()))
     return result.scalar()
@@ -156,14 +163,10 @@ async def paginate_query(
     )
 
 
-PaginateSignature = Callable[[Select, bool | None], Awaitable[Page[T]]]
-DefaultDependency = Callable[[AsyncSession, int, int], PaginateSignature]
-WithQueryCountDependency = Callable[[AsyncSession, int, int, int], PaginateSignature]
-PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
-
-
 def AsyncPagination(
-    min_page_size: int = 10, max_page_size: int = 100, query_count=None
+    min_page_size: int = 10,
+    max_page_size: int = 100,
+    query_count: QueryCountDependency = None,
 ) -> PaginateDependency:
     def default_dependency(
         session: AsyncSession = Depends(),
