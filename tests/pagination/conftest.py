@@ -8,8 +8,18 @@ from sqlalchemy import JSON, MetaData, Table, cast, func, select, text
 from sqlalchemy.orm import joinedload, relationship
 
 
+@fixture(scope="session")
+def nb_users():
+    return 42
+
+
+@fixture(scope="session")
+def nb_notes(nb_users):
+    return 22 * nb_users
+
+
 @fixture(scope="module", autouse=True)
-def setup_tear_down(sqla_connection):
+def setup_tear_down(sqla_connection, nb_users, nb_notes):
     faker = Faker(seed=0)
     with sqla_connection.begin():
         sqla_connection.execute(
@@ -34,9 +44,9 @@ def setup_tear_down(sqla_connection):
         metadata = MetaData()
         user = Table("user", metadata, autoload_with=sqla_connection)
         note = Table("note", metadata, autoload_with=sqla_connection)
-        user_params = [{"name": faker.name()} for _ in range(1, 43)]
+        user_params = [{"name": faker.name()}] * nb_users
         note_params = [
-            {"user_id": i % 42 + 1, "content": faker.text()} for i in range(0, 22 * 42)
+            {"user_id": i % 42 + 1, "content": faker.text()} for i in range(0, nb_notes)
         ]
         sqla_connection.execute(user.insert(), user_params)
         sqla_connection.execute(note.insert(), note_params)

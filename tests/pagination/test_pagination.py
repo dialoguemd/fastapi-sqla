@@ -6,13 +6,15 @@ from sqlalchemy.orm import joinedload
     "offset,limit,total_pages,page_number",
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
 )
-def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
+def test_pagination(
+    session, user_cls, offset, limit, total_pages, page_number, nb_users
+):
     from fastapi_sqla import Paginate
 
     query = session.query(user_cls).options(joinedload(user_cls.notes))
     result = Paginate(session, offset, limit)(query)
 
-    assert result.meta.total_items == 42
+    assert result.meta.total_items == nb_users
     assert result.meta.offset == offset
     assert result.meta.total_pages == total_pages
     assert result.meta.page_number == page_number
@@ -24,14 +26,14 @@ def test_pagination(session, user_cls, offset, limit, total_pages, page_number):
     [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
 )
 def test_pagination_with_legacy_query_count(
-    session, user_cls, offset, limit, total_pages, page_number
+    session, user_cls, offset, limit, total_pages, page_number, nb_users
 ):
     from fastapi_sqla import Paginate
 
     query = session.query(user_cls).options(joinedload(user_cls.notes))
     result = Paginate(session, offset, limit)(query)
 
-    assert result.meta.total_items == 42
+    assert result.meta.total_items == nb_users
     assert result.meta.offset == offset
     assert result.meta.total_pages == total_pages
     assert result.meta.page_number == page_number
@@ -51,7 +53,7 @@ def test_pagination_with_legacy_query_count(
         param(40, 2, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
     ],
 )
-async def test_functional(client, offset, items_number, path):
+async def test_functional(client, offset, items_number, path, nb_users):
     result = await client.get(path, params={"offset": offset})
 
     assert result.status_code == 200, result.json()
@@ -61,7 +63,7 @@ async def test_functional(client, offset, items_number, path):
     assert user_ids == list(range(offset + 1, offset + 1 + items_number))
 
     meta = result.json()["meta"]
-    assert meta["total_items"] == 42
+    assert meta["total_items"] == nb_users
 
 
 @mark.parametrize(
