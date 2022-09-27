@@ -1,6 +1,8 @@
 import math
 import os
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from typing import Union
 
 import structlog
 from fastapi import Depends, Query, Request
@@ -73,7 +75,7 @@ class AsyncSession(SqlaAsyncSession):
 
 
 @asynccontextmanager
-async def open_session() -> AsyncSession:
+async def open_session() -> AsyncGenerator[AsyncSession, None]:
     """Context manager to open an async session and properly close it when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
@@ -154,14 +156,20 @@ async def paginate_query(
     )
 
 
+PaginateSignature = Callable[[Select, bool | None], Awaitable[Page[T]]]
+DefaultDependency = Callable[[AsyncSession, int, int], PaginateSignature]
+WithQueryCountDependency = Callable[[AsyncSession, int, int, int], PaginateSignature]
+PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
+
+
 def AsyncPagination(
     min_page_size: int = 10, max_page_size: int = 100, query_count=None
-):
+) -> PaginateDependency:
     def default_dependency(
         session: AsyncSession = Depends(),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
-    ):
+    ) -> PaginateSignature:
         async def paginate(query: Select, scalars=True) -> Page[T]:
             total_items = await default_query_count(session, query)
             return await paginate_query(
@@ -189,4 +197,4 @@ def AsyncPagination(
         return default_dependency
 
 
-AsyncPaginate = AsyncPagination()
+AsyncPaginate: PaginateDependency = AsyncPagination()

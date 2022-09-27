@@ -1,9 +1,10 @@
 import asyncio
 import math
 import os
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Callable, Generic, List, Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
 
 import structlog
 from fastapi import Depends, FastAPI, Query, Request
@@ -127,7 +128,7 @@ class Session(SqlaSession):
 
 
 @contextmanager
-def open_session() -> Session:
+def open_session() -> Generator[Session, None, None]:
     """Context manager that opens a session and properly closes session when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
@@ -221,7 +222,7 @@ class Item(GenericModel, Generic[T]):
 class Collection(GenericModel, Generic[T]):
     """Collection container."""
 
-    data: List[T]
+    data: list[T]
 
 
 class Meta(BaseModel):
