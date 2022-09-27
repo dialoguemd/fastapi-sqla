@@ -61,7 +61,7 @@ def sqla_modules(user_cls, note_cls):
     pass
 
 
-@fixture(scope="module")
+@fixture(scope="session")
 def user_cls(note_cls):
     from fastapi_sqla import Base
 
@@ -73,7 +73,7 @@ def user_cls(note_cls):
     return User
 
 
-@fixture(scope="module")
+@fixture(scope="session")
 def note_cls():
     from fastapi_sqla import Base
 
