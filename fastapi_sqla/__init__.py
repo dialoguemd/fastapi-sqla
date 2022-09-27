@@ -36,6 +36,7 @@ except ImportError as err:
 
 __all__ = [
     "AsyncPaginate",
+    "AsyncPagination",
     "AsyncSession",
     "Base",
     "Page",

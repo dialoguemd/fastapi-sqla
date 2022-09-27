@@ -124,7 +124,7 @@ class UserWithMeta(User):
 
 
 @fixture
-def app(user_cls, note_cls):
+def app(user_cls, note_cls):  # noqa
     from fastapi_sqla import (
         Page,
         Paginate,
