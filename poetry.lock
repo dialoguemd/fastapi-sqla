@@ -99,14 +99,14 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.24.74"
+version = "1.24.81"
 description = "The AWS SDK for Python"
 category = "main"
 optional = true
 python-versions = ">= 3.7"
 
 [package.dependencies]
-botocore = ">=1.27.74,<1.28.0"
+botocore = ">=1.27.81,<1.28.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.6.0,<0.7.0"
 
@@ -115,7 +115,7 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.27.74"
+version = "1.27.81"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = true
@@ -131,7 +131,7 @@ crt = ["awscrt (==0.14.0)"]
 
 [[package]]
 name = "certifi"
-version = "2022.9.14"
+version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = true
@@ -186,7 +186,7 @@ python-versions = "*"
 
 [[package]]
 name = "Faker"
-version = "14.2.0"
+version = "14.2.1"
 description = "Faker is a Python package that generates fake data for you."
 category = "main"
 optional = true
@@ -367,7 +367,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "Mako"
-version = "1.2.2"
+version = "1.2.3"
 description = "A super-fast templating language that borrows the best ideas from the existing templating languages."
 category = "main"
 optional = true
@@ -912,12 +912,12 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [extras]
 asyncpg = ["asyncpg"]
 aws_rds_iam = ["boto3"]
-tests = ["alembic", "asgi_lifespan", "black", "Faker", "httpx", "isort", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox"]
+tests = ["alembic", "asgi_lifespan", "black", "greenlet", "Faker", "greenlet", "httpx", "isort", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "0629a04fa2b7142ef0b377a7239d76238926d43b8c8a484027a6a1998b66dfae"
+content-hash = "0e52b008fe97875622cdba077b44dbb9fde9673b1515010fe0fedf423c6dcc13"
 
 [metadata.files]
 alembic = [
@@ -990,16 +990,16 @@ black = [
     {file = "black-22.8.0.tar.gz", hash = "sha256:792f7eb540ba9a17e8656538701d3eb1afcb134e3b45b71f20b25c77a8db7e6e"},
 ]
 boto3 = [
-    {file = "boto3-1.24.74-py3-none-any.whl", hash = "sha256:293593dd93c0a5fe6088dd9a393002376824977c55c8e5756d53a1c0283473dd"},
-    {file = "boto3-1.24.74.tar.gz", hash = "sha256:def153fb4773c55d89193529e8b0f829eab5fed57cee1d28f3cdcaa18b8837c8"},
+    {file = "boto3-1.24.81-py3-none-any.whl", hash = "sha256:a84f11ba5d369ee4bb3e6d4c9595fe05c8c804ab9b817e578f87d956b803dcfc"},
+    {file = "boto3-1.24.81.tar.gz", hash = "sha256:75defbacdeb48b7fb321c2e283bc57b270595467e873c401b7914a79efd372c7"},
 ]
 botocore = [
-    {file = "botocore-1.27.74-py3-none-any.whl", hash = "sha256:e4430a48aaa8817342127b18c4c6c9cd44bdce85e3c0d980f9b36322d518fe2e"},
-    {file = "botocore-1.27.74.tar.gz", hash = "sha256:e103eb209e33c37bdb68e10ea3048088ee93e8973e5d9415af12d3c3f1ac46a6"},
+    {file = "botocore-1.27.81-py3-none-any.whl", hash = "sha256:ad789bfc36ade270671c6846e314193c1968cc3523828aec1e12d012c900652f"},
+    {file = "botocore-1.27.81.tar.gz", hash = "sha256:b6b54560b110666e6f0248c0d39e0588589410186c35f4cee44be847d83fec07"},
 ]
 certifi = [
-    {file = "certifi-2022.9.14-py3-none-any.whl", hash = "sha256:e232343de1ab72c2aa521b625c80f699e356830fd0e2c620b465b304b17b0516"},
-    {file = "certifi-2022.9.14.tar.gz", hash = "sha256:36973885b9542e6bd01dea287b2b4b3b21236307c56324fcc3f1160f2d655ed5"},
+    {file = "certifi-2022.9.24-py3-none-any.whl", hash = "sha256:90c1a32f1d68f940488354e36370f6cca89f0f106db09518524c88d6ed83f382"},
+    {file = "certifi-2022.9.24.tar.gz", hash = "sha256:0d9c601124e5a6ba9712dbc60d9c53c21e34f5f641fe83002317394311bdce14"},
 ]
 click = [
     {file = "click-8.1.3-py3-none-any.whl", hash = "sha256:bb4d8133cb15a609f44e8213d9b391b0809795062913b383c62be0ee95b1db48"},
@@ -1069,8 +1069,8 @@ docopt = [
     {file = "docopt-0.6.2.tar.gz", hash = "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"},
 ]
 Faker = [
-    {file = "Faker-14.2.0-py3-none-any.whl", hash = "sha256:e02c55a5b0586caaf913cc6c254b3de178e08b031c5922e590fd033ebbdbfd02"},
-    {file = "Faker-14.2.0.tar.gz", hash = "sha256:6db56e2c43a2b74250d1c332ef25fef7dc07dcb6c5fab5329dd7b4467b8ed7b9"},
+    {file = "Faker-14.2.1-py3-none-any.whl", hash = "sha256:2e28aaea60456857d4ce95dd12aed767769537ad23d13d51a545cd40a654e9d9"},
+    {file = "Faker-14.2.1.tar.gz", hash = "sha256:daad7badb4fd916bd047b28c8459ef4689e4fe6acf61f6dfebee8cc602e4d009"},
 ]
 fancycompleter = [
     {file = "fancycompleter-0.9.1-py3-none-any.whl", hash = "sha256:dd076bca7d9d524cc7f25ec8f35ef95388ffef9ef46def4d3d25e9b044ad7080"},
@@ -1177,8 +1177,8 @@ jmespath = [
     {file = "jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe"},
 ]
 Mako = [
-    {file = "Mako-1.2.2-py3-none-any.whl", hash = "sha256:8efcb8004681b5f71d09c983ad5a9e6f5c40601a6ec469148753292abc0da534"},
-    {file = "Mako-1.2.2.tar.gz", hash = "sha256:3724869b363ba630a272a5f89f68c070352137b8fd1757650017b7e06fda163f"},
+    {file = "Mako-1.2.3-py3-none-any.whl", hash = "sha256:c413a086e38cd885088d5e165305ee8eed04e8b3f8f62df343480da0a385735f"},
+    {file = "Mako-1.2.3.tar.gz", hash = "sha256:7fde96466fcfeedb0eed94f187f20b23d85e4cb41444be0e542e2c8c65c396cd"},
 ]
 MarkupSafe = [
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:86b1f75c4e7c2ac2ccdaec2b9022845dbb81880ca318bb7a0a01fbf7813e3812"},
@@ -1330,8 +1330,6 @@ pyparsing = [
     {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
 ]
 pyreadline = [
-    {file = "pyreadline-2.1.win-amd64.exe", hash = "sha256:9ce5fa65b8992dfa373bddc5b6e0864ead8f291c94fbfec05fbd5c836162e67b"},
-    {file = "pyreadline-2.1.win32.exe", hash = "sha256:65540c21bfe14405a3a77e4c085ecfce88724743a4ead47c66b84defcf82c32e"},
     {file = "pyreadline-2.1.zip", hash = "sha256:4530592fc2e85b25b1a9f79664433da09237c1a270e4d78ea5aa3a2c7229e2d1"},
 ]
 pyrepl = [
