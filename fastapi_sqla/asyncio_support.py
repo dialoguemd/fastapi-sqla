@@ -2,7 +2,7 @@ import math
 import os
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import Union
+from typing import Optional, Union
 
 import structlog
 from fastapi import Depends, Query, Request
@@ -127,7 +127,7 @@ async def add_session_to_request(request: Request, call_next):
 
 
 QueryCountDependency = Callable[..., Awaitable[int]]
-PaginateSignature = Callable[[Select, bool | None], Awaitable[Page[T]]]
+PaginateSignature = Callable[[Select, Optional[bool]], Awaitable[Page[T]]]
 DefaultDependency = Callable[[AsyncSession, int, int], PaginateSignature]
 WithQueryCountDependency = Callable[[AsyncSession, int, int, int], PaginateSignature]
 PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
