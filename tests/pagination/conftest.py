@@ -83,6 +83,41 @@ def note_cls():
     return Note
 
 
+class Note(BaseModel):
+    id: int
+    content: str
+
+    class Config:
+        orm_mode = True
+
+
+class User(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
+class UserWithNotes(User):
+    notes: list[Note]
+
+    class Config:
+        orm_mode = True
+
+
+class UserWithNotesCount(User):
+    notes_count: int
+
+
+class Meta(BaseModel):
+    notes_count: int
+
+
+class UserWithMeta(User):
+    meta: Meta
+
+
 @fixture
 def app(user_cls, note_cls):
     from fastapi_sqla import (
@@ -96,35 +131,6 @@ def app(user_cls, note_cls):
 
     app = FastAPI()
     setup(app)
-
-    class Note(BaseModel):
-        id: int
-        content: str
-
-        class Config:
-            orm_mode = True
-
-    class User(BaseModel):
-        id: int
-        name: str
-
-        class Config:
-            orm_mode = True
-
-    class UserWithNotes(User):
-        notes: list[Note]
-
-        class Config:
-            orm_mode = True
-
-    class UserWithNotesCount(User):
-        notes_count: int
-
-    class Meta(BaseModel):
-        notes_count: int
-
-    class UserWithMeta(User):
-        meta: Meta
 
     @app.get("/v1/users", response_model=Page[UserWithNotes])
     def sqla_13_all_users(session: Session = Depends(), paginate: Paginate = Depends()):
