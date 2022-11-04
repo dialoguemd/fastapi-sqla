@@ -166,7 +166,7 @@ async def test_commit_error_returns_500(client, user_1, mock_middleware):
 
 
 async def test_rollback_on_http_exception(client, mock_middleware):
-    with patch("fastapi_sqla.open_session") as open_session:
+    with patch("fastapi_sqla.sqla.open_session") as open_session:
         session = open_session.return_value.__enter__.return_value
 
         await client.get("/404")

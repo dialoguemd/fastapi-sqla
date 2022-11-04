@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
-from . import Base, Page, T, aws_rds_iam_support, new_engine
+from fastapi_sqla.sqla import Base, Page, T, aws_rds_iam_support, new_engine
 
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"

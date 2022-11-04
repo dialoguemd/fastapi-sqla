@@ -60,7 +60,7 @@ async def test_async_session_fixture_does_not_write_in_db(
 def test_sqla_14_all_opened_sessions_are_within_the_same_transaction(
     sqla_connection, session, singer_cls
 ):
-    from fastapi_sqla import _Session
+    from fastapi_sqla.sqla import _Session
 
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
@@ -74,7 +74,7 @@ def test_sqla_14_all_opened_sessions_are_within_the_same_transaction(
 def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
     sqla_connection, session, singer_cls
 ):
-    from fastapi_sqla import _Session
+    from fastapi_sqla.sqla import _Session
 
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()

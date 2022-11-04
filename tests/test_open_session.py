@@ -19,14 +19,14 @@ def module_setup_tear_down(engine, sqla_connection):
 
 @fixture(autouse=True)
 def setup(sqla_connection):
-    from fastapi_sqla import _Session
+    from fastapi_sqla.sqla import _Session
 
     _Session.configure(bind=sqla_connection)
 
 
 @fixture(scope="module")
 def TestTable(module_setup_tear_down):
-    from fastapi_sqla import Base, startup
+    from fastapi_sqla.sqla import Base, startup
 
     class TestTable(Base):
         __tablename__ = "test_table"

@@ -16,7 +16,7 @@ def setup_tear_down(engine):
 
 
 def test_startup_reflect_test_table():
-    from fastapi_sqla import Base, _Session, startup
+    from fastapi_sqla.sqla import Base, _Session, startup
 
     class TestTable(Base):
         __tablename__ = "test_table"
@@ -31,7 +31,7 @@ def test_startup_reflect_test_table():
 
 
 def test_startup_fails_when_table_doesnt_exist():
-    from fastapi_sqla import Base, startup
+    from fastapi_sqla.sqla import Base, startup
 
     class TestTable(Base):
         __tablename__ = "does_not_exist"
