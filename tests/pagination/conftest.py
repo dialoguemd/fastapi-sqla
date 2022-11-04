@@ -44,7 +44,7 @@ def setup_tear_down(sqla_connection, nb_users, nb_notes):
         metadata = MetaData()
         user = Table("user", metadata, autoload_with=sqla_connection)
         note = Table("note", metadata, autoload_with=sqla_connection)
-        user_params = [{"name": faker.name()}] * nb_users
+        user_params = [{"name": faker.name()} for i in range(0, nb_users)]
         note_params = [
             {"user_id": i % 42 + 1, "content": faker.text()} for i in range(0, nb_notes)
         ]

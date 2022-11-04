@@ -41,7 +41,7 @@ def boto_client_mock():
 
 @mark.dont_patch_engines
 def test_startup(case_sensitive_environ):
-    from fastapi_sqla import _Session, startup
+    from fastapi_sqla.sqla import _Session, startup
 
     startup()
 
@@ -52,7 +52,8 @@ def test_startup(case_sensitive_environ):
 
 @mark.dont_patch_engines
 async def test_fastapi_integration():
-    from fastapi_sqla import _Session, setup
+    from fastapi_sqla import setup
+    from fastapi_sqla.sqla import _Session
 
     app = FastAPI()
     setup(app)
@@ -75,7 +76,7 @@ async def test_fastapi_integration():
 
 @mark.dont_patch_engines
 def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
-    from fastapi_sqla import startup
+    from fastapi_sqla.sqla import startup
 
     monkeypatch.setenv("sqlalchemy_url", "postgresql://postgres@localhost/notexisting")
 
@@ -100,7 +101,7 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 def test_sync_startup_with_aws_rds_iam_enabled(
     monkeypatch, boto_session, boto_client_mock, db_host, db_user
 ):
-    from fastapi_sqla import startup
+    from fastapi_sqla.sqla import startup
 
     monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
 

@@ -102,13 +102,13 @@ def sqla_reflection(sqla_modules, sqla_connection, db_url):
 @fixture
 def patch_engine_from_config(request, db_url, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
-    from fastapi_sqla import _Session
+    from fastapi_sqla.sqla import _Session
 
     if "dont_patch_engines" in request.keywords:
         yield
 
     else:
-        with patch("fastapi_sqla.engine_from_config") as engine_from_config:
+        with patch("fastapi_sqla.sqla.engine_from_config") as engine_from_config:
             engine_from_config.return_value = sqla_connection
             _Session.configure(bind=sqla_connection)
             yield engine_from_config
@@ -130,9 +130,9 @@ def session(
     While it does not write any record in DB, the application will still be able to
     access any record committed with that session.
     """
-    import fastapi_sqla
+    import fastapi_sqla.sqla
 
-    yield fastapi_sqla._Session(bind=sqla_connection)
+    yield fastapi_sqla.sqla._Session(bind=sqla_connection)
 
 
 def format_async_async_sqlalchemy_url(url):
