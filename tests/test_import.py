@@ -18,8 +18,8 @@ def test_import_sync_api():
 @mark.sqlalchemy("1.4")
 def test_import_async_api():
     from fastapi_sqla import (  # noqa
-        AsyncSession,
-        AsyncPagination,
         AsyncPaginate,
+        AsyncPagination,
+        AsyncSession,
         open_async_session,
     )
