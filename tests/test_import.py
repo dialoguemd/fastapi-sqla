@@ -1,4 +1,4 @@
-from pytest import mark, raises
+from pytest import mark
 
 
 def test_import_sync_api():
