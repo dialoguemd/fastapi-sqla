@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from fastapi_sqla import sqla
 from fastapi_sqla.sqla import (
     Base,
+    Collection,
+    Item,
     Page,
     Paginate,
     PaginateSignature,
@@ -15,6 +17,8 @@ from fastapi_sqla.sqla import (
 
 __all__ = [
     "Base",
+    "Collection",
+    "Item",
     "Page",
     "Paginate",
     "PaginateSignature",
