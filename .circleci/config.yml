@@ -11,15 +11,20 @@ workflows:
     jobs:
       - python/pylama:
           name: pylama
-          context: org-global-v2
+          context: gemfury-download
       - python/isort:
           name: isort
-          context: org-global-v2
+          context: gemfury-download
       - python/black:
           name: black
-          context: org-global-v2
+          context: gemfury-download
+      - python/run:
+          name: 👮 mypy
+          run: mypy .
+          executor: python
+          context: gemfury-download
       - test:
-          context: org-global-v2
+          context: gemfury-download
           matrix:
             parameters:
               sqlalchemy_version: ["1.3", "1.4"]
@@ -109,7 +114,7 @@ jobs:
 executors:
   python-postgres:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
       - image: postgres:14.4
         name: postgres
         environment:

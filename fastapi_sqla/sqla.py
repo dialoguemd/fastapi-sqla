@@ -35,7 +35,7 @@ _SESSION_KEY = "fastapi_sqla_session"
 _Session = sessionmaker()
 
 
-def new_engine(*, envvar_prefix: str = None) -> Engine:
+def new_engine(*, envvar_prefix: str | None = None) -> Engine:
     envvar_prefix = envvar_prefix if envvar_prefix else "sqlalchemy_"
     lowercase_environ = {
         k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
@@ -300,7 +300,7 @@ def _paginate(
 def Pagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count: QueryCountDependency = None,
+    query_count: QueryCountDependency | None = None,
 ) -> PaginateDependency:
     def default_dependency(
         session: Session = Depends(),
