@@ -20,6 +20,7 @@ workflows:
           context: gemfury-download
       - python/run:
           name: mypy
+          run: mypy .
           context: gemfury-download
       - test:
           context: gemfury-download
