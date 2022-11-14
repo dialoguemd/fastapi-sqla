@@ -112,6 +112,9 @@ jobs:
             poetry publish --build --no-interaction
 
 executors:
+  python:
+    docker:
+      - image: cimg/python:3.10
   python-postgres:
     docker:
       - image: cimg/python:3.10
