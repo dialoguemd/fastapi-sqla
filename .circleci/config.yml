@@ -19,9 +19,7 @@ workflows:
           name: black
           context: gemfury-download
       - python/run:
-          name: 👮 mypy
-          run: mypy .
-          executor: python
+          name: mypy
           context: gemfury-download
       - test:
           context: gemfury-download
