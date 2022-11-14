@@ -21,6 +21,7 @@ workflows:
       - python/run:
           name: mypy
           run: mypy .
+          executor: cimg/python:3.10
           context: gemfury-download
       - test:
           context: gemfury-download
