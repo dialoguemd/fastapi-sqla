@@ -101,7 +101,7 @@ jobs:
       - store_test_results:
           path: test-reports
       - utils/send_coverage_to_codecov:
-          codecov_flag: sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
+          codecov_flag: python_version<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
 
   publish:
     docker:
