@@ -127,7 +127,7 @@ executors:
     parameters:
       python_version:
         type: string
-        default: 3.10
+        default: "3.10"
     docker:
       - image: cimg/python:<< parameters.python_version >>
       - image: postgres:14.4
