@@ -43,9 +43,10 @@ try:
         "AsyncSession",
         "open_async_session",
     ]
+    has_asyncio_support = True
 
 except ImportError as err:
-    asyncio_support = False
+    has_asyncio_support = False
     asyncio_support_err = str(err)
 
 
@@ -60,6 +61,6 @@ def setup(app: FastAPI):
         engine
     )
     if has_async_config:
-        assert asyncio_support, asyncio_support_err
+        assert has_asyncio_support, asyncio_support_err
         app.add_event_handler("startup", asyncio_support.startup)
         app.middleware("http")(asyncio_support.add_session_to_request)

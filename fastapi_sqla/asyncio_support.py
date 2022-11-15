@@ -166,7 +166,7 @@ async def paginate_query(
 def AsyncPagination(
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count: QueryCountDependency = None,
+    query_count: Union[QueryCountDependency, None] = None,
 ) -> PaginateDependency:
     def default_dependency(
         session: AsyncSession = Depends(),
