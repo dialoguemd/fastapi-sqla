@@ -58,7 +58,7 @@ jobs:
 
   test:
     environment:
-      CACHE_VERSION: "2021-05-02T10:18:17.640582"
+      CACHE_VERSION: "2022-11-15T12:56:00.000000"
     parameters:
       python_version:
         type: enum
@@ -86,7 +86,7 @@ jobs:
       - base/setup
       - python/setup
       - utils/with_cache:
-          key: 'sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
+          key: 'python<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
           namespace: tox
           path: ~/project/.tox
           steps:
