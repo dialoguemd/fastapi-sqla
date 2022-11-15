@@ -27,7 +27,7 @@ workflows:
           context: gemfury-download
           matrix:
             parameters:
-              python_version: ["3.9", "3.10"]
+              python_version: ["3.9", "3.10", "3.11"]
               sqlalchemy_version: ["1.3", "1.4"]
               asyncpg: ["asyncpg", "noasyncpg"]
               aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
@@ -62,7 +62,7 @@ jobs:
     parameters:
       python_version:
         type: enum
-        enum: ["3.9", "3.10"]
+        enum: ["3.9", "3.10", "3.11"]
         description: |
           Specify which version of python to run the tests against
       sqlalchemy_version:
