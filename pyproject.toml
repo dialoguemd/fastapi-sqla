@@ -90,7 +90,7 @@ asyncpg = ["asyncpg"]
 aws_rds_iam = ["boto3"]
 
 [build-system]
-requires = ["poetry>=1.2.0"]
+requires = ["poetry>=1.3.0"]
 build-backend = "poetry.masonry.api"
 
 [tool.semantic_release]

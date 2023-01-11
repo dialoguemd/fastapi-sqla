@@ -1,10 +1,10 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.12.0
-  release: dialogue/release@2.6.1
-  python: dialogue/python@3.4.1
-  utils: dialogue/utils@3.7.0
+  base: dialogue/base@1.15.1
+  release: dialogue/release@2.9.1
+  python: dialogue/python@3.8.3
+  utils: dialogue/utils@3.10.1
 
 workflows:
   ci:
@@ -38,7 +38,9 @@ workflows:
             - black
             - isort
             - test
-          context: org-global-v2
+          context:
+            - slack-release
+            - base-github-ci
           filters:
             branches:
               only: master
@@ -47,7 +49,7 @@ workflows:
     jobs:
       - publish:
           name: publish
-          context: org-global-v2
+          context: gemfury-download # Needed to build, the upload token is in the CI env vars
           filters:
             tags:
               only: /^v.*/
