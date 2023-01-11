@@ -106,11 +106,7 @@ jobs:
           codecov_flag: python_version<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
 
   publish:
-    docker:
-    - image: cimg/python:latest
-      auth:
-        username: $DOCKERHUB_USER
-        password: $DOCKERHUB_ACCESS_TOKEN
+    executor: python
     working_directory: ~/project/.
     steps:
       - base/setup
