@@ -38,7 +38,9 @@ workflows:
             - black
             - isort
             - test
-          context: org-global-v2
+          context:
+            - slack-release
+            - base-github-ci
           filters:
             branches:
               only: master
@@ -47,7 +49,7 @@ workflows:
     jobs:
       - publish:
           name: publish
-          context: org-global-v2
+          context: gemfury-download # Needed to build, the upload token is in the CI env vars
           filters:
             tags:
               only: /^v.*/
