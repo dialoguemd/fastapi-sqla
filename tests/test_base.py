@@ -1,6 +1,5 @@
-from pytest import fixture, raises
+from pytest import fixture, mark, raises
 from sqlalchemy import text
-from sqlalchemy.exc import NoSuchTableError
 
 
 @fixture(autouse=True, scope="module")
@@ -30,11 +29,26 @@ def test_startup_reflect_test_table():
     assert session.query(TestTable).count() == 2
 
 
-def test_startup_fails_when_table_doesnt_exist():
+@mark.sqlalchemy("1.3")
+@mark.sqlalchemy("1.4")
+def test_startup_fails_when_table_doesnt_exist(sqla_version_tuple):
+    from sqlalchemy.exc import NoSuchTableError
     from fastapi_sqla.sqla import Base, startup
 
     class TestTable(Base):
         __tablename__ = "does_not_exist"
 
     with raises(NoSuchTableError):
+        startup()
+
+
+@mark.sqlalchemy("2.0")
+def test_startup_fails_when_table_doesnt_exist_sqla_20(sqla_version_tuple):
+    from sqlalchemy.exc import InvalidRequestError
+    from fastapi_sqla.sqla import Base, startup
+
+    class TestTable(Base):
+        __tablename__ = "does_not_exist"
+
+    with raises(InvalidRequestError):
         startup()

@@ -43,9 +43,7 @@ async def startup():
         )
         raise
 
-    async with engine.connect() as connection:
-        await connection.run_sync(Base.prepare)
-
+    Base.prepare(engine.engine)
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
     logger.info("startup", async_engine=engine)
 

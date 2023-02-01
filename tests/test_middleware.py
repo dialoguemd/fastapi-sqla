@@ -133,10 +133,12 @@ async def test_async_session_dependency(client, faker, async_session):
 
 
 @fixture
-def user_1(sqla_connection):
+def user_1(sqla_connection, sqla_version_tuple):
     sqla_connection.execute(
         text("INSERT INTO public.user VALUES (1, 'bob', 'morane') ")
     )
+    if sqla_version_tuple >= (2, 0):
+        sqla_connection.commit()
     yield
 
 

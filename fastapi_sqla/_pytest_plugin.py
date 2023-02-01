@@ -96,7 +96,7 @@ def sqla_reflection(sqla_modules, sqla_connection, db_url):
     import fastapi_sqla
 
     fastapi_sqla.Base.metadata.bind = sqla_connection
-    fastapi_sqla.Base.prepare(sqla_connection)
+    fastapi_sqla.Base.prepare(sqla_connection.engine)
 
 
 @fixture
