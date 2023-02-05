@@ -4,7 +4,7 @@ import os
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Generic, Optional, TypeVar, Union
+from typing import Generic, Iterator, Optional, TypeVar, Union, cast
 
 import structlog
 from fastapi import Depends, Query, Request
@@ -71,7 +71,7 @@ class Base(declarative_base(cls=DeferredReflection)):  # type: ignore
 
 
 class Session(SqlaSession):
-    def __new__(cls, request: Request) -> SqlaSession:
+    def __new__(cls, request: Request):
         """Yield the sqlalchmey session for that request.
 
         It is meant to be used as a FastAPI dependency::
@@ -94,7 +94,7 @@ class Session(SqlaSession):
 
 
 @contextmanager
-def open_session() -> Generator[Session, None, None]:
+def open_session() -> Generator[SqlaSession, None, None]:
     """Context manager that opens a session and properly closes session when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
@@ -226,9 +226,12 @@ def default_query_count(session: Session, query: DbQuery) -> int:
         result = query.count()
 
     elif isinstance(query, Select):
-        result = session.execute(
-            select(func.count()).select_from(query.subquery())
-        ).scalar()
+        result = cast(
+            int,
+            session.execute(
+                select(func.count()).select_from(query.subquery())
+            ).scalar(),
+        )
 
     else:  # pragma no cover
         raise NotImplementedError(f"Query type {type(query)!r} is not supported")
@@ -285,7 +288,8 @@ def _paginate(
     page_number = offset / limit + 1
     query = query.offset(offset).limit(limit)
     result = session.execute(query)
-    data = iter(result.unique().scalars() if scalars else result.mappings())
+    items = result.unique().scalars() if scalars else result.mappings()
+    data = iter(cast(Iterator, items))
     return Page[T](
         data=data,
         meta={
