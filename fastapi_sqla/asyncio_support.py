@@ -149,8 +149,9 @@ async def paginate_query(
     page_number = offset / limit + 1
     query = query.offset(offset).limit(limit)
     result = await session.execute(query)
-    items = result.unique().scalars() if scalars else result.mappings()
-    data = iter(cast(Iterator, items))
+    data = iter(
+        cast(Iterator, result.unique().scalars() if scalars else result.mappings())
+    )
     return Page[T](
         data=data,
         meta={
