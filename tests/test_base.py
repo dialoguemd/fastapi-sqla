@@ -31,7 +31,7 @@ def test_startup_reflect_test_table():
 
 @mark.sqlalchemy("1.3")
 @mark.sqlalchemy("1.4")
-def test_startup_fails_when_table_doesnt_exist(sqla_version_tuple):
+def test_startup_fails_when_table_doesnt_exist():
     from sqlalchemy.exc import NoSuchTableError
 
     from fastapi_sqla.sqla import Base, startup
@@ -44,7 +44,7 @@ def test_startup_fails_when_table_doesnt_exist(sqla_version_tuple):
 
 
 @mark.sqlalchemy("2.0")
-def test_startup_fails_when_table_doesnt_exist_sqla_20(sqla_version_tuple):
+def test_startup_fails_when_table_doesnt_exist_sqla_20():
     from sqlalchemy.exc import InvalidRequestError
 
     from fastapi_sqla.sqla import Base, startup
