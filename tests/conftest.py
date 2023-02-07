@@ -15,8 +15,8 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers",
         (
-            "sqlalchemy(major.minor): skip test if tests run without the expected "
-            "sqlalchemy version"
+            "sqlalchemy(major.minor): skip test if tests run with a lower version than "
+            "the expected sqlalchemy version"
         ),
     )
     config.addinivalue_line(
@@ -103,9 +103,8 @@ def check_sqlalchemy_version(request, sqla_version_tuple):
     marker = request.node.get_closest_marker("sqlalchemy")
     if marker:
         expected = marker.args[0]
-        major, minor = sqla_version_tuple
-        current = f"{major}.{minor}"
-        if expected != current:
+        major, minor = tuple(int(i) for i in expected.split("."))
+        if sqla_version_tuple < (major, minor):
             skip(
                 f"Marked to run against sqlalchemy=^{expected}.0, but got {__version__}"
             )
