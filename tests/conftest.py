@@ -15,8 +15,8 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers",
         (
-            "sqlalchemy(major.minor): skip test if tests run without the expected "
-            "sqlalchemy version"
+            "sqlalchemy(major.minor): skip test if tests run with a lower version than "
+            "the expected sqlalchemy version"
         ),
     )
     config.addinivalue_line(
@@ -29,9 +29,10 @@ def pytest_configure(config):
 
 @fixture(scope="session")
 def sqla_version_tuple():
+    "Return sqla version major and minor in a tuple: '1.3.10' -> (1, 3)"
     from sqlalchemy import __version__
 
-    return tuple(int(i) for i in __version__.split("."))
+    return tuple(int(i) for i in __version__.split("."))[:2]
 
 
 def is_asyncpg_installed():
@@ -60,7 +61,7 @@ def environ(db_url, sqla_version_tuple, async_sqlalchemy_url):
         "SQLALCHEMY_WARN_20": "true",
     }
 
-    if sqla_version_tuple >= (1, 4, 0) and is_asyncpg_installed():
+    if sqla_version_tuple >= (1, 4) and is_asyncpg_installed():
         values["async_sqlalchemy_url"] = async_sqlalchemy_url
 
     with patch.dict("os.environ", values=values, clear=True):
@@ -101,10 +102,9 @@ def check_sqlalchemy_version(request, sqla_version_tuple):
 
     marker = request.node.get_closest_marker("sqlalchemy")
     if marker:
-        major, minor, _ = sqla_version_tuple
         expected = marker.args[0]
-        current = f"{major}.{minor}"
-        if expected != current:
+        major, minor = tuple(int(i) for i in expected.split("."))
+        if sqla_version_tuple < (major, minor):
             skip(
                 f"Marked to run against sqlalchemy=^{expected}.0, but got {__version__}"
             )

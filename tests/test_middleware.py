@@ -134,10 +134,13 @@ async def test_async_session_dependency(client, faker, async_session):
 
 @fixture
 def user_1(sqla_connection):
-    sqla_connection.execute(
-        text("INSERT INTO public.user VALUES (1, 'bob', 'morane') ")
-    )
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text("INSERT INTO public.user VALUES (1, 'bob', 'morane') ")
+        )
     yield
+    with sqla_connection.begin():
+        sqla_connection.execute(text("DELETE FROM public.user WHERE id = 1"))
 
 
 async def test_commit_error_returns_500(client, user_1, mock_middleware):

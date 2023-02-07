@@ -2,7 +2,7 @@ import math
 import os
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import Optional, Union
+from typing import Iterator, Optional, Union, cast
 
 import structlog
 from fastapi import Depends, Query, Request
@@ -43,15 +43,13 @@ async def startup():
         )
         raise
 
-    async with engine.connect() as connection:
-        await connection.run_sync(Base.prepare)
-
+    Base.prepare(engine.engine)
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
     logger.info("startup", async_engine=engine)
 
 
 class AsyncSession(SqlaAsyncSession):
-    def __new__(cls, request: Request) -> SqlaAsyncSession:
+    def __new__(cls, request: Request):
         """Yield the sqlalchmey async session for that request.
 
         It is meant to be used as a FastAPI dependency::
@@ -75,13 +73,13 @@ class AsyncSession(SqlaAsyncSession):
 
 
 @asynccontextmanager
-async def open_session() -> AsyncGenerator[AsyncSession, None]:
+async def open_session() -> AsyncGenerator[SqlaAsyncSession, None]:
     """Context manager to open an async session and properly close it when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
     context. If an exception is raised, session is rollbacked.
     """
-    session = _AsyncSession()
+    session = cast(SqlaAsyncSession, _AsyncSession())
     logger.bind(db_async_session=session)
 
     try:
@@ -135,7 +133,7 @@ PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 async def default_query_count(session: AsyncSession, query: Select) -> int:
     result = await session.execute(select(func.count()).select_from(query.subquery()))
-    return result.scalar()
+    return cast(int, result.scalar())
 
 
 async def paginate_query(
@@ -151,7 +149,9 @@ async def paginate_query(
     page_number = offset / limit + 1
     query = query.offset(offset).limit(limit)
     result = await session.execute(query)
-    data = iter(result.unique().scalars() if scalars else result.mappings())
+    data = iter(
+        cast(Iterator, result.unique().scalars() if scalars else result.mappings())
+    )
     return Page[T](
         data=data,
         meta={
