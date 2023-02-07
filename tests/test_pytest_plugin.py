@@ -57,7 +57,7 @@ async def test_async_session_fixture_does_not_write_in_db(
 
 
 @mark.sqlalchemy("1.4")
-def test_sqla_14_all_opened_sessions_are_within_the_same_transaction(
+def test_all_opened_sessions_are_within_the_same_transaction(
     sqla_connection, session, singer_cls
 ):
     from fastapi_sqla.sqla import _Session
@@ -70,7 +70,6 @@ def test_sqla_14_all_opened_sessions_are_within_the_same_transaction(
     assert other_session.get(singer_cls, 1)
 
 
-@mark.sqlalchemy("1.3")
 def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
     sqla_connection, session, singer_cls
 ):
