@@ -20,25 +20,6 @@ def test_pagination(
     assert result.meta.page_number == page_number
 
 
-@mark.sqlalchemy("1.3")
-@mark.parametrize(
-    "offset,limit,total_pages,page_number",
-    [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5)],
-)
-def test_pagination_with_legacy_query_count(
-    session, user_cls, offset, limit, total_pages, page_number, nb_users
-):
-    from fastapi_sqla import Paginate
-
-    query = session.query(user_cls).options(joinedload(user_cls.notes))
-    result = Paginate(session, offset, limit)(query)
-
-    assert result.meta.total_items == nb_users
-    assert result.meta.offset == offset
-    assert result.meta.total_pages == total_pages
-    assert result.meta.page_number == page_number
-
-
 @mark.parametrize(
     "offset,items_number,path",
     [
