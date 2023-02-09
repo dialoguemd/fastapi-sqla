@@ -23,7 +23,7 @@ def disconnect_on_readonly_error(context: ExceptionContext):
 
     error_code = getattr(context.original_exception, "pgcode", None)
     if error_code == READONLY_ERROR_CODE:
-        context.is_disconnect = True
+        context.is_disconnect = True  # type: ignore
 
 
 class Config(BaseSettings):
