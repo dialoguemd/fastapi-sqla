@@ -1,8 +1,10 @@
 from pydantic import BaseSettings
-from sqlalchemy import ExceptionContext, event
+from sqlalchemy import event
 from sqlalchemy.engine import Engine
+from sqlalchemy.engine.interfaces import ExceptionContext
 
-# Taken from https://www.postgresql.org/docs/current/errcodes-appendix.html#ERRCODES-TABLE
+# Taken from
+# https://www.postgresql.org/docs/current/errcodes-appendix.html#ERRCODES-TABLE
 READONLY_ERROR_CODE = "25006"
 
 
