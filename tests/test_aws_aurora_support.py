@@ -55,3 +55,14 @@ def test_readonly_error_codes(pgcode, should_disconnect):
     disconnect_on_readonly_error(context)
 
     assert context.is_disconnect == should_disconnect
+
+
+def test_already_disconnected():
+    from fastapi_sqla.aws_aurora_support import disconnect_on_readonly_error
+
+    context = Mock()
+    context.is_disconnect = True
+
+    disconnect_on_readonly_error(context)
+
+    assert context.is_disconnect is True
