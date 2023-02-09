@@ -4,6 +4,7 @@ from pytest import mark, raises
 from sqlalchemy import text
 
 
+@mark.sqlalchemy("1.4")
 @mark.dont_patch_engines
 def test_sync_disconnects_on_readonly_error(monkeypatch):
     from fastapi_sqla.sqla import _Session, startup
@@ -19,6 +20,7 @@ def test_sync_disconnects_on_readonly_error(monkeypatch):
     assert connection.invalidated
 
 
+@mark.sqlalchemy("1.4")
 @mark.require_asyncpg
 @mark.dont_patch_engines
 async def test_async_disconnects_on_readonly_error(monkeypatch, async_sqlalchemy_url):
