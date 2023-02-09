@@ -20,7 +20,7 @@ from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
-from fastapi_sqla import aws_rds_iam_support
+from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 
 try:
     from sqlalchemy.orm import declarative_base
@@ -50,6 +50,7 @@ def is_async_dialect(engine):
 def startup():
     engine = new_engine()
     aws_rds_iam_support.setup(engine.engine)
+    aws_aurora_support.setup(engine.engine)
 
     # Fail early:
     try:
