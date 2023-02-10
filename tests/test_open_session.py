@@ -24,7 +24,7 @@ def setup(sqla_connection):
     _Session.configure(bind=sqla_connection)
 
 
-@fixture(scope="module")
+@fixture
 def TestTable(module_setup_tear_down):
     from fastapi_sqla.sqla import Base, startup
 

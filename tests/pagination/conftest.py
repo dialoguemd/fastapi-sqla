@@ -24,26 +24,26 @@ def setup_tear_down(sqla_connection, nb_users, nb_notes):
     with sqla_connection.begin():
         sqla_connection.execute(
             text(
-                "create table if not exists public.user "
+                "create table if not exists test_pagination_user "
                 "(id serial primary key, name varchar)"
             )
         )
         sqla_connection.execute(
             text(
                 """
-            create table if not exists note (
+            create table if not exists test_pagination_note (
                 user_id integer,
                 id serial,
                 content text,
                 primary key (user_id, id),
-                foreign key (user_id) references public.user (id)
+                foreign key (user_id) references test_pagination_user (id)
             )
             """
             )
         )
         metadata = MetaData()
-        user = Table("user", metadata, autoload_with=sqla_connection)
-        note = Table("note", metadata, autoload_with=sqla_connection)
+        user = Table("test_pagination_user", metadata, autoload_with=sqla_connection)
+        note = Table("test_pagination_note", metadata, autoload_with=sqla_connection)
         user_params = [{"name": faker.name()} for i in range(0, nb_users)]
         note_params = [
             {"user_id": i % 42 + 1, "content": faker.text()} for i in range(0, nb_notes)
@@ -52,8 +52,8 @@ def setup_tear_down(sqla_connection, nb_users, nb_notes):
         sqla_connection.execute(note.insert(), note_params)
     yield
     with sqla_connection.begin():
-        sqla_connection.execute(text("drop table note cascade"))
-        sqla_connection.execute(text("drop table public.user cascade"))
+        sqla_connection.execute(text("drop table test_pagination_note cascade"))
+        sqla_connection.execute(text("drop table test_pagination_user cascade"))
 
 
 @fixture
@@ -61,24 +61,24 @@ def sqla_modules(user_cls, note_cls):
     pass
 
 
-@fixture(scope="session")
+@fixture
 def user_cls(note_cls):
     from fastapi_sqla import Base
 
     class User(Base):
-        __tablename__ = "user"
+        __tablename__ = "test_pagination_user"
 
         notes = relationship("Note")
 
     return User
 
 
-@fixture(scope="session")
+@fixture
 def note_cls():
     from fastapi_sqla import Base
 
     class Note(Base):
-        __tablename__ = "note"
+        __tablename__ = "test_pagination_note"
 
     return Note
 

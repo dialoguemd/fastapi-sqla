@@ -16,7 +16,7 @@ def setup_tear_down(engine):
             connection.execute(
                 text(
                     """
-                    CREATE TABLE IF NOT EXISTS public.user (
+                    CREATE TABLE IF NOT EXISTS test_middleware_user (
                        id integer primary key,
                        first_name varchar,
                        last_name varchar
@@ -24,9 +24,10 @@ def setup_tear_down(engine):
                     """
                 )
             )
-        yield
+    yield
+    with engine.connect() as connection:
         with connection.begin():
-            connection.execute(text("DROP TABLE public.user"))
+            connection.execute(text("DROP TABLE test_middleware_user"))
 
 
 @fixture
@@ -34,7 +35,7 @@ def User():
     from fastapi_sqla import Base
 
     class User(Base):
-        __tablename__ = "user"
+        __tablename__ = "test_middleware_user"
 
     return User
 
@@ -108,7 +109,7 @@ async def test_session_dependency(client, faker, session):
     )
     assert res.status_code == 200, res.json()
     row = session.execute(
-        text(f"select * from public.user where id = {userid}")
+        text(f"select * from test_middleware_user where id = {userid}")
     ).fetchone()
     assert row == (userid, first_name, last_name)
 
@@ -126,7 +127,7 @@ async def test_async_session_dependency(client, faker, async_session):
     assert res.status_code == 200, res.json()
     row = (
         await async_session.execute(
-            text(f"select * from public.user where id = {userid}")
+            text(f"select * from test_middleware_user where id = {userid}")
         )
     ).fetchone()
     assert row == (userid, first_name, last_name)
@@ -136,11 +137,11 @@ async def test_async_session_dependency(client, faker, async_session):
 def user_1(sqla_connection):
     with sqla_connection.begin():
         sqla_connection.execute(
-            text("INSERT INTO public.user VALUES (1, 'bob', 'morane') ")
+            text("INSERT INTO test_middleware_user VALUES (1, 'bob', 'morane') ")
         )
     yield
     with sqla_connection.begin():
-        sqla_connection.execute(text("DELETE FROM public.user WHERE id = 1"))
+        sqla_connection.execute(text("DELETE FROM test_middleware_user WHERE id = 1"))
 
 
 async def test_commit_error_returns_500(client, user_1, mock_middleware):

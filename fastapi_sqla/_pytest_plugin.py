@@ -92,10 +92,9 @@ def sqla_modules():
 
 
 @fixture
-def sqla_reflection(sqla_modules, sqla_connection, db_url):
+def sqla_reflection(sqla_modules, sqla_connection):
     import fastapi_sqla
 
-    fastapi_sqla.Base.metadata.bind = sqla_connection
     fastapi_sqla.Base.prepare(sqla_connection.engine)
 
 
@@ -178,7 +177,15 @@ if asyncio_support:
                 yield new_engine
 
     @fixture
-    async def async_session(async_sqla_connection, sqla_reflection, patch_new_engine):
+    def async_sqla_reflection(sqla_modules, async_sqla_connection):
+        import fastapi_sqla
+
+        fastapi_sqla.Base.prepare(async_sqla_connection.engine.sync_engine)
+
+    @fixture
+    async def async_session(
+        async_sqla_connection, async_sqla_reflection, patch_new_engine
+    ):
         from fastapi_sqla.asyncio_support import _AsyncSession
 
         session = _AsyncSession(bind=async_sqla_connection)
