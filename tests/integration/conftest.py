@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 
 @fixture(scope="module", autouse=True)
-def setup_tear_down(engine):
+def test_integration_module_setup_tear_down(engine):
     with engine.connect() as connection:
         with connection.begin():
             connection.execute(
@@ -73,3 +73,17 @@ async def client(app):
             transport=transport, base_url="http://example.local"
         ) as client:
             yield client
+
+
+@fixture
+def sqla_reflection():
+    # Overridden from _pytest_plugin conftest to assess reflection is done correctly by
+    # fastapi_sqla and not by plugin fixture sqla_reflection
+    pass
+
+
+@fixture
+def async_sqla_reflection():
+    # Overridden from _pytest_plugin conftest to assess reflection is done correctly by
+    # fastapi_sqla and not by plugin fixture async_sqla_reflection
+    pass

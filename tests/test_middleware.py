@@ -10,7 +10,7 @@ from structlog.testing import capture_logs
 
 
 @fixture(scope="module", autouse=True)
-def setup_tear_down(engine):
+def test_middleware_module_setup_tear_down(engine):
     with engine.connect() as connection:
         with connection.begin():
             connection.execute(
@@ -91,7 +91,6 @@ def mock_middleware(app: FastAPI):
 
 @fixture
 async def client(app):
-
     async with LifespanManager(app):
         transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
         async with httpx.AsyncClient(

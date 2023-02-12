@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 
 @fixture(autouse=True, scope="module")
-def setup_tear_down(engine):
+def test_base_module_setup_tear_down(engine):
     with engine.connect() as connection:
         with connection.begin():
             connection.execute(

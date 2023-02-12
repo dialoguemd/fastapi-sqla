@@ -10,4 +10,14 @@ def alembic_ini_path():
 
 
 def test_it(session):
-    session.execute(text("select * from testuser"))
+    session.execute(text("select * from test_db_migration_user"))
+
+
+@fixture
+def sqla_reflection():
+    pass
+
+
+@fixture
+def async_sqla_reflection():
+    pass

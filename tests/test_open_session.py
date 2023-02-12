@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 @fixture(autouse=True, scope="module")
-def module_setup_tear_down(engine, sqla_connection):
+def test_open_session_module_setup_tear_down(engine, sqla_connection):
     with sqla_connection.begin():
         sqla_connection.execute(
             text(
@@ -25,7 +25,7 @@ def setup(sqla_connection):
 
 
 @fixture
-def TestTable(module_setup_tear_down):
+def TestTable(test_open_session_module_setup_tear_down):
     from fastapi_sqla.sqla import Base, startup
 
     class TestTable(Base):

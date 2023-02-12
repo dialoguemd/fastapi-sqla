@@ -13,7 +13,7 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
-from fastapi_sqla.sqla import Base, Page, T, new_engine
+from fastapi_sqla.sqla import Page, T, new_engine
 
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
@@ -30,6 +30,8 @@ def new_async_engine():
 
 
 async def startup():
+    from fastapi_sqla import Base
+
     engine = new_async_engine()
     aws_rds_iam_support.setup(engine.sync_engine)
     aws_aurora_support.setup(engine.sync_engine)
@@ -45,7 +47,9 @@ async def startup():
         )
         raise
 
-    Base.prepare(engine.engine)
+    async with engine.connect() as connection:
+        await connection.run_sync(lambda conn: Base.prepare(conn.engine))
+
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
     logger.info("startup", async_engine=engine)
 

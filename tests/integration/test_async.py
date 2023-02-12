@@ -12,7 +12,9 @@ pytestmark = [mark.sqlalchemy("1.4"), mark.require_asyncpg]
         {"sqlalchemy_url": "db_url", "async_sqlalchemy_url": "async_sqlalchemy_url"},
     ],
 )
-def override_environ(setup_tear_down, async_sqlalchemy_url, monkeypatch, request):
+def override_environ(
+    test_integration_module_setup_tear_down, async_sqlalchemy_url, monkeypatch, request
+):
     """Override environ to test the 2 cases.
 
     In async mode, 2 environ are possible:

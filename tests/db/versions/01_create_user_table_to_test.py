@@ -17,11 +17,11 @@ depends_on = None
 
 def upgrade():
     op.create_table(
-        "testuser",
+        "test_db_migration_user",
         Column("id", Integer, primary_key=True, autoincrement=True),
         Column("name", String, nullable=False),
     )
 
 
 def downgrade():
-    op.drop_table("testuser")
+    op.drop_table("test_db_migration_user")

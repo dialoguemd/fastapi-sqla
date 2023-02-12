@@ -19,7 +19,7 @@ def nb_notes(nb_users):
 
 
 @fixture(scope="module", autouse=True)
-def setup_tear_down(sqla_connection, nb_users, nb_notes):
+def test_pagination_module_setup_tear_down(sqla_connection, nb_users, nb_notes):
     faker = Faker(seed=0)
     with sqla_connection.begin():
         sqla_connection.execute(

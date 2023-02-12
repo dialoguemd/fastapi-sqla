@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from faker import Faker
 from pytest import fixture, skip
+from sqlalchemy.orm import clear_mappers
+from sqlalchemy.orm.session import close_all_sessions
 
 # Must be done before importing anything from sqlalchemy:
 os.environ["SQLALCHEMY_WARN_20"] = "true"
@@ -77,18 +79,24 @@ def engine(environ):
 
 
 @fixture(autouse=True)
-def tear_down(environ):
-    from sqlalchemy.orm.session import close_all_sessions
-
+def top_level_setup_tear_down(sqla_version_tuple):
     import fastapi_sqla
+    import sqlalchemy
+    from fastapi_sqla import Base
 
     yield
-    fastapi_sqla.Base.registry.dispose()
-    fastapi_sqla.Base.metadata.clear()
+
+    clear_mappers()
     close_all_sessions()
-    # reload fastapi_sqla to clear sqla deferred reflection mapping stored in Base
-    importlib.reload(fastapi_sqla.sqla)
-    importlib.reload(fastapi_sqla)
+    Base.metadata.clear()
+    importlib.reload(sqlalchemy)
+    if sqla_version_tuple <= (1, 4):
+        try:
+            importlib.reload(fastapi_sqla.asyncio_support)
+        except AttributeError:
+            pass
+        importlib.reload(fastapi_sqla.sqla)
+        importlib.reload(fastapi_sqla)
 
 
 @fixture

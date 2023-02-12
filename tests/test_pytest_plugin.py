@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 
 @fixture(scope="module", autouse=True)
-def setup_tear_down(sqla_connection):
+def test_pytest_plugin_module_setup_tear_down(sqla_connection):
     with sqla_connection.begin():
         sqla_connection.execute(
             text(
