@@ -77,13 +77,13 @@ async def client(app):
 
 @fixture
 def sqla_reflection():
-    # Overridden from _pytest_plugin conftest to assess reflection is done correctly by
+    # Overridden from _pytest_plugin to assess reflection is done correctly by
     # fastapi_sqla and not by plugin fixture sqla_reflection
     pass
 
 
 @fixture
 def async_sqla_reflection():
-    # Overridden from _pytest_plugin conftest to assess reflection is done correctly by
+    # Overridden from _pytest_plugin to assess reflection is done correctly by
     # fastapi_sqla and not by plugin fixture async_sqla_reflection
     pass

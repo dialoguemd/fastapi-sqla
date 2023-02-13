@@ -93,9 +93,9 @@ def sqla_modules():
 
 @fixture
 def sqla_reflection(sqla_modules, sqla_connection):
-    from fastapi_sqla import Base
+    import fastapi_sqla
 
-    Base.prepare(sqla_connection.engine)
+    fastapi_sqla.Base.prepare(sqla_connection.engine)
 
 
 @fixture
