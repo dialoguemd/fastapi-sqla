@@ -75,7 +75,7 @@ async def test_fastapi_integration():
 
 
 @mark.dont_patch_engines
-def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
+def test_sqla_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
     from fastapi_sqla.sqla import startup
 
     monkeypatch.setenv("sqlalchemy_url", "postgresql://postgres@localhost/notexisting")
@@ -86,12 +86,14 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
 
 @mark.dont_patch_engines
 async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
+
+    from fastapi_sqla import asyncio_support
+
     monkeypatch.setenv(
         "async_sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
     )
 
     with raises(Exception):
-        from fastapi_sqla import asyncio_support
 
         await asyncio_support.startup()
 

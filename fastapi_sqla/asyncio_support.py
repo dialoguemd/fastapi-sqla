@@ -36,17 +36,18 @@ async def startup():
     aws_rds_iam_support.setup(engine.sync_engine)
     aws_aurora_support.setup(engine.sync_engine)
 
-    async with engine.connect() as connection:
-        try:
-            # Fail early:
+    # Fail early:
+    try:
+        async with engine.connect() as connection:
             await connection.execute(text("select 'ok'"))
-        except Exception:
-            logger.critical(
-                "Failed querying db: is sqlalchemy_url or async_sqlalchemy_url envvar "
-                "correctly configured?"
-            )
-            raise
+    except Exception:
+        logger.critical(
+            "Failed querying db: is sqlalchemy_url or async_sqlalchemy_url envvar "
+            "correctly configured?"
+        )
+        raise
 
+    async with engine.connect() as connection:
         # Reflect tables
         await connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
