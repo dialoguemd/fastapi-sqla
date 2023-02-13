@@ -80,8 +80,9 @@ def engine(environ):
 
 @fixture(autouse=True)
 def top_level_setup_tear_down(sqla_version_tuple):
-    import fastapi_sqla
     import sqlalchemy
+
+    import fastapi_sqla
     from fastapi_sqla import Base
 
     yield
