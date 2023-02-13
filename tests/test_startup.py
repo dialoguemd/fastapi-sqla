@@ -122,10 +122,10 @@ async def test_async_startup_with_aws_rds_iam_enabled(
     from fastapi_sqla.asyncio_support import startup
 
     monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
-    monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
+    monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
 
     await startup()
 
-    boto_client_mock.generate_db_auth_token.assert_called_once_with(
+    boto_client_mock.generate_db_auth_token.assert_called_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )

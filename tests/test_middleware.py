@@ -90,7 +90,7 @@ def mock_middleware(app: FastAPI):
 
 
 @fixture
-async def client(app):
+async def client(mock_middleware, app):
     async with LifespanManager(app):
         transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
         async with httpx.AsyncClient(

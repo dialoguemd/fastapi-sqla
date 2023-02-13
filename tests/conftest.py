@@ -90,13 +90,12 @@ def top_level_setup_tear_down(sqla_version_tuple):
     close_all_sessions()
     Base.metadata.clear()
     importlib.reload(sqlalchemy)
-    if sqla_version_tuple <= (1, 4):
-        try:
-            importlib.reload(fastapi_sqla.asyncio_support)
-        except AttributeError:
-            pass
-        importlib.reload(fastapi_sqla.sqla)
-        importlib.reload(fastapi_sqla)
+    try:
+        importlib.reload(fastapi_sqla.asyncio_support)
+    except AttributeError:
+        pass
+    importlib.reload(fastapi_sqla.sqla)
+    importlib.reload(fastapi_sqla)
 
 
 @fixture
