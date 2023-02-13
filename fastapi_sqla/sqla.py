@@ -27,7 +27,7 @@ try:
 except ImportError:
     from sqlalchemy.ext.declarative import declarative_base
 
-    DeclarativeBase = declarative_base()
+    DeclarativeBase = declarative_base()  # type: ignore
 
 
 logger = structlog.get_logger(__name__)
