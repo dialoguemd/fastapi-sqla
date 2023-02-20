@@ -178,7 +178,15 @@ if asyncio_support:
                 yield new_engine
 
     @fixture
-    async def async_session(async_sqla_connection, sqla_reflection, patch_new_engine):
+    async def async_sqla_reflection(sqla_modules, async_sqla_connection):
+        from fastapi_sqla import Base
+
+        await async_sqla_connection.run_sync(lambda conn: Base.prepare(conn.engine))
+
+    @fixture
+    async def async_session(
+        async_sqla_connection, async_sqla_reflection, patch_new_engine
+    ):
         from fastapi_sqla.asyncio_support import _AsyncSession
 
         session = _AsyncSession(bind=async_sqla_connection)
