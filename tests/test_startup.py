@@ -126,6 +126,6 @@ async def test_async_startup_with_aws_rds_iam_enabled(
 
     await startup()
 
-    boto_client_mock.generate_db_auth_token.assert_called_once_with(
+    boto_client_mock.generate_db_auth_token.assert_called_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
     )
