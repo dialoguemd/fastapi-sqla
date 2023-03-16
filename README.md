@@ -9,7 +9,7 @@
 
 Fastapi-SQLA is an [SQLAlchemy] extension for [FastAPI] easy to setup with support for
 pagination, asyncio, and [pytest].
-It supports SQLAlchemy>=1.3 and is fully compliant with [SQLAlchemy 2.0] syntax.
+It supports SQLAlchemy>=1.3 and is fully compliant with [SQLAlchemy 2.0].
 It is developped, maintained and used on production by the team at [@dialoguemd] with
 love from Montreal 🇨🇦.
 
@@ -236,8 +236,7 @@ def all_users(paginate: Paginate = Depends()):
 By default:
 
 * It returns pages of 10 items, up to 100 items;
-* Total number of items in the collection is queried using [`Query.count`] for legacy
-  orm queries and the equivalent for 2.0 style queries.
+* Total number of items in the collection is queried using [`Query.count`].
 * Response example for `/users?offset=40&limit=10`:
 
     ```json
@@ -565,8 +564,8 @@ $ poetry run pytest
 $ poetry run tox
 ```
 
-[`sqlalchemy.create_engine`]: https://docs.sqlalchemy.org/en/13/core/engines.html?highlight=create_engine#sqlalchemy.create_engine
-[`Query.count`]: https://docs.sqlalchemy.org/en/13/orm/query.html#sqlalchemy.orm.query.Query.count
+[`sqlalchemy.create_engine`]: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
+[`Query.count`]: https://docs.sqlalchemy.org/en/20/orm/queryguide/query.html#sqlalchemy.orm.Query.count
 [pytest options]: https://docs.pytest.org/en/stable/reference.html#confval-usefixtures
 [FastAPI]: https://fastapi.tiangolo.com/
 [FastAPI dependency injection]: https://fastapi.tiangolo.com/tutorial/dependencies/
@@ -574,7 +573,7 @@ $ poetry run tox
 [SQLAlchemy]: http://sqlalchemy.org/
 [SQLAlchemy 2.0]: https://docs.sqlalchemy.org/en/20/changelog/migration_20.html
 [`asyncpg`]: https://magicstack.github.io/asyncpg/current/
-[scalars]: (https://docs.sqlalchemy.org/en/14/core/connections.html?highlight=scalars#sqlalchemy.engine.Result.scalars),
+[scalars]: https://docs.sqlalchemy.org/en/20/core/connections.html#sqlalchemy.engine.Result.scalars
 [alembic]: https://alembic.sqlalchemy.org/
 [pytest]: https://docs.pytest.org/
 [@dialoguemd]: https://github.com/dialoguemd
