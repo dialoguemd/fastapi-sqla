@@ -103,6 +103,7 @@ fastapi-sqla = "fastapi_sqla._pytest_plugin"
 
 [tool.pylama]
 paths = "fastapi_sqla tests"
+skip = "*.tox/*,*.env/*,*.venv/*"
 linters = "pycodestyle,mccabe,pyflakes"
 
 [tool.pylama.linter.pycodestyle]
