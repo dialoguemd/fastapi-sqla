@@ -13,7 +13,7 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
-from fastapi_sqla.sqla import Base, Page, T, new_engine
+from fastapi_sqla.sqla import Base, Meta, Page, T, new_engine
 
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
@@ -150,20 +150,20 @@ async def paginate_query(
     scalars: bool = True,
 ) -> Page[T]:
     total_pages = math.ceil(total_items / limit)
-    page_number = offset / limit + 1
+    page_number = int(offset / limit) + 1
     query = query.offset(offset).limit(limit)
     result = await session.execute(query)
     data = iter(
         cast(Iterator, result.unique().scalars() if scalars else result.mappings())
     )
     return Page[T](
-        data=data,
-        meta={
-            "offset": offset,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "page_number": page_number,
-        },
+        data=list(data),
+        meta=Meta(
+            offset=offset,
+            total_items=total_items,
+            total_pages=total_pages,
+            page_number=page_number,
+        ),
     )
 
 

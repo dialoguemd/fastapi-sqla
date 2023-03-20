@@ -263,15 +263,15 @@ def _paginate_legacy(
     scalars: bool = True,
 ) -> Page[T]:
     total_pages = math.ceil(total_items / limit)
-    page_number = offset / limit + 1
+    page_number = int(offset / limit) + 1
     return Page[T](
         data=query.offset(offset).limit(limit).all(),
-        meta={
-            "offset": offset,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "page_number": page_number,
-        },
+        meta=Meta(
+            offset=offset,
+            total_items=total_items,
+            total_pages=total_pages,
+            page_number=page_number,
+        ),
     )
 
 
@@ -286,20 +286,20 @@ def _paginate(
     scalars: bool = True,
 ) -> Page[T]:
     total_pages = math.ceil(total_items / limit)
-    page_number = offset / limit + 1
+    page_number = int(offset / limit) + 1
     query = query.offset(offset).limit(limit)
     result = session.execute(query)
     data = iter(
         cast(Iterator, result.unique().scalars() if scalars else result.mappings())
     )
     return Page[T](
-        data=data,
-        meta={
-            "offset": offset,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "page_number": page_number,
-        },
+        data=list(data),
+        meta=Meta(
+            offset=offset,
+            total_items=total_items,
+            total_pages=total_pages,
+            page_number=page_number,
+        ),
     )
 
 
