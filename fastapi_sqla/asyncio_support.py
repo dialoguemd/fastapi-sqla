@@ -48,7 +48,9 @@ async def startup(*, base_cls: Union[type, None] = None):
     async with engine.connect() as connection:
         if base_cls is None:
             base_cls = Base
-        await connection.run_sync(lambda conn: Base.prepare(conn.engine))
+        await connection.run_sync(
+            lambda conn: base_cls.prepare(conn.engine) # type: ignore
+        )
 
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
     logger.info("startup", async_engine=engine)
