@@ -1,4 +1,6 @@
+from functools import partial
 import os
+from typing import Union
 
 from fastapi import FastAPI
 
@@ -50,11 +52,12 @@ except ImportError as err:
     asyncio_support_err = str(err)
 
 
-def setup(app: FastAPI):
+def setup(app: FastAPI, base_cls: Union[type, None] = None):
     engine = sqla.new_engine()
 
     if not sqla.is_async_dialect(engine):
-        app.add_event_handler("startup", sqla.startup)
+        bound_startup = partial(sqla.startup, base_cls=base_cls)
+        app.add_event_handler("startup", bound_startup)
         app.middleware("http")(sqla.add_session_to_request)
 
     has_async_config = "async_sqlalchemy_url" in os.environ or sqla.is_async_dialect(
@@ -62,5 +65,6 @@ def setup(app: FastAPI):
     )
     if has_async_config:
         assert has_asyncio_support, asyncio_support_err
-        app.add_event_handler("startup", asyncio_support.startup)
+        bound_startup = partial(asyncio_support.startup, base_cls=base_cls)
+        app.add_event_handler("startup", bound_startup)
         app.middleware("http")(asyncio_support.add_session_to_request)

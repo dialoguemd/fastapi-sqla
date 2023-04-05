@@ -47,7 +47,7 @@ def is_async_dialect(engine):
     return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
 
 
-def startup():
+def startup(base_cls: Union[type, None] = None):
     engine = new_engine()
     aws_rds_iam_support.setup(engine.engine)
     aws_aurora_support.setup(engine.engine)
@@ -62,7 +62,10 @@ def startup():
         )
         raise
 
-    Base.prepare(engine)
+    if base_cls is None:
+        base_cls = Base
+
+    base_cls.prepare(engine) # type: ignore
     _Session.configure(bind=engine)
     logger.info("startup", engine=engine)
 

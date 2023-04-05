@@ -29,7 +29,7 @@ def new_async_engine():
     return AsyncEngine(engine)
 
 
-async def startup():
+async def startup(base_cls: Union[type, None] = None):
     engine = new_async_engine()
     aws_rds_iam_support.setup(engine.sync_engine)
     aws_aurora_support.setup(engine.sync_engine)
@@ -46,6 +46,8 @@ async def startup():
         raise
 
     async with engine.connect() as connection:
+        if base_cls is None:
+            base_cls = Base
         await connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
     _AsyncSession.configure(bind=engine, expire_on_commit=False)
