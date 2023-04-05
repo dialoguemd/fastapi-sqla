@@ -52,7 +52,7 @@ except ImportError as err:
     asyncio_support_err = str(err)
 
 
-def setup(app: FastAPI, base_cls: Union[type, None] = None):
+def setup(app: FastAPI, *, base_cls: Union[type, None] = None):
     engine = sqla.new_engine()
 
     if not sqla.is_async_dialect(engine):

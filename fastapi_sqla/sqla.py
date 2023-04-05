@@ -47,7 +47,7 @@ def is_async_dialect(engine):
     return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
 
 
-def startup(base_cls: Union[type, None] = None):
+def startup(*, base_cls: Union[type, None] = None):
     engine = new_engine()
     aws_rds_iam_support.setup(engine.engine)
     aws_aurora_support.setup(engine.engine)

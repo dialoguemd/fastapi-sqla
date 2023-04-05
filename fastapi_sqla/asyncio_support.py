@@ -29,7 +29,7 @@ def new_async_engine():
     return AsyncEngine(engine)
 
 
-async def startup(base_cls: Union[type, None] = None):
+async def startup(*, base_cls: Union[type, None] = None):
     engine = new_async_engine()
     aws_rds_iam_support.setup(engine.sync_engine)
     aws_aurora_support.setup(engine.sync_engine)
