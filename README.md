@@ -1,7 +1,7 @@
 # Fastapi-SQLA
 
 [![codecov](https://codecov.io/gh/dialoguemd/fastapi-sqla/branch/master/graph/badge.svg?token=BQHLryClIn)](https://codecov.io/gh/dialoguemd/fastapi-sqla)
-[![CircleCI](https://circleci.com/gh/dialoguemd/fastapi-sqla.svg?style=svg&circle-token=998482f269270ee521aa54f2accbee2e22943743)](https://circleci.com/gh/dialoguemd/fastapi-sqla)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/dialoguemd/fastapi-sqla/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/dialoguemd/fastapi-sqla/tree/master)
 ![PyPI](https://img.shields.io/pypi/v/fastapi-sqla)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
