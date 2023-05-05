@@ -23,9 +23,11 @@ from sqlalchemy.sql import Select, func, select
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 
 try:
-    from sqlalchemy.orm import declarative_base
+    from sqlalchemy.orm import DeclarativeBase
 except ImportError:
     from sqlalchemy.ext.declarative import declarative_base
+
+    DeclarativeBase = declarative_base()  # type: ignore
 
 
 logger = structlog.get_logger(__name__)
@@ -67,7 +69,7 @@ def startup():
     logger.info("startup", engine=engine)
 
 
-class Base(declarative_base(cls=DeferredReflection)):  # type: ignore
+class Base(DeclarativeBase, DeferredReflection):
     __abstract__ = True
 
 
