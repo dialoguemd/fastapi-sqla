@@ -10,7 +10,8 @@ import structlog
 from fastapi import Depends, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field, __version__ as pydantic_version
+from pydantic import BaseModel, Field
+from pydantic import __version__ as pydantic_version
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeferredReflection
