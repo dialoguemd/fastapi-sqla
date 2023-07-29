@@ -24,6 +24,7 @@ workflows:
           executor: python
           context: gemfury-download
       - test:
+          name: test py<<matrix.python_version>> sqlalchemy-<<matrix.sqlalchemy_version >> pydantic-<<matrix.pydantic_version>> <<matrix.asyncpg>> <<matrix.aws_rds_iam>>
           context: gemfury-download
           matrix:
             parameters:
