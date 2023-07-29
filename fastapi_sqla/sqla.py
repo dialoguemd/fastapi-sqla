@@ -10,8 +10,7 @@ import structlog
 from fastapi import Depends, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
-from pydantic.generics import GenericModel
+from pydantic import BaseModel, Field, __version__ as pydantic_version
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -29,6 +28,13 @@ except ImportError:
 
     DeclarativeBase = declarative_base()  # type: ignore
 
+major, _, _ = [int(v) for v in pydantic_version.split(".")]
+is_pydantic2 = major == 2
+if is_pydantic2:
+    GenericModel = BaseModel
+
+else:
+    from pydantic.generics import GenericModel
 
 logger = structlog.get_logger(__name__)
 
