@@ -35,7 +35,7 @@ if is_pydantic2:
     GenericModel = BaseModel
 
 else:
-    from pydantic.generics import GenericModel
+    from pydantic.generics import GenericModel  # type:ignore
 
 logger = structlog.get_logger(__name__)
 
