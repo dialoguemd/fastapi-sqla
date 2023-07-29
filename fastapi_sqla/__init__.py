@@ -45,7 +45,7 @@ try:
     ]
     has_asyncio_support = True
 
-except ImportError as err:
+except ImportError as err:  # pragma: no cover
     has_asyncio_support = False
     asyncio_support_err = str(err)
 
