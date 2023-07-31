@@ -58,7 +58,7 @@ def app(User):
 
     @app.post("/users")
     def create_user(user: UserIn, session: Session = Depends()):
-        session.add(User(**user.dict()))
+        session.add(User(**dict(user)))
 
     if AsyncSession:
 
@@ -66,7 +66,7 @@ def app(User):
         def create_user_with_async_session(
             user: UserIn, session: AsyncSession = Depends()
         ):
-            session.add(User(**user.dict()))
+            session.add(User(**dict(user)))
 
     @app.get("/404")
     def get_users(session: Session = Depends(Session)):

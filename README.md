@@ -69,7 +69,7 @@ def get_user(user_id: int, session: Session = Depends()):
 
 @app.post("/users", response_model=Item[UserModel])
 def create_user(new_user: UserIn, session: Session = Depends()):
-    user = User(**new_user.dict())
+    user = User(**new_user.model_dump())
     session.add(user)
     try:
         session.flush()

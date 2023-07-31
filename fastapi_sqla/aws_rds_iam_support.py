@@ -1,3 +1,5 @@
+from os import environ
+
 try:
     import boto3
 
@@ -8,14 +10,14 @@ except ImportError as err:
 
 from functools import lru_cache
 
-from pydantic import BaseSettings
 from sqlalchemy import event
 
 
 def setup(engine):
-    config = Config()
+    lc_environ = {k.lower(): v for k, v in environ.items()}
+    aws_rds_iam_enabled = lc_environ.get("fastapi_sqla_aws_rds_iam_enabled") == "true"
 
-    if config.aws_rds_iam_enabled:
+    if aws_rds_iam_enabled:
         assert boto3_installed, boto3_installed_err
         # Cache the client at startup
         get_rds_client()
@@ -38,10 +40,3 @@ def set_connection_token(dialect, conn_rec, cargs, cparams):
     cparams["password"] = get_authentication_token(
         host=cparams["host"], port=cparams.get("port", 5432), user=cparams["user"]
     )
-
-
-class Config(BaseSettings):
-    aws_rds_iam_enabled: bool = False
-
-    class Config:
-        env_prefix = "fastapi_sqla_"
