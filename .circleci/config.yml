@@ -1,31 +1,35 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.17.1
-  release: dialogue/release@2.12.1
-  python: dialogue/python@3.11.1
-  utils: dialogue/utils@3.12.1
+  base: dialogue/base@1.21.2
+  release: dialogue/release@2.17.3
+  python: dialogue/python@3.19.3
+  utils: dialogue/utils@3.17.3
 
 workflows:
   ci:
     jobs:
       - python/pylama:
           name: pylama
-          context: gemfury-download
+          context: code-validator
+      
       - python/isort:
           name: isort
-          context: gemfury-download
+          context: code-validator
+      
       - python/black:
           name: black
-          context: gemfury-download
+          context: code-validator
+      
       - python/run:
           name: mypy
           run: mypy .
           executor: python
-          context: gemfury-download
+          context: code-validator
+      
       - test:
           name: test py<<matrix.python_version>> sqlalchemy-<<matrix.sqlalchemy_version >> pydantic-<<matrix.pydantic_version>> <<matrix.asyncpg>> <<matrix.aws_rds_iam>>
-          context: gemfury-download
+          context: code-validator
           matrix:
             parameters:
               python_version: ["3.9", "3.10", "3.11"]
@@ -33,6 +37,7 @@ workflows:
               asyncpg: ["asyncpg", "noasyncpg"]
               aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
               pydantic_version: ["1.10", "2.0", "2.1"]
+      
       - release/release:
           name: release
           requires:
@@ -51,7 +56,7 @@ workflows:
     jobs:
       - publish:
           name: publish
-          context: gemfury-download # Needed to build, the upload token is in the CI env vars
+          context: code-validator # Needed to build, the upload token is in the CI env vars
           filters:
             tags:
               only: /^v.*/
@@ -59,7 +64,6 @@ workflows:
               ignore: /.*/
 
 jobs:
-
   test:
     environment:
       CACHE_VERSION: "2022-11-15T12:56:00.000000"
