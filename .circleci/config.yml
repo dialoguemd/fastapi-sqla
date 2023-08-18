@@ -1,10 +1,10 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.17.1
-  release: dialogue/release@2.12.1
-  python: dialogue/python@3.11.1
-  utils: dialogue/utils@3.12.1
+  base: dialogue/base@1.21.2
+  release: dialogue/release@2.17.3
+  python: dialogue/python@3.19.3
+  utils: dialogue/utils@3.17.3
 
 workflows:
   ci:
