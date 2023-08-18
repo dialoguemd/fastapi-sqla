@@ -104,7 +104,7 @@ jobs:
             - run:
                 name: "install tox"
                 command: |
-                  poetry run pip install -U tox
+                  poetry run pip install -U tox==4.7.0
             - run:
                 name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* pydantic<<parameters.pydantic_version>> and -<<parameters.asyncpg>> and -<<parameters.aws_rds_iam>>"
                 command: |
