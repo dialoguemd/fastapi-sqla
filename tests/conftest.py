@@ -58,6 +58,7 @@ def environ(db_url, sqla_version_tuple, async_sqlalchemy_url):
     values = {
         "PYTHONASYNCIODEBUG": "1",
         "sqlalchemy_url": db_url,
+        "read_only_sqlalchemy_url": db_url,
         "SQLALCHEMY_WARN_20": "true",
     }
 

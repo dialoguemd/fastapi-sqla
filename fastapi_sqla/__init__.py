@@ -11,6 +11,7 @@ from fastapi_sqla.sqla import (
     Paginate,
     PaginateSignature,
     Pagination,
+    ReadOnlySession,
     Session,
     open_session,
 )
@@ -23,6 +24,7 @@ __all__ = [
     "Paginate",
     "PaginateSignature",
     "Pagination",
+    "ReadOnlySession",
     "Session",
     "open_session",
 ]
@@ -56,6 +58,7 @@ def setup(app: FastAPI):
     if not sqla.is_async_dialect(engine):
         app.add_event_handler("startup", sqla.startup)
         app.middleware("http")(sqla.add_session_to_request)
+        app.middleware("http")(sqla.add_read_only_session_to_request)
 
     has_async_config = "async_sqlalchemy_url" in os.environ or sqla.is_async_dialect(
         engine
