@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-sqla"
-version = "2.9.0"
+version = "2.9.1"
 description = "SQLAlchemy extension for FastAPI with support for pagination, asyncio, and pytest, ready for production."
 authors = [
     "Hadrien David <hadrien.david@dialogue.co>",
