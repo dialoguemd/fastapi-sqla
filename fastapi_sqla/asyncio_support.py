@@ -13,7 +13,8 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
-from fastapi_sqla.sqla import Base, Page, T, new_engine
+from fastapi_sqla.models import Page
+from fastapi_sqla.sqla import Base, new_engine
 
 logger = structlog.get_logger(__name__)
 _ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
@@ -129,7 +130,7 @@ async def add_session_to_request(request: Request, call_next):
 
 
 QueryCountDependency = Callable[..., Awaitable[int]]
-PaginateSignature = Callable[[Select, Optional[bool]], Awaitable[Page[T]]]
+PaginateSignature = Callable[[Select, Optional[bool]], Awaitable[Page]]
 DefaultDependency = Callable[[AsyncSession, int, int], PaginateSignature]
 WithQueryCountDependency = Callable[[AsyncSession, int, int, int], PaginateSignature]
 PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
@@ -148,7 +149,7 @@ async def paginate_query(
     limit: int,
     *,
     scalars: bool = True,
-) -> Page[T]:
+) -> Page:
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
     query = query.offset(offset).limit(limit)
@@ -156,7 +157,7 @@ async def paginate_query(
     data = iter(
         cast(Iterator, result.unique().scalars() if scalars else result.mappings())
     )
-    return Page[T](
+    return Page(
         data=data,
         meta={
             "offset": offset,
@@ -177,7 +178,7 @@ def AsyncPagination(
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
-        async def paginate(query: Select, scalars=True) -> Page[T]:
+        async def paginate(query: Select, scalars=True) -> Page:
             total_items = await default_query_count(session, query)
             return await paginate_query(
                 query, session, total_items, offset, limit, scalars=scalars
@@ -191,7 +192,7 @@ def AsyncPagination(
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
         total_items: int = Depends(query_count),
     ):
-        async def paginate(query: Select, scalars=True) -> Page[T]:
+        async def paginate(query: Select, scalars=True) -> Page:
             return await paginate_query(
                 query, session, total_items, offset, limit, scalars=scalars
             )

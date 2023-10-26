@@ -4,14 +4,12 @@ import os
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Generic, Iterator, Optional, TypeVar, Union, cast
+from typing import Iterator, Optional, Union, cast
 
 import structlog
 from fastapi import Depends, Query, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
-from pydantic import __version__ as pydantic_version
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -21,6 +19,7 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import Select, func, select
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
+from fastapi_sqla.models import Page
 
 try:
     from sqlalchemy.orm import DeclarativeBase
@@ -29,13 +28,6 @@ except ImportError:
 
     DeclarativeBase = declarative_base()  # type: ignore
 
-major, _, _ = [int(v) for v in pydantic_version.split(".")]
-is_pydantic2 = major == 2
-if is_pydantic2:
-    GenericModel = BaseModel
-
-else:
-    from pydantic.generics import GenericModel  # type:ignore
 
 logger = structlog.get_logger(__name__)
 
@@ -186,39 +178,9 @@ async def add_session_to_request(request: Request, call_next):
     return response
 
 
-T = TypeVar("T")
-
-
-class Item(GenericModel, Generic[T]):
-    """Item container."""
-
-    data: T
-
-
-class Collection(GenericModel, Generic[T]):
-    """Collection container."""
-
-    data: list[T]
-
-
-class Meta(BaseModel):
-    """Meta information on current page and collection"""
-
-    offset: int = Field(..., description="Current page offset")
-    total_items: int = Field(..., description="Total number of items in the collection")
-    total_pages: int = Field(..., description="Total number of pages in the collection")
-    page_number: int = Field(..., description="Current page number. Starts at 1.")
-
-
-class Page(Collection, Generic[T]):
-    """A page of the collection with info on current page and total items in meta."""
-
-    meta: Meta
-
-
 DbQuery = Union[LegacyQuery, Select]
 QueryCountDependency = Callable[..., int]
-PaginateSignature = Callable[[DbQuery, Optional[bool]], Page[T]]
+PaginateSignature = Callable[[DbQuery, Optional[bool]], Page]
 DefaultDependency = Callable[[Session, int, int], PaginateSignature]
 WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
 PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
@@ -243,7 +205,7 @@ def default_query_count(session: Session, query: DbQuery) -> int:
             ).scalar(),
         )
 
-    else:  # pragma no cover
+    else:  # pragma: no cover
         raise NotImplementedError(f"Query type {type(query)!r} is not supported")
 
     return result
@@ -257,7 +219,7 @@ def paginate_query(
     offset: int,
     limit: int,
     scalars: bool = True,
-) -> Page[T]:  # pragma no cover
+) -> Page:  # pragma: no cover
     "Dispatch on registered functions based on `query` type"
     raise NotImplementedError(f"no paginate_query registered for type {type(query)!r}")
 
@@ -270,10 +232,10 @@ def _paginate_legacy(
     offset: int,
     limit: int,
     scalars: bool = True,
-) -> Page[T]:
+) -> Page:
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
-    return Page[T](
+    return Page(
         data=query.offset(offset).limit(limit).all(),
         meta={
             "offset": offset,
@@ -293,7 +255,7 @@ def _paginate(
     limit: int,
     *,
     scalars: bool = True,
-) -> Page[T]:
+) -> Page:
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
     query = query.offset(offset).limit(limit)
@@ -301,7 +263,7 @@ def _paginate(
     data = iter(
         cast(Iterator, result.unique().scalars() if scalars else result.mappings())
     )
-    return Page[T](
+    return Page(
         data=data,
         meta={
             "offset": offset,
@@ -322,7 +284,7 @@ def Pagination(
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
-        def paginate(query: DbQuery, scalars=True) -> Page[T]:
+        def paginate(query: DbQuery, scalars=True) -> Page:
             total_items = default_query_count(session, query)
             return paginate_query(
                 query, session, total_items, offset, limit, scalars=scalars
@@ -336,7 +298,7 @@ def Pagination(
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
         total_items: int = Depends(query_count),
     ) -> PaginateSignature:
-        def paginate(query: DbQuery, scalars=True) -> Page[T]:
+        def paginate(query: DbQuery, scalars=True) -> Page:
             return paginate_query(
                 query, session, total_items, offset, limit, scalars=scalars
             )
