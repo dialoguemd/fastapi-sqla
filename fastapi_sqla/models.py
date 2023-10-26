@@ -34,7 +34,7 @@ class Meta(BaseModel):
     page_number: int = Field(..., description="Current page number. Starts at 1.")
 
 
-class Page(Collection, Generic[T]):
+class Page(Collection[T], Generic[T]):
     """A page of the collection with info on current page and total items in meta."""
 
     meta: Meta
