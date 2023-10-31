@@ -1,4 +1,3 @@
-import functools
 from unittest.mock import Mock
 
 from pytest import mark
