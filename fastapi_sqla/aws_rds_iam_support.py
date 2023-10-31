@@ -11,7 +11,8 @@ except ImportError as err:
 
 from functools import lru_cache
 
-from sqlalchemy import Engine, event
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 
 def setup(engine: Engine):
