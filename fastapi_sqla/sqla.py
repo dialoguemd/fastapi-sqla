@@ -40,7 +40,7 @@ class Base(DeclarativeBase, DeferredReflection):
     __abstract__ = True
 
 
-def new_engine(*, key: str = "default") -> Engine:
+def new_engine(key: str = "default") -> Engine:
     envvar_prefix = "sqlalchemy_"
     if key != "default":
         envvar_prefix = f"fastapi_sqla__{key}__sqlalchemy_{envvar_prefix}"

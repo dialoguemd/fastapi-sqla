@@ -1,4 +1,5 @@
 from os import environ
+from typing import Any
 
 try:
     import boto3
@@ -36,7 +37,7 @@ def get_authentication_token(host: str, port: int, user: str):
     return token
 
 
-def set_connection_token(dialect, conn_rec, cargs, cparams: dict[str]):
+def set_connection_token(dialect, conn_rec, cargs, cparams: dict[str, Any]):
     cparams["password"] = get_authentication_token(
         host=cparams["host"], port=cparams.get("port", 5432), user=cparams["user"]
     )

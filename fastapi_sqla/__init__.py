@@ -56,18 +56,22 @@ except ImportError as err:  # pragma: no cover
 ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(.+)__.+")
 
 
-def _get_engine_keys() -> list[str]:
-    keys = ["default"]
+def _get_engine_keys() -> set[str]:
+    keys = {"default"}
 
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     for env_var in lowercase_environ:
+        match = ENGINE_KEYS_REGEX.search(env_var)
+        if not match:
+            continue
+
         try:
-            key = ENGINE_KEYS_REGEX.search(env_var).group(1)
+            key = match.group(1)
         except IndexError:
             continue
 
         if key:
-            keys.append(key)
+            keys.add(key)
 
     return keys
 
