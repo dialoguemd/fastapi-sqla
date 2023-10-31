@@ -46,7 +46,7 @@ def new_engine(key: str = "default") -> Engine:
         envvar_prefix = f"fastapi_sqla__{key}__sqlalchemy_{envvar_prefix}"
 
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
-    lowercase_environ.pop(f"{envvar_prefix}_warn_20", None)
+    lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
     return engine_from_config(lowercase_environ, prefix=envvar_prefix)
 
 
