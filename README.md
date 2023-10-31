@@ -27,7 +27,7 @@ unique `email`:
 
 ```python
 # main.py
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi_sqla import Base, Item, Page, Paginate, Session, setup
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
@@ -55,12 +55,12 @@ class UserModel(UserIn):
 
 
 @app.get("/users", response_model=Page[UserModel])
-def list_users(paginate: Paginate = Depends()):
+def list_users(paginate: Paginate):
     return paginate(select(User))
 
 
 @app.get("/users/{user_id}", response_model=Item[UserModel])
-def get_user(user_id: int, session: Session = Depends()):
+def get_user(user_id: int, session: Session):
     user = session.get(User, user_id)
     if user is None:
         raise HTTPException(404)
@@ -68,7 +68,7 @@ def get_user(user_id: int, session: Session = Depends()):
 
 
 @app.post("/users", response_model=Item[UserModel])
-def create_user(new_user: UserIn, session: Session = Depends()):
+def create_user(new_user: UserIn, session: Session):
     user = User(**new_user.model_dump())
     session.add(user)
     try:
@@ -157,7 +157,7 @@ SQLAlchemy session is committed before response is returned or rollbacked if any
 exception occurred:
 
 ```python
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi_sqla import Session
 from fastapi_sqla.asyncio_support import AsyncSession
 
@@ -165,12 +165,12 @@ router = APIRouter()
 
 
 @router.get("/example")
-def example(session: Session = Depends()):
+def example(session: Session):
     return session.execute("SELECT now()").scalar()
 
 
 @router.get("/async_example")
-async def async_example(session: AsyncSession = Depends()):
+async def async_example(session: AsyncSession):
     return await session.scalar("SELECT now()")
 ```
 
@@ -208,7 +208,7 @@ async def run_async_bg():
 ## Pagination
 
 ```python
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi_sqla import Base, Page, Paginate
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -229,7 +229,7 @@ class UserModel(BaseModel):
 
 
 @router.get("/users", response_model=Page[UserModel])
-def all_users(paginate: Paginate = Depends()):
+def all_users(paginate: Paginate):
     return paginate(select(User))
 ```
 
@@ -266,7 +266,7 @@ To paginate a query which doesn't return [scalars], specify `scalars=False` when
 `paginate`:
 
 ```python
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi_sqla import Base, Page, Paginate
 from pydantic import BaseModel
 from sqlalchemy import func, select
@@ -291,7 +291,7 @@ class UserModel(BaseModel):
 
 
 @router.get("/users", response_model=Page[UserModel])
-def all_users(paginate: Paginate = Depends()):
+def all_users(paginate: Paginate):
     query = (
         select(User.id, User.name, func.count(Note.id).label("notes_count"))
         .join(Note)
@@ -327,7 +327,7 @@ class UserModel(BaseModel):
     name: str
 
 
-def query_count(session: Session = Depends()) -> int:
+def query_count(session: Session) -> int:
     return session.execute(select(func.count()).select_from(User)).scalar()
 
 
@@ -344,7 +344,7 @@ def all_users(paginate: Paginate = Depends()):
 When using the asyncio support, use the `AsyncPaginate` dependency:
 
 ```python
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi_sqla import Base, Page, AsyncPaginate
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -365,7 +365,7 @@ class UserModel(BaseModel):
 
 
 @router.get("/users", response_model=Page[UserModel])
-async def all_users(paginate: AsyncPaginate = Depends()):
+async def all_users(paginate: AsyncPaginate):
     return await paginate(select(User))
 ```
 
@@ -389,7 +389,7 @@ class UserModel(BaseModel):
     name: str
 
 
-async def query_count(session: AsyncSession = Depends()) -> int:
+async def query_count(session: AsyncSession) -> int:
     result = await session.execute(select(func.count()).select_from(User))
     return result.scalar()
 

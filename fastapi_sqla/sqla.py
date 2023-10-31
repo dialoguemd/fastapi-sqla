@@ -4,7 +4,7 @@ import os
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Iterator, Optional, Union, cast
+from typing import Annotated, Iterator, Optional, Union, cast
 
 import structlog
 from fastapi import Depends, Query, Request
@@ -33,27 +33,33 @@ logger = structlog.get_logger(__name__)
 
 _SESSION_KEY = "fastapi_sqla_session"
 
-_Session = sessionmaker()
+_Session: dict[str, sessionmaker] = {}
 
 
-def new_engine(*, envvar_prefix: Union[str, None] = None) -> Engine:
-    envvar_prefix = envvar_prefix if envvar_prefix else "sqlalchemy_"
-    lowercase_environ = {
-        k.lower(): v for k, v in os.environ.items() if k.lower() != "sqlalchemy_warn_20"
-    }
+class Base(DeclarativeBase, DeferredReflection):
+    __abstract__ = True
+
+
+def new_engine(*, key: str = "default") -> Engine:
+    envvar_prefix = "sqlalchemy_"
+    if key != "default":
+        envvar_prefix = f"fastapi_sqla__{key}__sqlalchemy_{envvar_prefix}"
+
+    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
+    lowercase_environ.pop(f"{envvar_prefix}_warn_20", None)
     return engine_from_config(lowercase_environ, prefix=envvar_prefix)
 
 
-def is_async_dialect(engine):
+def is_async_dialect(engine: Engine):
     return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
 
 
-def startup():
-    engine = new_engine()
+def startup(key: str = "default"):
+    engine = new_engine(key)
     aws_rds_iam_support.setup(engine.engine)
     aws_aurora_support.setup(engine.engine)
 
-    # Fail early:
+    # Fail early
     try:
         with engine.connect() as connection:
             connection.execute(text("select 'OK'"))
@@ -64,45 +70,26 @@ def startup():
         raise
 
     Base.prepare(engine)
-    _Session.configure(bind=engine)
-    logger.info("startup", engine=engine)
+    _Session[key] = sessionmaker(bind=engine)
 
-
-class Base(DeclarativeBase, DeferredReflection):
-    __abstract__ = True
-
-
-class Session(SqlaSession):
-    def __new__(cls, request: Request):
-        """Yield the sqlalchmey session for that request.
-
-        It is meant to be used as a FastAPI dependency::
-
-            from fastapi import APIRouter, Depends
-            from fastapi_sqla import Session
-
-            router = APIRouter()
-
-            @router.get("/users")
-            def get_users(session: Session = Depends()):
-                pass
-        """
-        try:
-            return request.scope[_SESSION_KEY]
-        except KeyError:  # pragma: no cover
-            raise Exception(
-                "No session found in request, please ensure you've setup fastapi_sqla."
-            )
+    logger.info("engine startup", engine_key=key, engine=engine)
 
 
 @contextmanager
-def open_session() -> Generator[SqlaSession, None, None]:
+def open_session(key: str = "default") -> Generator[SqlaSession, None, None]:
     """Context manager that opens a session and properly closes session when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
     context. If an exception is raised, session is rollbacked.
     """
-    session = _Session()
+    try:
+        session: SqlaSession = _Session[key]()
+    except KeyError as exc:
+        raise Exception(
+            f"No session with key {key} found, "
+            "please ensure you've configured the environment variables for this key."
+        ) from exc
+
     logger.bind(db_session=session)
 
     try:
@@ -125,7 +112,7 @@ def open_session() -> Generator[SqlaSession, None, None]:
         session.close()
 
 
-async def add_session_to_request(request: Request, call_next):
+async def add_session_to_request(request: Request, call_next, key: str = "default"):
     """Middleware which injects a new sqla session into every request.
 
     Handles creation of session, as well as commit, rollback, and closing of session.
@@ -140,11 +127,12 @@ async def add_session_to_request(request: Request, call_next):
         fastapi_sqla.setup(app)  # includes middleware
 
         @app.get("/users")
-        def get_users(session: fastapi_sqla.Session = Depends()):
+        def get_users(session: fastapi_sqla.Session):
             return session.execute(...) # use your session here
     """
-    async with contextmanager_in_threadpool(open_session()) as session:
-        request.scope[_SESSION_KEY] = session
+    async with contextmanager_in_threadpool(open_session(key)) as session:
+        # TODO: This should use request.state
+        request.scope[f"{_SESSION_KEY}_{key}"] = session
 
         response = await call_next(request)
 
@@ -178,15 +166,42 @@ async def add_session_to_request(request: Request, call_next):
     return response
 
 
+class SessionDependency:
+    def __init__(self, key: str = "default") -> None:
+        self.key = key
+
+    def __call__(self, request: Request) -> SqlaSession:
+        """Yield the sqlalchemy session for that request.
+
+        It is meant to be used as a FastAPI dependency::
+
+            from fastapi import APIRouter, Depends
+            from fastapi_sqla import SqlaSession, SessionDependency
+
+            router = APIRouter()
+
+            @router.get("/users")
+            def get_users(session: SqlaSession = Depends(SessionDependency())):
+                pass
+        """
+        try:
+            return request.scope[f"{_SESSION_KEY}_{self.key}"]
+        except KeyError:  # pragma: no cover
+            raise Exception(
+                f"No session with key {self.key} found in request, "
+                "please ensure you've setup fastapi_sqla."
+            )
+
+
 DbQuery = Union[LegacyQuery, Select]
 QueryCountDependency = Callable[..., int]
 PaginateSignature = Callable[[DbQuery, Optional[bool]], Page]
-DefaultDependency = Callable[[Session, int, int], PaginateSignature]
-WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
+DefaultDependency = Callable[[SqlaSession, int, int], PaginateSignature]
+WithQueryCountDependency = Callable[[SqlaSession, int, int, int], PaginateSignature]
 PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
-def default_query_count(session: Session, query: DbQuery) -> int:
+def default_query_count(session: SqlaSession, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
     It is slower than a manually written query could be: It runs the query in a
@@ -214,7 +229,7 @@ def default_query_count(session: Session, query: DbQuery) -> int:
 @singledispatch
 def paginate_query(
     query: DbQuery,
-    session: Session,
+    session: SqlaSession,
     total_items: int,
     offset: int,
     limit: int,
@@ -227,7 +242,7 @@ def paginate_query(
 @paginate_query.register
 def _paginate_legacy(
     query: LegacyQuery,
-    session: Session,
+    session: SqlaSession,
     total_items: int,
     offset: int,
     limit: int,
@@ -249,7 +264,7 @@ def _paginate_legacy(
 @paginate_query.register
 def _paginate(
     query: Select,
-    session: Session,
+    session: SqlaSession,
     total_items: int,
     offset: int,
     limit: int,
@@ -275,12 +290,13 @@ def _paginate(
 
 
 def Pagination(
+    session_key: str = "default",
     min_page_size: int = 10,
     max_page_size: int = 100,
     query_count: Union[QueryCountDependency, None] = None,
 ) -> PaginateDependency:
     def default_dependency(
-        session: Session = Depends(),
+        session: SqlaSession = Depends(SessionDependency(key=session_key)),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
@@ -293,7 +309,7 @@ def Pagination(
         return paginate
 
     def with_query_count_dependency(
-        session: Session = Depends(),
+        session: SqlaSession = Depends(SessionDependency(key=session_key)),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
         total_items: int = Depends(query_count),
@@ -311,4 +327,5 @@ def Pagination(
         return default_dependency
 
 
-Paginate: PaginateDependency = Pagination()
+Paginate = Annotated[PaginateDependency, Depends(Pagination())]
+Session = Annotated[SqlaSession, Depends(SessionDependency())]

@@ -1,4 +1,6 @@
+import functools
 import os
+import re
 
 from fastapi import FastAPI
 
@@ -10,6 +12,8 @@ from fastapi_sqla.sqla import (
     PaginateSignature,
     Pagination,
     Session,
+    SessionDependency,
+    SqlaSession,
     open_session,
 )
 
@@ -22,6 +26,8 @@ __all__ = [
     "PaginateSignature",
     "Pagination",
     "Session",
+    "SessionDependency",
+    "SqlaSession",
     "open_session",
 ]
 
@@ -47,18 +53,41 @@ except ImportError as err:  # pragma: no cover
     has_asyncio_support = False
     asyncio_support_err = str(err)
 
+ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(.+)__.+")
+
+
+def _get_engine_keys() -> list[str]:
+    keys = ["default"]
+
+    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
+    for env_var in lowercase_environ:
+        try:
+            key = ENGINE_KEYS_REGEX.search(env_var).group(1)
+        except IndexError:
+            continue
+
+        if key:
+            keys.append(key)
+
+    return keys
+
 
 def setup(app: FastAPI):
-    engine = sqla.new_engine()
+    engine_keys = _get_engine_keys()
+    engines = {key: sqla.new_engine(key) for key in engine_keys}
+    for key, engine in engines.items():
+        if not sqla.is_async_dialect(engine):
+            app.add_event_handler("startup", functools.partial(sqla.startup, key=key))
+            app.middleware("http")(
+                functools.partial(sqla.add_session_to_request, key=key)
+            )
 
-    if not sqla.is_async_dialect(engine):
-        app.add_event_handler("startup", sqla.startup)
-        app.middleware("http")(sqla.add_session_to_request)
-
-    has_async_config = "async_sqlalchemy_url" in os.environ or sqla.is_async_dialect(
-        engine
-    )
-    if has_async_config:
-        assert has_asyncio_support, asyncio_support_err
-        app.add_event_handler("startup", asyncio_support.startup)
-        app.middleware("http")(asyncio_support.add_session_to_request)
+        has_async_config = key == "default" and "async_sqlalchemy_url" in os.environ
+        if sqla.is_async_dialect(engine) or has_async_config:
+            assert has_asyncio_support, asyncio_support_err
+            app.add_event_handler(
+                "startup", functools.partial(asyncio_support.startup, key=key)
+            )
+            app.middleware("http")(
+                functools.partial(asyncio_support.add_session_to_request, key=key)
+            )
