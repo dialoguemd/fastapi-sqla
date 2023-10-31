@@ -31,7 +31,8 @@ except ImportError:
 
 logger = structlog.get_logger(__name__)
 
-_SESSION_KEY = "fastapi_sqla_session"
+_DEFAULT_SESSION_KEY = "default"
+_REQUEST_SESSION_KEY = "fastapi_sqla_session"
 
 _Session: dict[str, sessionmaker] = {}
 
@@ -40,9 +41,9 @@ class Base(DeclarativeBase, DeferredReflection):
     __abstract__ = True
 
 
-def new_engine(key: str = "default") -> Engine:
+def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Engine:
     envvar_prefix = "sqlalchemy_"
-    if key != "default":
+    if key != _DEFAULT_SESSION_KEY:
         envvar_prefix = f"fastapi_sqla__{key}__sqlalchemy_{envvar_prefix}"
 
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
@@ -54,7 +55,7 @@ def is_async_dialect(engine: Engine):
     return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
 
 
-def startup(key: str = "default"):
+def startup(key: str = _DEFAULT_SESSION_KEY):
     engine = new_engine(key)
     aws_rds_iam_support.setup(engine.engine)
     aws_aurora_support.setup(engine.engine)
@@ -76,7 +77,7 @@ def startup(key: str = "default"):
 
 
 @contextmanager
-def open_session(key: str = "default") -> Generator[SqlaSession, None, None]:
+def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None, None]:
     """Context manager that opens a session and properly closes session when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
@@ -112,7 +113,9 @@ def open_session(key: str = "default") -> Generator[SqlaSession, None, None]:
         session.close()
 
 
-async def add_session_to_request(request: Request, call_next, key: str = "default"):
+async def add_session_to_request(
+    request: Request, call_next, key: str = _DEFAULT_SESSION_KEY
+):
     """Middleware which injects a new sqla session into every request.
 
     Handles creation of session, as well as commit, rollback, and closing of session.
@@ -132,7 +135,7 @@ async def add_session_to_request(request: Request, call_next, key: str = "defaul
     """
     async with contextmanager_in_threadpool(open_session(key)) as session:
         # TODO: This should use request.state
-        request.scope[f"{_SESSION_KEY}_{key}"] = session
+        request.scope[f"{_REQUEST_SESSION_KEY}_{key}"] = session
 
         response = await call_next(request)
 
@@ -167,7 +170,7 @@ async def add_session_to_request(request: Request, call_next, key: str = "defaul
 
 
 class SessionDependency:
-    def __init__(self, key: str = "default") -> None:
+    def __init__(self, key: str = _DEFAULT_SESSION_KEY) -> None:
         self.key = key
 
     def __call__(self, request: Request) -> SqlaSession:
@@ -185,7 +188,7 @@ class SessionDependency:
                 pass
         """
         try:
-            return request.scope[f"{_SESSION_KEY}_{self.key}"]
+            return request.scope[f"{_REQUEST_SESSION_KEY}_{self.key}"]
         except KeyError:  # pragma: no cover
             raise Exception(
                 f"No session with key {self.key} found in request, "
@@ -290,7 +293,7 @@ def _paginate(
 
 
 def Pagination(
-    session_key: str = "default",
+    session_key: str = _DEFAULT_SESSION_KEY,
     min_page_size: int = 10,
     max_page_size: int = 100,
     query_count: Union[QueryCountDependency, None] = None,
