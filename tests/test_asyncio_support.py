@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from pytest import fixture, mark, raises
 from sqlalchemy import text
@@ -16,8 +16,9 @@ async def startup(environ):
 
 async def test_startup_configure_async_session(startup):
     from fastapi_sqla.asyncio_support import _AsyncSession
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
-    async with _AsyncSession() as session:
+    async with _AsyncSession[_DEFAULT_SESSION_KEY]() as session:
         res = await session.execute(text("SELECT 123"))
 
     assert res.scalar() == 123
@@ -44,16 +45,24 @@ async def test_new_async_engine_without_async_alchemy_url(
 
 
 @fixture
-def AsyncSessionMock():
-    with patch("fastapi_sqla.asyncio_support._AsyncSession") as AsyncSessionMock:
-        AsyncSessionMock.return_value = AsyncMock()
-        yield AsyncSessionMock
+def async_session_mock():
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
+
+    sessionmaker_mock = Mock()
+    session_mock = AsyncMock()
+    sessionmaker_mock.return_value = session_mock
+
+    with patch.dict(
+        "fastapi_sqla.asyncio_support._AsyncSession",
+        {_DEFAULT_SESSION_KEY: sessionmaker_mock},
+    ):
+        yield sessionmaker_mock
 
 
-async def test_context_manager_rollbacks_on_error(AsyncSessionMock):
+async def test_context_manager_rollbacks_on_error(async_session_mock):
     from fastapi_sqla.asyncio_support import open_session
 
-    session = AsyncSessionMock.return_value
+    session = async_session_mock.return_value
     with raises(Exception) as raise_info:
         async with open_session():
             raise Exception("boom!")

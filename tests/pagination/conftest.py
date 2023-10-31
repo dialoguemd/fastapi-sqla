@@ -133,7 +133,7 @@ def app(user_cls, note_cls):
     setup(app)
 
     @app.get("/v1/users", response_model=Page[UserWithNotes])
-    def sqla_13_all_users(session: Session = Depends(), paginate: Paginate = Depends()):
+    def sqla_13_all_users(session: Session, paginate: Paginate):
         query = (
             session.query(user_cls)
             .options(joinedload(user_cls.notes))
@@ -142,14 +142,14 @@ def app(user_cls, note_cls):
         return paginate(query)
 
     @app.get("/v2/users", response_model=Page[UserWithNotes])
-    def sqla_14_all_users(paginate: Paginate = Depends()):
+    def sqla_14_all_users(paginate: Paginate):
         query = (
             select(user_cls).options(joinedload(user_cls.notes)).order_by(user_cls.id)
         )
         return paginate(query)
 
     @app.get("/v2/users-with-notes-count", response_model=Page[UserWithNotesCount])
-    def sqla_14_all_users_with_notes_count(paginate: Paginate = Depends()):
+    def sqla_14_all_users_with_notes_count(paginate: Paginate):
         query = (
             select(
                 user_cls.id, user_cls.name, func.count(note_cls.id).label("notes_count")
@@ -161,7 +161,7 @@ def app(user_cls, note_cls):
         return paginate(query, scalars=False)
 
     @app.get("/v2/query-with-json-result", response_model=Page[UserWithMeta])
-    def query_with_JSON_result(paginate: Paginate = Depends()):
+    def query_with_JSON_result(paginate: Paginate):
         query = (
             select(
                 user_cls.id,
@@ -176,7 +176,7 @@ def app(user_cls, note_cls):
         )
         return paginate(query, scalars=False)
 
-    def count_user_notes(user_id: int, session: Session = Depends()) -> int:
+    def count_user_notes(user_id: int, session: Session) -> int:
         return session.execute(
             select(func.count(note_cls.id)).where(note_cls.user_id == user_id)
         ).scalar()

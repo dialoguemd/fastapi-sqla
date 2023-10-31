@@ -121,15 +121,26 @@ def sqla_transaction(sqla_connection):
 
 
 @fixture
+def session_factory():
+    return sessionmaker()
+
+
+@fixture
 def session(
-    sqla_transaction, sqla_connection, sqla_reflection, patch_engine_from_config
+    session_factory,
+    sqla_connection,
+    sqla_transaction,
+    sqla_reflection,
+    patch_engine_from_config,
 ):
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
     access any record committed with that session.
     """
-    yield sessionmaker(bind=sqla_connection)
+    session = session_factory(bind=sqla_connection)
+    yield session
+    session.close()
 
 
 def format_async_async_sqlalchemy_url(url):
@@ -177,12 +188,19 @@ if asyncio_support:
         await async_sqla_connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
     @fixture
-    async def async_session(
-        async_sqla_connection, async_sqla_reflection, patch_new_engine
-    ):
+    def async_session_factory():
         from fastapi_sqla.asyncio_support import SqlaAsyncSession
 
-        session = sessionmaker(class_=SqlaAsyncSession, bind=async_sqla_connection)
+        return sessionmaker(class_=SqlaAsyncSession)
+
+    @fixture
+    async def async_session(
+        async_session_factory,
+        async_sqla_connection,
+        async_sqla_reflection,
+        patch_new_engine,
+    ):
+        session = async_session_factory(bind=async_sqla_connection)
         yield session
         await session.close()
 

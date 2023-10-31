@@ -24,12 +24,13 @@ _AsyncSession: dict[str, sessionmaker] = {}
 
 
 def new_async_engine(key: str = _DEFAULT_SESSION_KEY):
-    # TODO: Fix this so that we keep backward compat
+    # NOTE: We don't support this for non-default sessions
+    # TODO: Check if we can get rid of it. I think so
     envvar_prefix = None
-    if "async_sqlalchemy_url" in os.environ:
+    if key == _DEFAULT_SESSION_KEY and "async_sqlalchemy_url" in os.environ:
         envvar_prefix = "async_sqlalchemy_"
 
-    engine = new_engine(key)
+    engine = new_engine(key, envvar_prefix=envvar_prefix)
     return AsyncEngine(engine)
 
 

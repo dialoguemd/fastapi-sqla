@@ -8,7 +8,10 @@ def test_import_sync_api():
         Item,
         Page,
         Paginate,
+        Pagination,
         Session,
+        SessionDependency,
+        SqlaSession,
         open_session,
         setup,
     )
@@ -21,5 +24,7 @@ def test_import_async_api():
         AsyncPaginate,
         AsyncPagination,
         AsyncSession,
+        AsyncSessionDependency,
+        SqlaAsyncSession,
         open_async_session,
     )

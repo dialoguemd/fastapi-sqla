@@ -90,6 +90,7 @@ def setup(app: FastAPI):
                 functools.partial(sqla.add_session_to_request, key=key)
             )
 
+        # TODO: Check if we can get rid of it. I think so
         has_async_config = (
             key == sqla._DEFAULT_SESSION_KEY and "async_sqlalchemy_url" in os.environ
         )

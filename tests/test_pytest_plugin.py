@@ -58,27 +58,23 @@ async def test_async_session_fixture_does_not_write_in_db(
 
 @mark.sqlalchemy("1.4")
 def test_all_opened_sessions_are_within_the_same_transaction(
-    sqla_connection, session, singer_cls
+    sqla_connection, session, session_factory, singer_cls
 ):
-    from fastapi_sqla.sqla import _Session
-
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
 
-    other_session = _Session(bind=sqla_connection)
+    other_session = session_factory(bind=sqla_connection)
 
     assert other_session.get(singer_cls, 1)
 
 
 def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
-    sqla_connection, session, singer_cls
+    sqla_connection, session, session_factory, singer_cls
 ):
-    from fastapi_sqla.sqla import _Session
-
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
 
-    other_session = _Session(bind=sqla_connection)
+    other_session = session_factory(bind=sqla_connection)
 
     assert other_session.query(singer_cls).get(1)
 
@@ -86,14 +82,12 @@ def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 async def test_all_opened_async_sessions_are_within_the_same_transaction(
-    async_sqla_connection, async_session, singer_cls
+    async_sqla_connection, async_session, async_session_factory, singer_cls
 ):
-    from fastapi_sqla.asyncio_support import _AsyncSession
-
     async_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     await async_session.commit()
 
-    other_session = _AsyncSession(bind=async_sqla_connection)
+    other_session = async_session_factory(bind=async_sqla_connection)
     assert await other_session.get(singer_cls, 1)
 
 

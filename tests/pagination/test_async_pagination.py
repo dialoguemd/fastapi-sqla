@@ -21,10 +21,10 @@ def app(app, user_cls, note_cls):
     from fastapi_sqla import AsyncPaginate, AsyncPagination, AsyncSession, Page
 
     @app.get("/v1/notes", response_model=Page[Note])
-    async def async_paginated_notes(paginate: AsyncPaginate = Depends()):
+    async def async_paginated_notes(paginate: AsyncPaginate):
         return await paginate(select(note_cls))
 
-    async def count_notes(session: AsyncSession = Depends()):
+    async def count_notes(session: AsyncSession):
         result = await session.execute(select(func.count(note_cls.id)))
         return result.scalar()
 

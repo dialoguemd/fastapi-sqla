@@ -41,7 +41,7 @@ def User():
 
 @fixture
 def app(User):
-    from fastapi_sqla import Session, setup
+    from fastapi_sqla import Session, SessionDependency, SqlaSession, setup
 
     try:
         from fastapi_sqla import AsyncSession
@@ -57,19 +57,17 @@ def app(User):
         last_name: str
 
     @app.post("/users")
-    def create_user(user: UserIn, session: Session = Depends()):
+    def create_user(user: UserIn, session: Session):
         session.add(User(**dict(user)))
 
     if AsyncSession:
 
         @app.post("/async/users")
-        def create_user_with_async_session(
-            user: UserIn, session: AsyncSession = Depends()
-        ):
+        def create_user_with_async_session(user: UserIn, session: AsyncSession):
             session.add(User(**dict(user)))
 
     @app.get("/404")
-    def get_users(session: Session = Depends(Session)):
+    def get_users(session: SqlaSession = Depends(SessionDependency())):
         raise HTTPException(status_code=404, detail="YOLO")
 
     return app

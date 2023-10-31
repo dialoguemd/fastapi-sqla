@@ -9,10 +9,10 @@ from sqlalchemy.orm import joinedload
 def test_pagination(
     session, user_cls, offset, limit, total_pages, page_number, nb_users
 ):
-    from fastapi_sqla import Paginate
+    from fastapi_sqla import Pagination
 
     query = session.query(user_cls).options(joinedload(user_cls.notes))
-    result = Paginate(session, offset, limit)(query)
+    result = Pagination()(session, offset, limit)(query)
 
     assert result.meta.total_items == nb_users
     assert result.meta.offset == offset

@@ -1,3 +1,4 @@
+import functools
 from unittest.mock import Mock
 
 from pytest import mark
@@ -16,8 +17,13 @@ def test_setup_with_async_sqlalchemy_url_adds_asyncio_support_startup(
     app = Mock()
     setup(app)
 
-    app.add_event_handler.assert_called_once_with("startup", asyncio_support.startup)
+    app.add_event_handler.assert_called_once()
+    assert app.add_event_handler.call_args.args[0] == "startup"
+    assert app.add_event_handler.call_args.args[1].func == asyncio_support.startup
+
     app.middleware.assert_called_once_with("http")
-    app.middleware.return_value.assert_called_once_with(
-        asyncio_support.add_session_to_request
+    app.middleware.return_value.assert_called_once()
+    assert (
+        app.middleware.return_value.call_args.args[0].func
+        == asyncio_support.add_session_to_request
     )

@@ -19,19 +19,18 @@ def module_setup_tear_down(engine, sqla_connection):
 
 @fixture(autouse=True)
 def setup(sqla_connection):
-    from fastapi_sqla.sqla import _Session
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _Session, startup
 
-    _Session.configure(bind=sqla_connection)
+    startup()
+    _Session[_DEFAULT_SESSION_KEY].configure(bind=sqla_connection)
 
 
 @fixture(scope="module")
 def TestTable(module_setup_tear_down):
-    from fastapi_sqla.sqla import Base, startup
+    from fastapi_sqla.sqla import Base
 
     class TestTable(Base):
         __tablename__ = "test_table"
-
-    startup()
 
     return TestTable
 
@@ -47,13 +46,10 @@ def test_open_session():
 
 
 @mark.sqlalchemy("1.4")
-def test_open_session_rollback_when_error_occurs_in_context(TestTable, session):
+def test_open_session_rollback_when_error_occurs_in_context(TestTable):
     from fastapi_sqla import open_session
 
     error = Exception("Error in context")
-
-    class Custom(Exception):
-        pass
 
     with raises(Exception) as raise_info:
         with open_session() as session:
@@ -74,9 +70,7 @@ def existing_record(TestTable, session):
     yield (1, "bob morane was there.")
 
 
-def test_open_session_re_raise_exception_when_commit_fails(
-    TestTable, existing_record, session
-):
+def test_open_session_re_raise_exception_when_commit_fails(TestTable, existing_record):
     from fastapi_sqla import open_session
 
     with raises(Exception) as raise_info:

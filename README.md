@@ -331,11 +331,11 @@ def query_count(session: Session) -> int:
     return session.execute(select(func.count()).select_from(User)).scalar()
 
 
-Paginate = Pagination(min_page_size=5, max_page_size=500, query_count=query_count)
+CustomPaginate = Pagination(min_page_size=5, max_page_size=500, query_count=query_count)
 
 
 @router.get("/users", response_model=Page[UserModel])
-def all_users(paginate: Paginate = Depends()):
+def all_users(paginate: CustomPaginate = Depends()):
     return paginate(select(User))
 ```
 
@@ -394,7 +394,7 @@ async def query_count(session: AsyncSession) -> int:
     return result.scalar()
 
 
-Paginate = AsyncPagination(min_page_size=5, max_page_size=500, query_count=query_count)
+CustomPaginate = AsyncPagination(min_page_size=5, max_page_size=500, query_count=query_count)
 
 
 @router.get("/users", response_model=Page[UserModel])
