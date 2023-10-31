@@ -138,9 +138,11 @@ class AsyncSessionDependency:
             router = APIRouter()
 
             @router.get("/users")
-            async def get_users(session: SqlaAsyncSession = Depends(AsyncSessionDependency())):
+            async def get_users(
+                session: SqlaAsyncSession = Depends(AsyncSessionDependency())
+            ):
                 pass
-        """  # noqa: E501
+        """
         try:
             return request.scope[f"{_ASYNC_REQUEST_SESSION_KEY}_{self.key}"]
         except KeyError:  # pragma: no cover
