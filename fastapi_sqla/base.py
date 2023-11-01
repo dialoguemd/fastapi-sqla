@@ -21,6 +21,30 @@ _DEFAULT_SESSION_KEY = "default"
 _ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(.+)__.+")
 
 
+def setup(app: FastAPI):
+    engine_keys = _get_engine_keys()
+    engines = {key: sqla.new_engine(key) for key in engine_keys}
+    for key, engine in engines.items():
+        if not _is_async_dialect(engine):
+            app.add_event_handler("startup", functools.partial(sqla.startup, key=key))
+            app.middleware("http")(
+                functools.partial(sqla.add_session_to_request, key=key)
+            )
+
+        # TODO: Check if we can get rid of it. I think so
+        has_async_config = (
+            key == sqla._DEFAULT_SESSION_KEY and "async_sqlalchemy_url" in os.environ
+        )
+        if _is_async_dialect(engine) or has_async_config:
+            assert has_asyncio_support, asyncio_support_err
+            app.add_event_handler(
+                "startup", functools.partial(async_sqla.startup, key=key)
+            )
+            app.middleware("http")(
+                functools.partial(async_sqla.add_session_to_request, key=key)
+            )
+
+
 def _get_engine_keys() -> set[str]:
     keys = {_DEFAULT_SESSION_KEY}
 
@@ -41,29 +65,5 @@ def _get_engine_keys() -> set[str]:
     return keys
 
 
-def setup(app: FastAPI):
-    engine_keys = _get_engine_keys()
-    engines = {key: sqla.new_engine(key) for key in engine_keys}
-    for key, engine in engines.items():
-        if not is_async_dialect(engine):
-            app.add_event_handler("startup", functools.partial(sqla.startup, key=key))
-            app.middleware("http")(
-                functools.partial(sqla.add_session_to_request, key=key)
-            )
-
-        # TODO: Check if we can get rid of it. I think so
-        has_async_config = (
-            key == sqla._DEFAULT_SESSION_KEY and "async_sqlalchemy_url" in os.environ
-        )
-        if is_async_dialect(engine) or has_async_config:
-            assert has_asyncio_support, asyncio_support_err
-            app.add_event_handler(
-                "startup", functools.partial(async_sqla.startup, key=key)
-            )
-            app.middleware("http")(
-                functools.partial(async_sqla.add_session_to_request, key=key)
-            )
-
-
-def is_async_dialect(engine: Engine):
+def _is_async_dialect(engine: Engine):
     return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False

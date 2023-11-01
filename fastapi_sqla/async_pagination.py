@@ -6,8 +6,8 @@ from fastapi import Depends, Query
 from sqlalchemy.sql import Select, func, select
 
 from fastapi_sqla.async_sqla import AsyncSessionDependency, SqlaAsyncSession
+from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 from fastapi_sqla.models import Page
-from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
 QueryCountDependency = Callable[..., Awaitable[int]]
 PaginateSignature = Callable[[Select, Optional[bool]], Awaitable[Page]]
