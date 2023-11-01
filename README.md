@@ -199,7 +199,7 @@ def run_bg():
 
 
 async def run_async_bg():
-    async with asyncio_support.open_session() as session:
+    async with open_async_session() as session:
         await session.scalar("SELECT now()")
 ```
 
