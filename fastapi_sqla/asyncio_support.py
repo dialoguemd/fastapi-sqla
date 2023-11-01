@@ -45,8 +45,8 @@ async def startup(key: str = _DEFAULT_SESSION_KEY):
             await connection.execute(text("select 'ok'"))
     except Exception:
         logger.critical(
-            "Failed querying db: is sqlalchemy_url or async_sqlalchemy_url envvar "
-            "correctly configured?"
+            f"Failed querying db for key '{key}': "
+            "are the the environment variables correctly configured for this key?"
         )
         raise
 

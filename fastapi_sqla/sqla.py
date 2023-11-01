@@ -68,7 +68,8 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
             connection.execute(text("select 'OK'"))
     except Exception:
         logger.critical(
-            "Fail querying db: is sqlalchemy_url envvar correctly configured?"
+            f"Failed querying db for key '{key}': "
+            "are the the environment variables correctly configured for this key?"
         )
         raise
 
