@@ -8,7 +8,8 @@ from pytest import mark
 def test_setup_with_async_sqlalchemy_url_adds_asyncio_support_startup(
     monkeypatch, async_sqlalchemy_url
 ):
-    from fastapi_sqla import asyncio_support, setup
+    from fastapi_sqla import async_session
+    from fastapi_sqla.base import setup
 
     monkeypatch.delenv("async_sqlalchemy_url")
     monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
@@ -16,8 +17,8 @@ def test_setup_with_async_sqlalchemy_url_adds_asyncio_support_startup(
     app = Mock()
     setup(app)
 
-    app.add_event_handler.assert_called_once_with("startup", asyncio_support.startup)
+    app.add_event_handler.assert_called_once_with("startup", async_session.startup)
     app.middleware.assert_called_once_with("http")
     app.middleware.return_value.assert_called_once_with(
-        asyncio_support.add_session_to_request
+        async_session.add_session_to_request
     )

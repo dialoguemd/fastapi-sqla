@@ -6,7 +6,7 @@ from sqlalchemy.engine import Engine
 from fastapi_sqla import sqla
 
 try:
-    from fastapi_sqla import asyncio_support
+    from fastapi_sqla import async_session
 
     has_asyncio_support = True
 
@@ -25,8 +25,8 @@ def setup(app: FastAPI):
     has_async_config = "async_sqlalchemy_url" in os.environ or is_async_dialect(engine)
     if has_async_config:
         assert has_asyncio_support, asyncio_support_err
-        app.add_event_handler("startup", asyncio_support.startup)
-        app.middleware("http")(asyncio_support.add_session_to_request)
+        app.add_event_handler("startup", async_session.startup)
+        app.middleware("http")(async_session.add_session_to_request)
 
 
 def is_async_dialect(engine: Engine):

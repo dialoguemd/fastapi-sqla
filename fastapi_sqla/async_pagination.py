@@ -5,7 +5,7 @@ from typing import Iterator, Optional, Union, cast
 from fastapi import Depends, Query
 from sqlalchemy.sql import Select, func, select
 
-from fastapi_sqla.asyncio_support import AsyncSession
+from fastapi_sqla.async_session import AsyncSession
 from fastapi_sqla.models import Page
 
 QueryCountDependency = Callable[..., Awaitable[int]]

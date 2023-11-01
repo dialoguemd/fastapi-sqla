@@ -86,6 +86,7 @@ def tear_down(environ):
 
     close_all_sessions()
     # reload fastapi_sqla to clear sqla deferred reflection mapping stored in Base
+    importlib.reload(fastapi_sqla.models)
     importlib.reload(fastapi_sqla.sqla)
     importlib.reload(fastapi_sqla)
 
