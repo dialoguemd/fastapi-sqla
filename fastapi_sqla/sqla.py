@@ -14,11 +14,11 @@ from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
-from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 from fastapi_sqla.models import Base
 
 logger = structlog.get_logger(__name__)
 
+_DEFAULT_SESSION_KEY = "default"
 _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
 

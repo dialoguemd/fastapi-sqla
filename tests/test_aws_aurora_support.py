@@ -7,8 +7,7 @@ from sqlalchemy import text
 @mark.sqlalchemy("1.4")
 @mark.dont_patch_engines
 def test_sync_disconnects_on_readonly_error(monkeypatch):
-    from fastapi_sqla.base import _DEFAULT_SESSION_KEY
-    from fastapi_sqla.sqla import _session_factories, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     monkeypatch.setenv("fastapi_sqla_aws_aurora_enabled", "true")
 
@@ -27,7 +26,7 @@ def test_sync_disconnects_on_readonly_error(monkeypatch):
 @mark.dont_patch_engines
 async def test_async_disconnects_on_readonly_error(monkeypatch, async_sqlalchemy_url):
     from fastapi_sqla.async_sqla import _async_session_factories, startup
-    from fastapi_sqla.base import _DEFAULT_SESSION_KEY
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
     monkeypatch.setenv("fastapi_sqla_aws_aurora_enabled", "true")
     monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)

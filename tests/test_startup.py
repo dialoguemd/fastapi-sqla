@@ -41,8 +41,7 @@ def boto_client_mock():
 
 @mark.dont_patch_engines
 def test_startup(case_sensitive_environ):
-    from fastapi_sqla.base import _DEFAULT_SESSION_KEY
-    from fastapi_sqla.sqla import _session_factories, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     startup()
 
@@ -53,8 +52,8 @@ def test_startup(case_sensitive_environ):
 
 @mark.dont_patch_engines
 async def test_fastapi_integration():
-    from fastapi_sqla.base import _DEFAULT_SESSION_KEY, setup
-    from fastapi_sqla.sqla import _session_factories
+    from fastapi_sqla.base import setup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories
 
     app = FastAPI()
     setup(app)

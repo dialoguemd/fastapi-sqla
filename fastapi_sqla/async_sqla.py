@@ -11,9 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.orm.session import sessionmaker
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
-from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 from fastapi_sqla.models import Base
-from fastapi_sqla.sqla import new_engine
+from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, new_engine
 
 logger = structlog.get_logger(__name__)
 

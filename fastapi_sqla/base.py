@@ -17,7 +17,6 @@ except ImportError as err:  # pragma: no cover
     asyncio_support_err = str(err)
 
 
-_DEFAULT_SESSION_KEY = "default"
 _ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(.+)__.+")
 
 
@@ -46,7 +45,7 @@ def setup(app: FastAPI):
 
 
 def _get_engine_keys() -> set[str]:
-    keys = {_DEFAULT_SESSION_KEY}
+    keys = {sqla._DEFAULT_SESSION_KEY}
 
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     for env_var in lowercase_environ:
