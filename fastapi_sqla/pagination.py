@@ -5,12 +5,11 @@ from typing import Annotated, Iterator, Optional, Union, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.orm import Query as LegacyQuery
-from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.sql import Select, func, select
 
 from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 from fastapi_sqla.models import Page
-from fastapi_sqla.sqla import SessionDependency
+from fastapi_sqla.sqla import SessionDependency, SqlaSession
 
 DbQuery = Union[LegacyQuery, Select]
 QueryCountDependency = Callable[..., int]
