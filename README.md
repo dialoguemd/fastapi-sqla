@@ -158,8 +158,7 @@ exception occurred:
 
 ```python
 from fastapi import APIRouter, Depends
-from fastapi_sqla import Session
-from fastapi_sqla.asyncio_support import AsyncSession
+from fastapi_sqla import Session, AsyncSession
 
 router = APIRouter()
 
@@ -183,8 +182,7 @@ occurred:
 
 ```python
 from fastapi import APIRouter, BackgroundTasks
-from fastapi_sqla import open_session
-from fastapi_sqla import asyncio_support
+from fastapi_sqla import open_session, open_async_session
 
 router = APIRouter()
 
@@ -201,7 +199,7 @@ def run_bg():
 
 
 async def run_async_bg():
-    async with asyncio_support.open_session() as session:
+    async with open_async_session() as session:
         await session.scalar("SELECT now()")
 ```
 
