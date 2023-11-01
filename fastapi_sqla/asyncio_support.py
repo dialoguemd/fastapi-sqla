@@ -20,7 +20,7 @@ logger = structlog.get_logger(__name__)
 
 _ASYNC_REQUEST_SESSION_KEY = "fastapi_sqla_async_session"
 
-_AsyncSession: dict[str, sessionmaker] = {}
+_async_session_factories: dict[str, sessionmaker] = {}
 
 
 def new_async_engine(key: str = _DEFAULT_SESSION_KEY):
@@ -53,7 +53,7 @@ async def startup(key: str = _DEFAULT_SESSION_KEY):
     async with engine.connect() as connection:
         await connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
-    _AsyncSession[key] = sessionmaker(
+    _async_session_factories[key] = sessionmaker(
         class_=SqlaAsyncSession, bind=engine, expire_on_commit=False
     )
 
@@ -70,7 +70,7 @@ async def open_session(
     context. If an exception is raised, session is rollbacked.
     """
     try:
-        session: SqlaAsyncSession = _AsyncSession[key]()
+        session: SqlaAsyncSession = _async_session_factories[key]()
     except KeyError as exc:
         raise Exception(
             f"No async session with key {key} found, "

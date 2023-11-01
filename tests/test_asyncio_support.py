@@ -15,10 +15,10 @@ async def startup(environ):
 
 
 async def test_startup_configure_async_session(startup):
-    from fastapi_sqla.asyncio_support import _AsyncSession
+    from fastapi_sqla.asyncio_support import _async_session_factories
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
-    async with _AsyncSession[_DEFAULT_SESSION_KEY]() as session:
+    async with _async_session_factories[_DEFAULT_SESSION_KEY]() as session:
         res = await session.execute(text("SELECT 123"))
 
     assert res.scalar() == 123
@@ -53,7 +53,7 @@ def async_session_mock():
     sessionmaker_mock.return_value = session_mock
 
     with patch.dict(
-        "fastapi_sqla.asyncio_support._AsyncSession",
+        "fastapi_sqla.asyncio_support._async_session_factories",
         {_DEFAULT_SESSION_KEY: sessionmaker_mock},
     ):
         yield sessionmaker_mock

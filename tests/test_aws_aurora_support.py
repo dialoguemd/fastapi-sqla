@@ -7,15 +7,14 @@ from sqlalchemy import text
 @mark.sqlalchemy("1.4")
 @mark.dont_patch_engines
 def test_sync_disconnects_on_readonly_error(monkeypatch):
-    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _Session, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     monkeypatch.setenv("fastapi_sqla_aws_aurora_enabled", "true")
 
     startup()
 
-    connection = _Session[_DEFAULT_SESSION_KEY]().connection(
-        execution_options={"postgresql_readonly": True}
-    )
+    session = _session_factories[_DEFAULT_SESSION_KEY]()
+    connection = session.connection(execution_options={"postgresql_readonly": True})
     with raises(Exception):
         connection.execute(text("CREATE TABLE fail(id integer)"))
 
@@ -26,7 +25,7 @@ def test_sync_disconnects_on_readonly_error(monkeypatch):
 @mark.require_asyncpg
 @mark.dont_patch_engines
 async def test_async_disconnects_on_readonly_error(monkeypatch, async_sqlalchemy_url):
-    from fastapi_sqla.asyncio_support import _AsyncSession, startup
+    from fastapi_sqla.asyncio_support import _async_session_factories, startup
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
     monkeypatch.setenv("fastapi_sqla_aws_aurora_enabled", "true")
@@ -34,7 +33,8 @@ async def test_async_disconnects_on_readonly_error(monkeypatch, async_sqlalchemy
 
     await startup()
 
-    connection = await _AsyncSession[_DEFAULT_SESSION_KEY]().connection(
+    session = _async_session_factories[_DEFAULT_SESSION_KEY]()
+    connection = await session.connection(
         execution_options={"postgresql_readonly": True}
     )
     with raises(Exception):

@@ -34,7 +34,7 @@ logger = structlog.get_logger(__name__)
 _DEFAULT_SESSION_KEY = "default"
 _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 
-_Session: dict[str, sessionmaker] = {}
+_session_factories: dict[str, sessionmaker] = {}
 
 
 class Base(DeclarativeBase, DeferredReflection):
@@ -74,7 +74,7 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
         raise
 
     Base.prepare(engine)
-    _Session[key] = sessionmaker(bind=engine)
+    _session_factories[key] = sessionmaker(bind=engine)
 
     logger.info("engine startup", engine_key=key, engine=engine)
 
@@ -87,7 +87,7 @@ def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None
     context. If an exception is raised, session is rollbacked.
     """
     try:
-        session: SqlaSession = _Session[key]()
+        session: SqlaSession = _session_factories[key]()
     except KeyError as exc:
         raise Exception(
             f"No session with key {key} found, "

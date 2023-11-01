@@ -41,11 +41,11 @@ def boto_client_mock():
 
 @mark.dont_patch_engines
 def test_startup(case_sensitive_environ):
-    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _Session, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     startup()
 
-    session = _Session[_DEFAULT_SESSION_KEY]()
+    session = _session_factories[_DEFAULT_SESSION_KEY]()
 
     assert session.execute(text("SELECT 1")).scalar() == 1
 
@@ -53,14 +53,14 @@ def test_startup(case_sensitive_environ):
 @mark.dont_patch_engines
 async def test_fastapi_integration():
     from fastapi_sqla import setup
-    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _Session
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories
 
     app = FastAPI()
     setup(app)
 
     @app.get("/one")
     def now():
-        session = _Session[_DEFAULT_SESSION_KEY]()
+        session = _session_factories[_DEFAULT_SESSION_KEY]()
         result = session.execute(text("SELECT 1")).scalar()
         session.close()
         return result
