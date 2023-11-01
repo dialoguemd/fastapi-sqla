@@ -26,7 +26,8 @@ def setup(sqla_connection):
 
 @fixture(scope="module")
 def TestTable(module_setup_tear_down):
-    from fastapi_sqla.sqla import Base, startup
+    from fastapi_sqla import Base
+    from fastapi_sqla.sqla import startup
 
     class TestTable(Base):
         __tablename__ = "test_table"
