@@ -17,7 +17,7 @@ except ImportError as err:  # pragma: no cover
     asyncio_support_err = str(err)
 
 
-_ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(.+)__.+")
+_ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(?!_)(.+)(?<!_)__(?!_).+")
 
 
 def setup(app: FastAPI):

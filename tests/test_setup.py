@@ -28,3 +28,45 @@ def test_setup_with_async_sqlalchemy_url_adds_asyncio_support_startup(
         app.middleware.return_value.call_args.args[0].func
         == async_sqla.add_session_to_request
     )
+
+
+@mark.parametrize(
+    "env_vars, expected_keys",
+    [
+        param([], {"default"}, id="default always present"),
+        param(
+            [
+                "potato",
+                "sqlalchemy__potato__url",
+                "fastapi_sqla_potato_url",
+                "fastapi_sqla_potato__url",
+                "fastapi_sqla__potato_url",
+                "fastapi_sqla__potato___url",
+                "fastapi_sqla___potato__url",
+                "fastapi_sqla___potato___url",
+            ],
+            {"default"},
+            id="invalid formats",
+        ),
+        param(
+            ["fastapi_sqla__potato__url", "fastapi_sqla__tomato__url"],
+            {"default", "potato", "tomato"},
+            id="valid formats",
+        ),
+        param(
+            [
+                "fastapi_sqla__read_only__url",
+                "fastapi_sqla__read-only__url",
+                "fastapi_sqla__potato__pre_ping",
+            ],
+            {"default", "read_only", "read-only", "potato"},
+            id="valid format with underscore or dashes",
+        ),
+    ],
+)
+def test_get_engine_keys(env_vars, expected_keys):
+    from fastapi_sqla.base import _get_engine_keys
+
+    env_vars = {var: "test" for var in env_vars}
+    with patch.dict("os.environ", values=env_vars, clear=True):
+        assert _get_engine_keys() == expected_keys
