@@ -19,8 +19,8 @@ __all__ = [
 
 try:
     from fastapi_sqla.async_pagination import AsyncPaginate, AsyncPagination
-    from fastapi_sqla.async_session import AsyncSession
-    from fastapi_sqla.async_session import open_session as open_async_session
+    from fastapi_sqla.async_sqla import AsyncSession
+    from fastapi_sqla.async_sqla import open_session as open_async_session
 
     __all__ += [
         "AsyncPaginate",

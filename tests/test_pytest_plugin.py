@@ -88,7 +88,7 @@ def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
 async def test_all_opened_async_sessions_are_within_the_same_transaction(
     async_sqla_connection, async_session, singer_cls
 ):
-    from fastapi_sqla.async_session import _AsyncSession
+    from fastapi_sqla.async_sqla import _AsyncSession
 
     async_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     await async_session.commit()

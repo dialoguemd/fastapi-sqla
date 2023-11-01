@@ -91,9 +91,9 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
     )
 
     with raises(Exception):
-        from fastapi_sqla import async_session
+        from fastapi_sqla import async_sqla
 
-        await async_session.startup()
+        await async_sqla.startup()
 
 
 @mark.require_boto3
@@ -119,7 +119,7 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 async def test_async_startup_with_aws_rds_iam_enabled(
     monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user
 ):
-    from fastapi_sqla.async_session import startup
+    from fastapi_sqla.async_sqla import startup
 
     monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
     monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
