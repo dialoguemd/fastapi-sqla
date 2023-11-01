@@ -14,13 +14,12 @@ from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
+from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 from fastapi_sqla.models import Base
 
 logger = structlog.get_logger(__name__)
 
-_DEFAULT_SESSION_KEY = "default"
 _REQUEST_SESSION_KEY = "fastapi_sqla_session"
-
 _session_factories: dict[str, sessionmaker] = {}
 
 
@@ -34,10 +33,6 @@ def new_engine(
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
     return engine_from_config(lowercase_environ, prefix=envvar_prefix)
-
-
-def is_async_dialect(engine: Engine):
-    return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
 
 
 def startup(key: str = _DEFAULT_SESSION_KEY):

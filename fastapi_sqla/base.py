@@ -3,6 +3,7 @@ import os
 import re
 
 from fastapi import FastAPI
+from sqlalchemy.engine import Engine
 
 from fastapi_sqla import sqla
 
@@ -16,15 +17,16 @@ except ImportError as err:  # pragma: no cover
     asyncio_support_err = str(err)
 
 
-ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(.+)__.+")
+_DEFAULT_SESSION_KEY = "default"
+_ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(.+)__.+")
 
 
 def _get_engine_keys() -> set[str]:
-    keys = {sqla._DEFAULT_SESSION_KEY}
+    keys = {_DEFAULT_SESSION_KEY}
 
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     for env_var in lowercase_environ:
-        match = ENGINE_KEYS_REGEX.search(env_var)
+        match = _ENGINE_KEYS_REGEX.search(env_var)
         if not match:
             continue
 
@@ -43,7 +45,7 @@ def setup(app: FastAPI):
     engine_keys = _get_engine_keys()
     engines = {key: sqla.new_engine(key) for key in engine_keys}
     for key, engine in engines.items():
-        if not sqla.is_async_dialect(engine):
+        if not is_async_dialect(engine):
             app.add_event_handler("startup", functools.partial(sqla.startup, key=key))
             app.middleware("http")(
                 functools.partial(sqla.add_session_to_request, key=key)
@@ -53,7 +55,7 @@ def setup(app: FastAPI):
         has_async_config = (
             key == sqla._DEFAULT_SESSION_KEY and "async_sqlalchemy_url" in os.environ
         )
-        if sqla.is_async_dialect(engine) or has_async_config:
+        if is_async_dialect(engine) or has_async_config:
             assert has_asyncio_support, asyncio_support_err
             app.add_event_handler(
                 "startup", functools.partial(async_sqla.startup, key=key)
@@ -61,3 +63,7 @@ def setup(app: FastAPI):
             app.middleware("http")(
                 functools.partial(async_sqla.add_session_to_request, key=key)
             )
+
+
+def is_async_dialect(engine: Engine):
+    return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False

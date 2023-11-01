@@ -3,10 +3,9 @@ from collections.abc import Awaitable, Callable
 from typing import Annotated, Iterator, Optional, Union, cast
 
 from fastapi import Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.sql import Select, func, select
 
-from fastapi_sqla.async_sqla import AsyncSessionDependency
+from fastapi_sqla.async_sqla import AsyncSessionDependency, SqlaAsyncSession
 from fastapi_sqla.models import Page
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 

@@ -8,8 +8,9 @@ from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.sql import Select, func, select
 
+from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 from fastapi_sqla.models import Page
-from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, SessionDependency
+from fastapi_sqla.sqla import SessionDependency
 
 DbQuery = Union[LegacyQuery, Select]
 QueryCountDependency = Callable[..., int]

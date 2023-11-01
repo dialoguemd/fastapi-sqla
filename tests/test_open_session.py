@@ -19,7 +19,8 @@ def module_setup_tear_down(engine, sqla_connection):
 
 @fixture(autouse=True)
 def setup(sqla_connection):
-    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
+    from fastapi_sqla.base import _DEFAULT_SESSION_KEY
+    from fastapi_sqla.sqla import _session_factories, startup
 
     startup()
     _session_factories[_DEFAULT_SESSION_KEY].configure(bind=sqla_connection)

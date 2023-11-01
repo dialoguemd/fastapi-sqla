@@ -16,7 +16,7 @@ async def startup(environ):
 
 async def test_startup_configure_async_session(startup):
     from fastapi_sqla.async_sqla import _async_session_factories
-    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
+    from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 
     async with _async_session_factories[_DEFAULT_SESSION_KEY]() as session:
         res = await session.execute(text("SELECT 123"))
@@ -46,7 +46,7 @@ async def test_new_async_engine_without_async_alchemy_url(
 
 @fixture
 def async_session_mock():
-    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
+    from fastapi_sqla.base import _DEFAULT_SESSION_KEY
 
     sessionmaker_mock = Mock()
     session_mock = AsyncMock()
