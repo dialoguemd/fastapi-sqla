@@ -23,19 +23,19 @@ class Base(DeclarativeBase, DeferredReflection):
     __abstract__ = True
 
 
-T = TypeVar("T")
+ItemT = TypeVar("ItemT")
 
 
-class Item(GenericModel, Generic[T]):
+class Item(GenericModel, Generic[ItemT]):
     """Item container."""
 
-    data: T
+    data: ItemT
 
 
-class Collection(GenericModel, Generic[T]):
+class Collection(GenericModel, Generic[ItemT]):
     """Collection container."""
 
-    data: list[T]
+    data: list[ItemT]
 
 
 class Meta(BaseModel):
@@ -47,7 +47,7 @@ class Meta(BaseModel):
     page_number: int = Field(..., description="Current page number. Starts at 1.")
 
 
-class Page(Collection[T], Generic[T]):
+class Page(Collection[ItemT], Generic[ItemT]):
     """A page of the collection with info on current page and total items in meta."""
 
     meta: Meta
