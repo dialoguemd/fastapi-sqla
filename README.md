@@ -158,8 +158,7 @@ exception occurred:
 
 ```python
 from fastapi import APIRouter
-from fastapi_sqla import Session
-from fastapi_sqla.asyncio_support import AsyncSession
+from fastapi_sqla import AsyncSession, Session
 
 router = APIRouter()
 
@@ -183,8 +182,7 @@ occurred:
 
 ```python
 from fastapi import APIRouter, BackgroundTasks
-from fastapi_sqla import open_session
-from fastapi_sqla import asyncio_support
+from fastapi_sqla import open_async_session, open_session
 
 router = APIRouter()
 

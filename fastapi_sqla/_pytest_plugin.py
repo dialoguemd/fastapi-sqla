@@ -177,7 +177,7 @@ if asyncio_support:
             yield
 
         else:
-            with patch("fastapi_sqla.asyncio_support.new_engine") as new_engine:
+            with patch("fastapi_sqla.async_sqla.new_engine") as new_engine:
                 new_engine.return_value = async_sqla_connection
                 yield new_engine
 
@@ -189,7 +189,7 @@ if asyncio_support:
 
     @fixture
     def async_session_factory():
-        from fastapi_sqla.asyncio_support import SqlaAsyncSession
+        from fastapi_sqla.async_sqla import SqlaAsyncSession
 
         return sessionmaker(class_=SqlaAsyncSession)
 

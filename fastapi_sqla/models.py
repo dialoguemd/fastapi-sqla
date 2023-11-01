@@ -2,6 +2,14 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 from pydantic import __version__ as pydantic_version
+from sqlalchemy.ext.declarative import DeferredReflection
+
+try:
+    from sqlalchemy.orm import DeclarativeBase
+except ImportError:
+    from sqlalchemy.ext.declarative import declarative_base
+
+    DeclarativeBase = declarative_base()  # type: ignore
 
 major, _, _ = [int(v) for v in pydantic_version.split(".")]
 is_pydantic2 = major == 2
@@ -9,6 +17,11 @@ if is_pydantic2:
     GenericModel = BaseModel
 else:
     from pydantic.generics import GenericModel  # type:ignore
+
+
+class Base(DeclarativeBase, DeferredReflection):
+    __abstract__ = True
+
 
 T = TypeVar("T")
 

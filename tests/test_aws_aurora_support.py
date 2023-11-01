@@ -25,7 +25,7 @@ def test_sync_disconnects_on_readonly_error(monkeypatch):
 @mark.require_asyncpg
 @mark.dont_patch_engines
 async def test_async_disconnects_on_readonly_error(monkeypatch, async_sqlalchemy_url):
-    from fastapi_sqla.asyncio_support import _async_session_factories, startup
+    from fastapi_sqla.async_sqla import _async_session_factories, startup
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
     monkeypatch.setenv("fastapi_sqla_aws_aurora_enabled", "true")
