@@ -157,7 +157,7 @@ def async_sqlalchemy_url(db_url):
     return format_async_async_sqlalchemy_url(db_url)
 
 
-if asyncio_support:
+if asyncio_support:  # noqa: C901
 
     @fixture
     async def async_engine(async_sqlalchemy_url):

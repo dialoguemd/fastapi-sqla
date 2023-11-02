@@ -72,7 +72,7 @@ async def open_session(
 
     try:
         yield session
-    except Exception as exc:
+    except Exception:
         logger.warning("context failed, rolling back", exc_info=True)
         await session.rollback()
         raise
