@@ -46,7 +46,7 @@ def test_session_fixture_does_not_write_in_db(session, singer_cls, engine):
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 async def test_async_session_fixture_does_not_write_in_db(
-    async_session, singer_cls, async_engine, session
+    async_session, singer_cls, async_engine
 ):
     async_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     await async_session.commit()

@@ -53,8 +53,13 @@ def is_boto3_installed():
         return True
 
 
+@fixture(scope="session")
+def async_session_key():
+    return "async"
+
+
 @fixture(scope="session", autouse=True)
-def environ(db_url, sqla_version_tuple, async_sqlalchemy_url):
+def environ(db_url, sqla_version_tuple, async_session_key, async_sqlalchemy_url):
     values = {
         "PYTHONASYNCIODEBUG": "1",
         "sqlalchemy_url": db_url,
@@ -62,7 +67,9 @@ def environ(db_url, sqla_version_tuple, async_sqlalchemy_url):
     }
 
     if sqla_version_tuple >= (1, 4) and is_asyncpg_installed():
-        values["async_sqlalchemy_url"] = async_sqlalchemy_url
+        values[
+            f"fastapi_sqla__{async_session_key}__sqlalchemy_url"
+        ] = async_sqlalchemy_url
 
     with patch.dict("os.environ", values=values, clear=True):
         yield values
@@ -88,6 +95,7 @@ def tear_down(environ):
     # reload fastapi_sqla to clear sqla deferred reflection mapping stored in Base
     importlib.reload(fastapi_sqla.models)
     importlib.reload(fastapi_sqla.sqla)
+    importlib.reload(fastapi_sqla.async_sqla)
     importlib.reload(fastapi_sqla)
 
 

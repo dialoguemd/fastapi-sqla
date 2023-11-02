@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Annotated, Optional
+from typing import Annotated
 
 import structlog
 from fastapi import Depends, Request
@@ -23,10 +23,8 @@ _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
 
 
-def new_engine(
-    key: str = _DEFAULT_SESSION_KEY, *, envvar_prefix: Optional[str] = None
-) -> Engine:
-    envvar_prefix = envvar_prefix or "sqlalchemy_"
+def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Engine:
+    envvar_prefix = "sqlalchemy_"
     if key != _DEFAULT_SESSION_KEY:
         envvar_prefix = f"fastapi_sqla__{key}__{envvar_prefix}"
 
@@ -76,7 +74,6 @@ def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None
 
     try:
         yield session
-
     except Exception:
         logger.warning("context failed, rolling back", exc_info=True)
         session.rollback()

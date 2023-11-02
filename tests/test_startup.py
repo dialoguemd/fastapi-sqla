@@ -87,7 +87,7 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
 @mark.dont_patch_engines
 async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
     monkeypatch.setenv(
-        "async_sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
+        "sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
     )
 
     with raises(Exception):
@@ -117,14 +117,13 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 @mark.sqlalchemy("1.4")
 @mark.dont_patch_engines
 async def test_async_startup_with_aws_rds_iam_enabled(
-    monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user
+    monkeypatch, async_session_key, boto_session, boto_client_mock, db_host, db_user
 ):
     from fastapi_sqla.async_sqla import startup
 
     monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
-    monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
 
-    await startup()
+    await startup(async_session_key)
 
     boto_client_mock.generate_db_auth_token.assert_called_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user

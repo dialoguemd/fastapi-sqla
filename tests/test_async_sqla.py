@@ -7,16 +7,31 @@ pytestmark = [mark.sqlalchemy("1.4"), mark.require_asyncpg]
 
 
 @fixture
-async def startup(environ):
+async def startup(async_session_key):
     from fastapi_sqla.async_sqla import startup
 
-    await startup()
+    await startup(async_session_key)
     yield
 
 
-async def test_startup_configure_async_session(startup):
+async def test_startup_configure_async_session(startup, async_session_key):
     from fastapi_sqla.async_sqla import _async_session_factories
+
+    async with _async_session_factories[async_session_key]() as session:
+        res = await session.execute(text("SELECT 123"))
+
+    assert res.scalar() == 123
+
+
+async def test_startup_configure_async_session_with_default_alchemy_url(
+    monkeypatch, async_sqlalchemy_url
+):
+    from fastapi_sqla.async_sqla import _async_session_factories, startup
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
+
+    monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
+
+    await startup()
 
     async with _async_session_factories[_DEFAULT_SESSION_KEY]() as session:
         res = await session.execute(text("SELECT 123"))
@@ -24,24 +39,13 @@ async def test_startup_configure_async_session(startup):
     assert res.scalar() == 123
 
 
-async def test_open_async_session(startup):
+async def test_open_async_session(startup, async_session_key):
     from fastapi_sqla.async_sqla import open_session
 
-    async with open_session() as session:
+    async with open_session(async_session_key) as session:
         res = await session.execute(text("select 123"))
 
     assert res.scalar() == 123
-
-
-async def test_new_async_engine_without_async_alchemy_url(
-    monkeypatch, async_sqlalchemy_url
-):
-    from fastapi_sqla.async_sqla import new_async_engine
-
-    monkeypatch.delenv("async_sqlalchemy_url")
-    monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
-
-    assert new_async_engine()
 
 
 @fixture

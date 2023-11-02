@@ -29,12 +29,7 @@ def setup(app: FastAPI):
             app.middleware("http")(
                 functools.partial(sqla.add_session_to_request, key=key)
             )
-
-        # TODO: Check if we can get rid of it. I think so
-        has_async_config = (
-            key == sqla._DEFAULT_SESSION_KEY and "async_sqlalchemy_url" in os.environ
-        )
-        if _is_async_dialect(engine) or has_async_config:
+        else:
             assert has_asyncio_support, asyncio_support_err
             app.add_event_handler(
                 "startup", functools.partial(async_sqla.startup, key=key)

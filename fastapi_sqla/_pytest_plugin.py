@@ -93,7 +93,7 @@ def sqla_modules():
 
 
 @fixture
-def sqla_reflection(sqla_modules, sqla_connection, db_url):
+def sqla_reflection(sqla_modules, sqla_connection):
     import fastapi_sqla
 
     fastapi_sqla.Base.metadata.bind = sqla_connection
@@ -101,7 +101,7 @@ def sqla_reflection(sqla_modules, sqla_connection, db_url):
 
 
 @fixture
-def patch_engine_from_config(request, db_url, sqla_connection, sqla_transaction):
+def patch_engine_from_config(request, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
 
     if "dont_patch_engines" in request.keywords:
@@ -165,12 +165,18 @@ if asyncio_support:
 
     @fixture
     async def async_sqla_connection(async_engine, event_loop):
-        async with async_engine.begin() as connection:
+        async with async_engine.connect() as connection:
             yield connection
-            await connection.rollback()
 
     @fixture
-    async def patch_new_engine(async_sqlalchemy_url, async_sqla_connection, request):
+    async def async_sqla_transaction(async_sqla_connection):
+        transaction = async_sqla_connection.begin()
+        await transaction.start()
+        yield transaction
+        await transaction.rollback()
+
+    @fixture
+    async def patch_new_engine(request, async_sqla_connection, async_sqla_transaction):
         """So that all async DB operations are never written to db for real."""
 
         if "dont_patch_engines" in request.keywords:
@@ -197,6 +203,7 @@ if asyncio_support:
     async def async_session(
         async_session_factory,
         async_sqla_connection,
+        async_sqla_transaction,
         async_sqla_reflection,
         patch_new_engine,
     ):

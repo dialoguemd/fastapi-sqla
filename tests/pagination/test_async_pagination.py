@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark
 from sqlalchemy import func, select
@@ -17,8 +17,13 @@ class NoteWithAuthorName(Note):
 
 
 @fixture
-def app(app, user_cls, note_cls):
-    from fastapi_sqla import AsyncPaginate, AsyncPagination, AsyncSession, Page
+def app(user_cls, note_cls, monkeypatch, async_sqlalchemy_url):
+    from fastapi_sqla import AsyncPaginate, AsyncPagination, AsyncSession, Page, setup
+
+    monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
+
+    app = FastAPI()
+    setup(app)
 
     @app.get("/v1/notes", response_model=Page[Note])
     async def async_paginated_notes(paginate: AsyncPaginate):
