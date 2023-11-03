@@ -43,5 +43,5 @@ try:
     ]
     has_asyncio_support = True
 
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
