@@ -110,6 +110,21 @@ The only required key is `sqlalchemy_url`, which provides the database URL, exam
 export sqlalchemy_url=postgresql://postgres@localhost
 ```
 
+### Multi-session support
+
+In order to configure multiple sessions for the application, 
+set the environment variables with this prefix format: `fastapi_sqla__MY_KEY__`.
+
+As with the default session, each matching key (after the prefix is stripped) 
+is treated as though it were the corresponding keyword argument to [`sqlalchemy.create_engine`]
+call.
+
+For example, to configure a session with the `read_only` key:
+
+```bash
+export fastapi_sqla__read_only__sqlalchemy_url=postgresql://postgres@localhost
+```
+
 ### `asyncio` support using [`asyncpg`]
 
 SQLAlchemy `>= 1.4` supports `asyncio`.
@@ -119,7 +134,7 @@ To enable `asyncio` support against a Postgres DB, install `asyncpg`:
 pip install asyncpg
 ```
 
-And define environment variable `sqlalchemy_url` with `postgres+asyncpg` scheme:
+And define the environment variable `sqlalchemy_url` with `postgres+asyncpg` scheme:
 
 ```bash
 export sqlalchemy_url=postgresql+asyncpg://postgres@localhost
@@ -153,7 +168,8 @@ class Entity(Base):
 
 Use [FastAPI dependency injection] to get a session as a parameter of a path operation
 function.
-SQLAlchemy session is committed before response is returned or rollbacked if any
+
+The SQLAlchemy session is committed before the response is returned or rollbacked if any
 exception occurred:
 
 ```python
@@ -173,11 +189,58 @@ async def async_example(session: AsyncSession):
     return await session.scalar("SELECT now()")
 ```
 
+In order to get a session configured with a custom key:
+
+```python
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+from fastapi_sqla import (
+    AsyncSessionDependency,
+    SessionDependency,
+    SqlaAsyncSession,
+    SqlaSession,
+)
+
+router = APIRouter()
+
+
+# Preferred
+
+ReadOnlySession = Annotated[SqlaSession, Depends(SessionDependency(key="read_only"))]
+AsyncReadOnlySession = Annotated[
+    SqlaAsyncSession, Depends(AsyncSessionDependency(key="read_only"))
+]
+
+@router.get("/example")
+def example(session: ReadOnlySession):
+    return session.execute("SELECT now()").scalar()
+
+
+@router.get("/async_example")
+async def async_example(session: AsyncReadOnlySession):
+    return await session.scalar("SELECT now()")
+
+
+# Alternative
+
+@router.get("/example/alt")
+def example_alt(session: SqlaSession = Depends(SessionDependency(key="read_only"))):
+    return session.execute("SELECT now()").scalar()
+
+
+@router.get("/async_example/alt")
+async def async_example_alt(
+    session: SqlaAsyncSession = Depends(AsyncSessionDependency(key="read_only")),
+):
+    return await session.scalar("SELECT now()")
+```
+
 ### Using a context manager
 
 When needing a session outside of a path operation, like when using
 [FastAPI background tasks], use `fastapi_sqla.open_session` context manager.
-SQLAlchemy session is committed when exiting context or rollbacked if any exception
+The SQLAlchemy session is committed when exiting context or rollbacked if any exception
 occurred:
 
 ```python
@@ -197,9 +260,16 @@ def run_bg():
     with open_session() as session:
         session.execute("SELECT now()").scalar()
 
+def run_bg_with_key():
+    with open_session(key="read_only") as session:
+        session.execute("SELECT now()").scalar()
 
 async def run_async_bg():
     async with open_async_session() as session:
+        await session.scalar("SELECT now()")
+
+async def run_async_bg_with_key():
+    async with open_async_session(key="read_only") as session:
         await session.scalar("SELECT now()")
 ```
 
@@ -396,7 +466,76 @@ CustomPaginate = AsyncPagination(min_page_size=5, max_page_size=500, query_count
 
 
 @router.get("/users", response_model=Page[UserModel])
-def all_users(paginate: CustomPaginate = Depends()):
+async def all_users(paginate: CustomPaginate = Depends()):
+    return await paginate(select(User))
+```
+
+### Multi-session support
+
+Pagination supports multiple sessions as well. To paginate using a session 
+configured with a custom key:
+
+```python
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+from fastapi_sqla import (
+    AsyncPaginateSignature,
+    AsyncPagination,
+    Base,
+    Page,
+    PaginateSignature,
+    Pagination,
+)
+from pydantic import BaseModel
+from sqlalchemy import func, select
+
+router = APIRouter()
+
+
+class User(Base):
+    __tablename__ = "user"
+
+
+class UserModel(BaseModel):
+    id: int
+    name: str
+
+
+# Preferred
+
+ReadOnlyPaginate = Annotated[
+    PaginateSignature, Depends(Pagination(session_key="read_only"))
+]
+AsyncReadOnlyPaginate = Annotated[
+    AsyncPaginateSignature, Depends(AsyncPagination(session_key="read_only"))
+]
+
+@router.get("/users", response_model=Page[UserModel])
+def all_users(paginate: ReadOnlyPaginate):
+    return paginate(select(User))
+
+@router.get("/async_users", response_model=Page[UserModel])
+async def async_all_users(paginate: AsyncReadOnlyPaginate):
+    return await paginate(select(User))
+
+
+# Alternative
+
+@router.get("/users/alt", response_model=Page[UserModel])
+def all_users_alt(
+    paginate: PaginateSignature = Depends(
+        Pagination(session_key="read_only")
+    ),
+):
+    return paginate(select(User))
+
+@router.get("/async_users/alt", response_model=Page[UserModel])
+async def async_all_users_alt(
+    paginate: AsyncPaginateSignature = Depends(
+        AsyncPagination(session_key="read_only")
+    ),
+):
     return await paginate(select(User))
 ```
 
