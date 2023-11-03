@@ -18,7 +18,6 @@ def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
         setup,
     )
 
-    monkeypatch.delenv(f"fastapi_sqla__{async_session_key}__sqlalchemy_url")
     monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
 
     app = FastAPI()
@@ -34,7 +33,11 @@ def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
         session.add(User(**dict(user)))
 
     @app.get("/404")
-    def get_users(session: SqlaAsyncSession = Depends(AsyncSessionDependency())):
+    def get_users(
+        session: SqlaAsyncSession = Depends(
+            AsyncSessionDependency(key=async_session_key)
+        ),
+    ):
         raise HTTPException(status_code=404, detail="YOLO")
 
     @app.get("/unknown_session_key")
@@ -100,13 +103,14 @@ async def test_commit_error_returns_500(client, user_1, mock_middleware):
     mock_middleware.assert_called_once()
 
 
-async def test_rollback_on_http_exception(client, mock_middleware):
+async def test_all_sessions_rollback_on_http_exception(client, mock_middleware):
     with patch("fastapi_sqla.async_sqla.open_session") as open_session:
         session = open_session.return_value.__aenter__.return_value
 
         await client.get("/404")
 
-        session.rollback.assert_awaited_once_with()
+        # Default and custom session are rolled back
+        assert session.rollback.await_count == 2
         mock_middleware.assert_called_once()
 
 

@@ -38,8 +38,11 @@ def User():
 
 
 @fixture
-def app(User):
+def app(User, monkeypatch, db_url):
     from fastapi_sqla import Session, SessionDependency, SqlaSession, setup
+
+    custom_session_key = "custom"
+    monkeypatch.setenv(f"fastapi_sqla__{custom_session_key}__sqlalchemy_url", db_url)
 
     app = FastAPI()
     setup(app)
@@ -54,7 +57,9 @@ def app(User):
         session.add(User(**dict(user)))
 
     @app.get("/404")
-    def get_users(session: SqlaSession = Depends(SessionDependency())):
+    def get_users(
+        session: SqlaSession = Depends(SessionDependency(key=custom_session_key)),
+    ):
         raise HTTPException(status_code=404, detail="YOLO")
 
     @app.get("/unknown_session_key")
