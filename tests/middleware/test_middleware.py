@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from pytest import fixture, mark
+from pytest import fixture
 from sqlalchemy import text
 from structlog.testing import capture_logs
 
