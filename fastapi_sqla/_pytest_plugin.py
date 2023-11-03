@@ -209,4 +209,4 @@ else:
 
     @fixture
     async def patch_new_engine():
-        pass
+        pass  # pragma: no cover
