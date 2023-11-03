@@ -48,13 +48,7 @@ def _get_engine_keys() -> set[str]:
         if not match:
             continue
 
-        try:
-            key = match.group(1)
-        except IndexError:
-            continue
-
-        if key:
-            keys.add(key)
+        keys.add(match.group(1))
 
     return keys
 

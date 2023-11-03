@@ -143,6 +143,7 @@ def test_setup_with_async_default_sqlalchemy_url(async_sqlalchemy_url):
                 "fastapi_sqla__potato___url",
                 "fastapi_sqla___potato__url",
                 "fastapi_sqla___potato___url",
+                "fastapi_sqla____url",
             ],
             {"default"},
             id="invalid formats",
