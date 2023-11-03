@@ -37,6 +37,12 @@ def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
     def get_users(session: SqlaAsyncSession = Depends(AsyncSessionDependency())):
         raise HTTPException(status_code=404, detail="YOLO")
 
+    @app.get("/unknown_session_key")
+    def unknown_session_key(
+        session: SqlaAsyncSession = Depends(AsyncSessionDependency(key="unknown")),
+    ):
+        return "Shouldn't return"
+
     return app
 
 
@@ -115,3 +121,17 @@ async def test_rollback_on_http_exception_silent(client, mock_middleware):
         "log_level": "warning",
         "status_code": 404,
     } not in caplog
+
+
+async def test_async_session_dependency_raises_unknown_key(client):
+    with capture_logs() as caplog:
+        res = await client.get("/unknown_session_key")
+
+    assert res.status_code == 500
+
+    assert {
+        "event": "No async session with key 'unknown' found in request, please ensure you've setup fastapi_sqla.",
+        "log_level": "error",
+        "exc_info": True,
+        "session_key": "unknown",
+    } in caplog

@@ -58,6 +58,12 @@ def app(User):
     def get_users(session: SqlaSession = Depends(SessionDependency())):
         raise HTTPException(status_code=404, detail="YOLO")
 
+    @app.get("/unknown_session_key")
+    def unknown_session_key(
+        session: SqlaSession = Depends(SessionDependency(key="unknown")),
+    ):
+        return "Shouldn't return"
+
     return app
 
 

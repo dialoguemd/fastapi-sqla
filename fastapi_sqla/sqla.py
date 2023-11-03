@@ -65,8 +65,8 @@ def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None
     try:
         session: SqlaSession = _session_factories[key]()
     except KeyError as exc:
-        raise Exception(
-            f"No session with key {key} found, "
+        raise KeyError(
+            f"No session with key '{key}' found, "
             "please ensure you've configured the environment variables for this key."
         ) from exc
 
@@ -167,11 +167,13 @@ class SessionDependency:
         """
         try:
             return request.scope[f"{_REQUEST_SESSION_KEY}_{self.key}"]
-        except KeyError:  # pragma: no cover
-            raise Exception(
-                f"No session with key {self.key} found in request, "
-                "please ensure you've setup fastapi_sqla."
+        except KeyError:
+            logger.exception(
+                f"No session with key '{self.key}' found in request, "
+                "please ensure you've setup fastapi_sqla.",
+                session_key=self.key,
             )
+            raise
 
 
 Session = Annotated[SqlaSession, Depends(SessionDependency())]

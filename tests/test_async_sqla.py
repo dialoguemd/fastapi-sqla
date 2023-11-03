@@ -73,3 +73,13 @@ async def test_context_manager_rollbacks_on_error(async_session_mock):
 
     session.rollback.assert_awaited_once_with()
     assert raise_info.value.args == ("boom!",)
+
+
+async def test_open_async_session_raises_unknown_key():
+    from fastapi_sqla.async_sqla import open_session
+
+    with raises(KeyError) as raise_info:
+        async with open_session(key="unknown"):
+            pass
+
+    assert "No async session with key" in raise_info.value.args[0]

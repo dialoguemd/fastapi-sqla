@@ -63,8 +63,8 @@ async def open_session(
     try:
         session: SqlaAsyncSession = _async_session_factories[key]()
     except KeyError as exc:
-        raise Exception(
-            f"No async session with key {key} found, "
+        raise KeyError(
+            f"No async session with key '{key}' found, "
             "please ensure you've configured the environment variables for this key."
         ) from exc
 
@@ -163,11 +163,13 @@ class AsyncSessionDependency:
         """
         try:
             return request.scope[f"{_ASYNC_REQUEST_SESSION_KEY}_{self.key}"]
-        except KeyError:  # pragma: no cover
-            raise Exception(
-                f"No async session with key {self.key} found in request, "
-                "please ensure you've setup fastapi_sqla."
+        except KeyError:
+            logger.exception(
+                f"No async session with key '{self.key}' found in request, "
+                "please ensure you've setup fastapi_sqla.",
+                session_key=self.key,
             )
+            raise
 
 
 AsyncSession = Annotated[SqlaAsyncSession, Depends(AsyncSessionDependency())]

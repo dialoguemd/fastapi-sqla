@@ -37,7 +37,7 @@ def TestTable(module_setup_tear_down):
 
 @mark.sqlalchemy("1.4")
 def test_open_session():
-    from fastapi_sqla import open_session
+    from fastapi_sqla.sqla import open_session
 
     with open_session() as session:
         res = session.execute(select(text("'OK'"))).scalar()
@@ -47,7 +47,7 @@ def test_open_session():
 
 @mark.sqlalchemy("1.4")
 def test_open_session_rollback_when_error_occurs_in_context(TestTable):
-    from fastapi_sqla import open_session
+    from fastapi_sqla.sqla import open_session
 
     error = Exception("Error in context")
 
@@ -71,10 +71,20 @@ def existing_record(TestTable, session):
 
 
 def test_open_session_re_raise_exception_when_commit_fails(TestTable, existing_record):
-    from fastapi_sqla import open_session
+    from fastapi_sqla.sqla import open_session
 
     with raises(Exception) as raise_info:
         with open_session() as session:
             session.add(TestTable(id=1, value="bobby already exists"))
 
     assert isinstance(raise_info.value, IntegrityError)
+
+
+def test_open_session_raises_unknown_key():
+    from fastapi_sqla.sqla import open_session
+
+    with raises(KeyError) as raise_info:
+        with open_session(key="unknown"):
+            pass
+
+    assert "No session with key" in raise_info.value.args[0]
