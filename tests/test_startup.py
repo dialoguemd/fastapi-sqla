@@ -103,6 +103,8 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
         startup()
 
 
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
 async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
     from fastapi_sqla.async_sqla import startup
 
