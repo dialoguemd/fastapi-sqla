@@ -52,8 +52,12 @@ def db_url(db_host, db_user):
 
 
 @fixture(scope="session")
-def sqla_connection(db_url):
-    engine = create_engine(db_url)
+def engine(db_url):
+    return create_engine(db_url)
+
+
+@fixture(scope="session")
+def sqla_connection(engine):
     with engine.connect() as connection:
         yield connection
 
@@ -92,7 +96,7 @@ def sqla_modules():
 
 
 @fixture
-def sqla_reflection(sqla_modules, sqla_connection, db_url):
+def sqla_reflection(sqla_modules, sqla_connection):
     import fastapi_sqla
 
     fastapi_sqla.Base.metadata.bind = sqla_connection
@@ -100,7 +104,7 @@ def sqla_reflection(sqla_modules, sqla_connection, db_url):
 
 
 @fixture
-def patch_engine_from_config(request, db_url, sqla_connection, sqla_transaction):
+def patch_engine_from_config(request, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
     from fastapi_sqla.sqla import _Session
 
@@ -149,17 +153,22 @@ def async_sqlalchemy_url(db_url):
     return format_async_async_sqlalchemy_url(db_url)
 
 
-if asyncio_support:
+if asyncio_support:  # noqa: C901
 
     @fixture
-    async def async_engine(async_sqlalchemy_url):
+    def async_engine(async_sqlalchemy_url):
         return create_async_engine(async_sqlalchemy_url)
 
     @fixture
     async def async_sqla_connection(async_engine, event_loop):
-        async with async_engine.begin() as connection:
+        async with async_engine.connect() as connection:
             yield connection
-            await connection.rollback()
+
+    @fixture
+    async def async_sqla_transaction(async_sqla_connection):
+        async with async_sqla_connection.begin() as transaction:
+            yield transaction
+            await transaction.rollback()
 
     @fixture
     async def patch_new_engine(async_sqlalchemy_url, async_sqla_connection, request):
@@ -185,7 +194,10 @@ if asyncio_support:
 
     @fixture
     async def async_session(
-        async_sqla_connection, async_sqla_reflection, patch_new_engine
+        async_sqla_connection,
+        async_sqla_transaction,
+        async_sqla_reflection,
+        patch_new_engine,
     ):
         from fastapi_sqla.async_sqla import _AsyncSession
 
