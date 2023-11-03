@@ -22,6 +22,7 @@ def test_import_sync_api():
 def test_import_async_api():
     from fastapi_sqla import (  # noqa
         AsyncPaginate,
+        AsyncPaginateSignature,
         AsyncPagination,
         AsyncSession,
         AsyncSessionDependency,

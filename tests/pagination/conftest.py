@@ -119,7 +119,7 @@ class UserWithMeta(User):
 
 
 @fixture
-def app(user_cls, note_cls):
+def app(user_cls, note_cls, monkeypatch, db_url):
     from fastapi_sqla import (
         Page,
         Paginate,
@@ -128,6 +128,9 @@ def app(user_cls, note_cls):
         Session,
         setup,
     )
+
+    custom_session_key = "custom"
+    monkeypatch.setenv(f"fastapi_sqla__{custom_session_key}__sqlalchemy_url", db_url)
 
     app = FastAPI()
     setup(app)
@@ -188,6 +191,17 @@ def app(user_cls, note_cls):
         user_id: int, paginate: CustomPaginate = Depends()
     ):
         return paginate(select(note_cls).where(note_cls.user_id == user_id))
+
+    @app.get("/v3/users", response_model=Page[UserWithNotes])
+    def paginated_notes_custom_session(
+        paginate: PaginateSignature = Depends(
+            Pagination(session_key=custom_session_key)
+        ),
+    ):
+        query = (
+            select(user_cls).options(joinedload(user_cls.notes)).order_by(user_cls.id)
+        )
+        return paginate(query)
 
     return app
 

@@ -10,10 +10,10 @@ from fastapi_sqla.models import Page
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
 QueryCountDependency = Callable[..., Awaitable[int]]
-PaginateSignature = Callable[[Select, Optional[bool]], Awaitable[Page]]
-DefaultDependency = Callable[[SqlaAsyncSession, int, int], PaginateSignature]
+AsyncPaginateSignature = Callable[[Select, Optional[bool]], Awaitable[Page]]
+DefaultDependency = Callable[[SqlaAsyncSession, int, int], AsyncPaginateSignature]
 WithQueryCountDependency = Callable[
-    [SqlaAsyncSession, int, int, int], PaginateSignature
+    [SqlaAsyncSession, int, int, int], AsyncPaginateSignature
 ]
 PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
@@ -60,7 +60,7 @@ def AsyncPagination(
         session: SqlaAsyncSession = Depends(AsyncSessionDependency(key=session_key)),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
-    ) -> PaginateSignature:
+    ) -> AsyncPaginateSignature:
         async def paginate(query: Select, scalars=True) -> Page:
             total_items = await default_query_count(session, query)
             return await paginate_query(
@@ -74,7 +74,7 @@ def AsyncPagination(
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
         total_items: int = Depends(query_count),
-    ):
+    ) -> AsyncPaginateSignature:
         async def paginate(query: Select, scalars=True) -> Page:
             return await paginate_query(
                 query, session, total_items, offset, limit, scalars=scalars
@@ -88,4 +88,4 @@ def AsyncPagination(
         return default_dependency
 
 
-AsyncPaginate = Annotated[PaginateDependency, Depends(AsyncPagination())]
+AsyncPaginate = Annotated[AsyncPaginateSignature, Depends(AsyncPagination())]

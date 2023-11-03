@@ -32,6 +32,9 @@ def test_pagination(
         param(0, 10, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
         param(10, 10, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
         param(40, 2, "/v2/users-with-notes-count", marks=mark.sqlalchemy("1.4")),
+        param(0, 10, "/v3/users", marks=mark.sqlalchemy("1.4")),
+        param(10, 10, "/v3/users", marks=mark.sqlalchemy("1.4")),
+        param(40, 2, "/v3/users", marks=mark.sqlalchemy("1.4")),
     ],
 )
 async def test_functional(client, offset, items_number, path, nb_users):

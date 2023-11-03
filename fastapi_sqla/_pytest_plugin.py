@@ -174,10 +174,9 @@ if asyncio_support:  # noqa: C901
 
     @fixture
     async def async_sqla_transaction(async_sqla_connection):
-        transaction = async_sqla_connection.begin()
-        await transaction.start()
-        yield transaction
-        await transaction.rollback()
+        async with async_sqla_connection.begin() as transaction:
+            yield transaction
+            await transaction.rollback()
 
     @fixture
     async def patch_new_engine(request, async_sqla_connection, async_sqla_transaction):

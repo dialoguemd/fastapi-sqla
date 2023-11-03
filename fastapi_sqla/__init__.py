@@ -20,7 +20,11 @@ __all__ = [
 
 
 try:
-    from fastapi_sqla.async_pagination import AsyncPaginate, AsyncPagination
+    from fastapi_sqla.async_pagination import (
+        AsyncPaginate,
+        AsyncPaginateSignature,
+        AsyncPagination,
+    )
     from fastapi_sqla.async_sqla import (
         AsyncSession,
         AsyncSessionDependency,
@@ -30,6 +34,7 @@ try:
 
     __all__ += [
         "AsyncPaginate",
+        "AsyncPaginateSignature",
         "AsyncPagination",
         "AsyncSession",
         "AsyncSessionDependency",

@@ -144,4 +144,4 @@ def Pagination(
         return default_dependency
 
 
-Paginate = Annotated[PaginateDependency, Depends(Pagination())]
+Paginate = Annotated[PaginateSignature, Depends(Pagination())]
