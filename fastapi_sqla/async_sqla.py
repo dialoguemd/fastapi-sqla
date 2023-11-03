@@ -140,6 +140,7 @@ async def add_session_to_request(request: Request, call_next):
                 response = PlainTextResponse(
                     content="Internal Server Error", status_code=500
                 )
+
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
