@@ -12,7 +12,7 @@ try:
 
     has_asyncio_support = True
 
-except ImportError as err:  # pragma: no cover
+except ImportError as err:
     has_asyncio_support = False
     asyncio_support_err = str(err)
 
