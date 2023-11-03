@@ -53,8 +53,12 @@ def db_url(db_host, db_user):
 
 
 @fixture(scope="session")
-def sqla_connection(db_url):
-    engine = create_engine(db_url)
+def engine(db_url):
+    return create_engine(db_url)
+
+
+@fixture(scope="session")
+def sqla_connection(engine):
     with engine.connect() as connection:
         yield connection
 
@@ -160,7 +164,7 @@ def async_sqlalchemy_url(db_url):
 if asyncio_support:  # noqa: C901
 
     @fixture
-    async def async_engine(async_sqlalchemy_url):
+    def async_engine(async_sqlalchemy_url):
         return create_async_engine(async_sqlalchemy_url)
 
     @fixture

@@ -75,14 +75,6 @@ def environ(db_url, sqla_version_tuple, async_session_key, async_sqlalchemy_url)
         yield values
 
 
-@fixture(scope="session")
-def engine(environ):
-    from sqlalchemy import engine_from_config
-
-    engine = engine_from_config(environ, prefix="sqlalchemy_")
-    return engine
-
-
 @fixture(autouse=True)
 def tear_down(environ):
     from sqlalchemy.orm.session import close_all_sessions

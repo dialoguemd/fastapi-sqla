@@ -85,7 +85,8 @@ async def test_async_session_dependency_raises_unknown_key(client):
     assert res.status_code == 500
 
     assert {
-        "event": "No session with key 'unknown' found in request, please ensure you've setup fastapi_sqla.",
+        "event": "No session with key 'unknown' found in request, "
+        "please ensure you've setup fastapi_sqla.",
         "log_level": "error",
         "exc_info": True,
         "session_key": "unknown",

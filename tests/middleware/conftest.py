@@ -9,23 +9,22 @@ from sqlalchemy import text
 
 
 @fixture(scope="module", autouse=True)
-def setup_tear_down(engine):
-    with engine.connect() as connection:
-        with connection.begin():
-            connection.execute(
-                text(
-                    """
-                    CREATE TABLE IF NOT EXISTS public.user (
-                       id integer primary key,
-                       first_name varchar,
-                       last_name varchar
-                    )
-                    """
+def setup_tear_down(sqla_connection):
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS public.user (
+                    id integer primary key,
+                    first_name varchar,
+                    last_name varchar
                 )
+                """
             )
-        yield
-        with connection.begin():
-            connection.execute(text("DROP TABLE public.user"))
+        )
+    yield
+    with sqla_connection.begin():
+        sqla_connection.execute(text("DROP TABLE public.user"))
 
 
 @fixture
