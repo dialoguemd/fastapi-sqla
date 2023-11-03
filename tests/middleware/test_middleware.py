@@ -79,7 +79,7 @@ async def test_rollback_on_http_exception_silent(client, mock_middleware):
     } not in caplog
 
 
-async def test_async_session_dependency_raises_unknown_key(client):
+async def test_session_dependency_raises_unknown_key(client):
     with capture_logs() as caplog:
         res = await client.get("/unknown_session_key")
 
