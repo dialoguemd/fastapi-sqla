@@ -108,7 +108,7 @@ def patch_engine_from_config(request, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
     from fastapi_sqla.sqla import _Session
 
-    if "dont_patch_engines" in request.keywords:
+    if "dont_patch_engines" in request.keywords:  # pragma: no cover
         yield
 
     else:
@@ -175,7 +175,7 @@ if asyncio_support:  # noqa: C901
         """So that all async DB operations are never written to db for real."""
         from fastapi_sqla.async_sqla import _AsyncSession
 
-        if "dont_patch_engines" in request.keywords:
+        if "dont_patch_engines" in request.keywords:  # pragma: no cover
             yield
 
         else:
