@@ -204,9 +204,3 @@ if asyncio_support:  # noqa: C901
         session = _AsyncSession(bind=async_sqla_connection)
         yield session
         await session.close()
-
-else:
-
-    @fixture
-    async def patch_new_engine():
-        pass  # pragma: no cover
