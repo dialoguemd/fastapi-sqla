@@ -6,8 +6,6 @@ from fastapi import FastAPI
 from pytest import fixture, mark, raises
 from sqlalchemy import text
 
-pytestmark = mark.usefixtures("patch_engine_from_config", "patch_new_engine")
-
 
 @fixture
 def clear_rds_client_cache():
@@ -30,7 +28,6 @@ def boto_client_mock():
     return Mock()
 
 
-@mark.dont_patch_engines
 def test_startup():
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
@@ -41,7 +38,6 @@ def test_startup():
     assert session.execute(text("SELECT 123")).scalar() == 123
 
 
-@mark.dont_patch_engines
 def test_startup_case_insensitive(environ):
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
@@ -54,7 +50,6 @@ def test_startup_case_insensitive(environ):
     assert session.execute(text("SELECT 123")).scalar() == 123
 
 
-@mark.dont_patch_engines
 def test_startup_with_key(monkeypatch, db_url):
     from fastapi_sqla.sqla import _session_factories, startup
 
@@ -70,7 +65,6 @@ def test_startup_with_key(monkeypatch, db_url):
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-@mark.dont_patch_engines
 async def test_startup_configure_async_session(async_session_key):
     from fastapi_sqla.async_sqla import _async_session_factories, startup
 
@@ -84,7 +78,6 @@ async def test_startup_configure_async_session(async_session_key):
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-@mark.dont_patch_engines
 async def test_startup_configure_async_session_with_default_alchemy_url(
     monkeypatch, async_sqlalchemy_url
 ):
@@ -101,7 +94,6 @@ async def test_startup_configure_async_session_with_default_alchemy_url(
     assert res.scalar() == 123
 
 
-@mark.dont_patch_engines
 def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
     from fastapi_sqla.sqla import startup
 
@@ -111,7 +103,6 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
         startup()
 
 
-@mark.dont_patch_engines
 async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
     from fastapi_sqla.async_sqla import startup
 
@@ -124,7 +115,6 @@ async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
 
 
 @mark.require_boto3
-@mark.dont_patch_engines
 def test_sync_startup_with_aws_rds_iam_enabled(
     monkeypatch, boto_session, boto_client_mock, db_host, db_user
 ):
@@ -142,7 +132,6 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 @mark.require_boto3
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-@mark.dont_patch_engines
 async def test_async_startup_with_aws_rds_iam_enabled(
     monkeypatch, async_session_key, boto_session, boto_client_mock, db_host, db_user
 ):
@@ -157,7 +146,6 @@ async def test_async_startup_with_aws_rds_iam_enabled(
     )
 
 
-@mark.dont_patch_engines
 async def test_fastapi_integration():
     from fastapi_sqla.base import setup
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories
