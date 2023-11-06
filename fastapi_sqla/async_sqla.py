@@ -172,4 +172,5 @@ class AsyncSessionDependency:
             raise
 
 
-AsyncSession = Annotated[SqlaAsyncSession, Depends(AsyncSessionDependency())]
+default_async_session_dep = AsyncSessionDependency()
+AsyncSession = Annotated[SqlaAsyncSession, Depends(default_async_session_dep)]

@@ -176,4 +176,5 @@ class SessionDependency:
             raise
 
 
-Session = Annotated[SqlaSession, Depends(SessionDependency())]
+default_session_dep = SessionDependency()
+Session = Annotated[SqlaSession, Depends(default_session_dep)]
