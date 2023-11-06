@@ -5,6 +5,7 @@ from typing import cast
 
 import structlog
 from fastapi import Request
+from fastapi.responses import PlainTextResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
@@ -87,12 +88,19 @@ async def open_session() -> AsyncGenerator[SqlaAsyncSession, None]:
 
     try:
         yield session
-        await session.commit()
 
     except Exception:
-        logger.exception("commit failed, rolling back")
+        logger.warning("context failed, rolling back", exc_info=True)
         await session.rollback()
         raise
+
+    else:
+        try:
+            await session.commit()
+        except Exception:
+            logger.exception("commit failed, rolling back")
+            await session.rollback()
+            raise
 
     finally:
         await session.close()
@@ -119,9 +127,30 @@ async def add_session_to_request(request: Request, call_next):
     async with open_session() as session:
         request.scope[_ASYNC_SESSION_KEY] = session
         response = await call_next(request)
+
+        is_dirty = bool(session.dirty or session.deleted or session.new)
+
+        # try to commit after response, so that we can return a proper 500 response
+        # and not raise a true internal server error
+        if response.status_code < 400:
+            try:
+                await session.commit()
+            except Exception:
+                logger.exception("commit failed, returning http error")
+                response = PlainTextResponse(
+                    content="Internal Server Error", status_code=500
+                )
+
         if response.status_code >= 400:
             # If ever a route handler returns an http exception, we do not want the
             # session opened by current context manager to commit anything in db.
+            if is_dirty:
+                # optimistically only log if there were uncommitted changes
+                logger.warning(
+                    "http error, rolling back possibly uncommitted changes",
+                    status_code=response.status_code,
+                )
+            # since this is no-op if session is not dirty, we can always call it
             await session.rollback()
 
     return response
