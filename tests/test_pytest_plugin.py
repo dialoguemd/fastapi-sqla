@@ -56,6 +56,37 @@ async def test_async_session_fixture_does_not_write_in_db(
         ).scalar() == 0
 
 
+@fixture
+def truncate_table_tear_down(sqla_connection):
+    yield
+    with sqla_connection.begin():
+        sqla_connection.execute(text("TRUNCATE TABLE singer"))
+
+
+@mark.dont_patch_engines
+def test_session_fixture_dont_patch_engine_writes_in_db(
+    session, singer_cls, engine, truncate_table_tear_down
+):
+    session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
+    session.commit()
+    with engine.connect() as connection:
+        assert connection.execute(text("select count(*) from singer")).scalar() == 1
+
+
+@mark.dont_patch_engines
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
+async def test_async_session_fixture_dont_patch_engine_writes_in_db(
+    async_session, singer_cls, async_engine, truncate_table_tear_down
+):
+    async_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
+    await async_session.commit()
+    async with async_engine.connect() as connection:
+        assert (
+            await connection.execute(text("select count(*) from singer"))
+        ).scalar() == 1
+
+
 @mark.sqlalchemy("1.4")
 def test_all_opened_sessions_are_within_the_same_transaction(
     sqla_connection, session, session_factory, singer_cls

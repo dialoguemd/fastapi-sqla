@@ -105,23 +105,19 @@ def sqla_reflection(sqla_modules, sqla_connection):
 
 
 @fixture
-def patch_engine_from_config(request, sqla_connection, sqla_transaction):
+def patch_engine_from_config(request, sqla_connection):
     """So that all DB operations are never written to db for real."""
 
-    if "dont_patch_engines" in request.keywords:  # pragma: no cover
+    if "dont_patch_engines" in request.keywords:
         yield
-
     else:
+        transaction = sqla_connection.begin()
+
         with patch("fastapi_sqla.sqla.engine_from_config") as engine_from_config:
             engine_from_config.return_value = sqla_connection
-            yield engine_from_config
+            yield
 
-
-@fixture
-def sqla_transaction(sqla_connection):
-    transaction = sqla_connection.begin()
-    yield transaction
-    transaction.rollback()
+        transaction.rollback()
 
 
 @fixture
@@ -131,11 +127,7 @@ def session_factory():
 
 @fixture
 def session(
-    session_factory,
-    sqla_connection,
-    sqla_transaction,
-    sqla_reflection,
-    patch_engine_from_config,
+    session_factory, sqla_connection, sqla_reflection, patch_engine_from_config
 ):
     """Sqla session to use when creating db fixtures.
 
@@ -173,22 +165,18 @@ if asyncio_support:  # noqa: C901
             yield connection
 
     @fixture
-    async def async_sqla_transaction(async_sqla_connection):
-        async with async_sqla_connection.begin() as transaction:
-            yield transaction
-            await transaction.rollback()
-
-    @fixture
-    async def patch_new_engine(request, async_sqla_connection, async_sqla_transaction):
+    async def patch_new_engine(request, async_sqla_connection):
         """So that all async DB operations are never written to db for real."""
 
-        if "dont_patch_engines" in request.keywords:  # pragma: no cover
+        if "dont_patch_engines" in request.keywords:
             yield
-
         else:
-            with patch("fastapi_sqla.async_sqla.new_engine") as new_engine:
-                new_engine.return_value = async_sqla_connection
-                yield new_engine
+            async with async_sqla_connection.begin() as transaction:
+                with patch("fastapi_sqla.async_sqla.new_engine") as new_engine:
+                    new_engine.return_value = async_sqla_connection
+                    yield
+
+                await transaction.rollback()
 
     @fixture
     async def async_sqla_reflection(sqla_modules, async_sqla_connection):
@@ -206,7 +194,6 @@ if asyncio_support:  # noqa: C901
     async def async_session(
         async_session_factory,
         async_sqla_connection,
-        async_sqla_transaction,
         async_sqla_reflection,
         patch_new_engine,
     ):
