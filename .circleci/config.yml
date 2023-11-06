@@ -129,7 +129,7 @@ jobs:
 executors:
   python:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
   python-postgres:
     parameters:
       python_version:
