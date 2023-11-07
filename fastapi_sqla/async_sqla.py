@@ -110,7 +110,7 @@ async def add_session_to_request(
             return await session.execute(...) # use your session here
     """
     async with open_session(key) as session:
-        request.state[f"{_ASYNC_REQUEST_SESSION_KEY}_{key}"] = session
+        setattr(request.state, f"{_ASYNC_REQUEST_SESSION_KEY}_{key}", session)
         response = await call_next(request)
 
         is_dirty = bool(session.dirty or session.deleted or session.new)
@@ -162,8 +162,8 @@ class AsyncSessionDependency:
                 pass
         """
         try:
-            return request.state[f"{_ASYNC_REQUEST_SESSION_KEY}_{self.key}"]
-        except KeyError:
+            return getattr(request.state, f"{_ASYNC_REQUEST_SESSION_KEY}_{self.key}")
+        except AttributeError:
             logger.exception(
                 f"No async session with key '{self.key}' found in request, "
                 "please ensure you've setup fastapi_sqla.",
