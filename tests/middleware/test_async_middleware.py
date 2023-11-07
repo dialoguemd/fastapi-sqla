@@ -10,8 +10,15 @@ pytestmark = [mark.sqlalchemy("1.4"), mark.require_asyncpg]
 
 
 @fixture
-def app(User):
-    from fastapi_sqla import AsyncSession, setup
+def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
+    from fastapi_sqla import (
+        AsyncSession,
+        AsyncSessionDependency,
+        SqlaAsyncSession,
+        setup,
+    )
+
+    monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
 
     app = FastAPI()
     setup(app)
@@ -22,12 +29,22 @@ def app(User):
         last_name: str
 
     @app.post("/users")
-    def create_user(user: UserIn, session: AsyncSession = Depends()):
+    def create_user(user: UserIn, session: AsyncSession):
         session.add(User(**dict(user)))
 
     @app.get("/404")
-    def get_users(session: AsyncSession = Depends(AsyncSession)):
+    def get_users(
+        session: SqlaAsyncSession = Depends(
+            AsyncSessionDependency(key=async_session_key)
+        ),
+    ):
         raise HTTPException(status_code=404, detail="YOLO")
+
+    @app.get("/unknown_session_key")
+    def unknown_session_key(
+        session: SqlaAsyncSession = Depends(AsyncSessionDependency(key="unknown")),
+    ):
+        return "Shouldn't return"
 
     return app
 
@@ -86,13 +103,14 @@ async def test_commit_error_returns_500(client, user_1, mock_middleware):
     mock_middleware.assert_called_once()
 
 
-async def test_rollback_on_http_exception(client, mock_middleware):
+async def test_all_sessions_rollback_on_http_exception(client, mock_middleware):
     with patch("fastapi_sqla.async_sqla.open_session") as open_session:
         session = open_session.return_value.__aenter__.return_value
 
         await client.get("/404")
 
-        session.rollback.assert_awaited_once_with()
+        # Default and custom session are rolled back
+        assert session.rollback.await_count == 2
         mock_middleware.assert_called_once()
 
 
@@ -107,3 +125,18 @@ async def test_rollback_on_http_exception_silent(client, mock_middleware):
         "log_level": "warning",
         "status_code": 404,
     } not in caplog
+
+
+async def test_async_session_dependency_raises_unknown_key(client):
+    with capture_logs() as caplog:
+        res = await client.get("/unknown_session_key")
+
+    assert res.status_code == 500
+
+    assert {
+        "event": "No async session with key 'unknown' found in request, "
+        "please ensure you've setup fastapi_sqla.",
+        "log_level": "error",
+        "exc_info": True,
+        "session_key": "unknown",
+    } in caplog

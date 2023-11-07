@@ -8,7 +8,10 @@ def test_import_sync_api():
         Item,
         Page,
         Paginate,
+        Pagination,
         Session,
+        SessionDependency,
+        SqlaSession,
         open_session,
         setup,
     )
@@ -19,7 +22,10 @@ def test_import_sync_api():
 def test_import_async_api():
     from fastapi_sqla import (  # noqa
         AsyncPaginate,
+        AsyncPaginateSignature,
         AsyncPagination,
         AsyncSession,
+        AsyncSessionDependency,
+        SqlaAsyncSession,
         open_async_session,
     )

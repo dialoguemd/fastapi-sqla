@@ -1,10 +1,9 @@
-import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import cast
+from typing import Annotated
 
 import structlog
-from fastapi import Request
+from fastapi import Depends, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -13,82 +12,66 @@ from sqlalchemy.orm.session import sessionmaker
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 from fastapi_sqla.models import Base
-from fastapi_sqla.sqla import new_engine
+from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, new_engine
 
 logger = structlog.get_logger(__name__)
-_ASYNC_SESSION_KEY = "fastapi_sqla_async_session"
-_AsyncSession = sessionmaker(class_=SqlaAsyncSession)
+
+_ASYNC_REQUEST_SESSION_KEY = "fastapi_sqla_async_session"
+_async_session_factories: dict[str, sessionmaker] = {}
 
 
-def new_async_engine():
-    envvar_prefix = None
-    if "async_sqlalchemy_url" in os.environ:
-        envvar_prefix = "async_sqlalchemy_"
-
-    engine = new_engine(envvar_prefix=envvar_prefix)
+def new_async_engine(key: str = _DEFAULT_SESSION_KEY):
+    engine = new_engine(key)
     return AsyncEngine(engine)
 
 
-async def startup():
-    engine = new_async_engine()
+async def startup(key: str = _DEFAULT_SESSION_KEY):
+    engine = new_async_engine(key)
     aws_rds_iam_support.setup(engine.sync_engine)
     aws_aurora_support.setup(engine.sync_engine)
 
-    # Fail early:
+    # Fail early
     try:
         async with engine.connect() as connection:
             await connection.execute(text("select 'ok'"))
     except Exception:
         logger.critical(
-            "Failed querying db: is sqlalchemy_url or async_sqlalchemy_url envvar "
-            "correctly configured?"
+            f"Failed querying db for key '{key}': "
+            "are the the environment variables correctly configured for this key?"
         )
         raise
 
     async with engine.connect() as connection:
         await connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
-    _AsyncSession.configure(bind=engine, expire_on_commit=False)
-    logger.info("startup", async_engine=engine)
+    _async_session_factories[key] = sessionmaker(
+        class_=SqlaAsyncSession, bind=engine, expire_on_commit=False
+    )
 
-
-class AsyncSession(SqlaAsyncSession):
-    def __new__(cls, request: Request):
-        """Yield the sqlalchmey async session for that request.
-
-        It is meant to be used as a FastAPI dependency::
-
-            from fastapi import APIRouter, Depends
-            from fastapi_sqla import AsyncSession
-
-            router = APIRouter()
-
-            @router.get("/users")
-            async def get_users(session: AsyncSession = Depends()):
-                pass
-        """
-        try:
-            return request.scope[_ASYNC_SESSION_KEY]
-        except KeyError:  # pragma: no cover
-            raise Exception(
-                "No async session found in request, please ensure you've setup "
-                "fastapi_sqla."
-            )
+    logger.info("engine startup", engine_key=key, async_engine=engine)
 
 
 @asynccontextmanager
-async def open_session() -> AsyncGenerator[SqlaAsyncSession, None]:
+async def open_session(
+    key: str = _DEFAULT_SESSION_KEY,
+) -> AsyncGenerator[SqlaAsyncSession, None]:
     """Context manager to open an async session and properly close it when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
     context. If an exception is raised, session is rollbacked.
     """
-    session = cast(SqlaAsyncSession, _AsyncSession())
+    try:
+        session: SqlaAsyncSession = _async_session_factories[key]()
+    except KeyError as exc:
+        raise KeyError(
+            f"No async session with key '{key}' found, "
+            "please ensure you've configured the environment variables for this key."
+        ) from exc
+
     logger.bind(db_async_session=session)
 
     try:
         yield session
-
     except Exception:
         logger.warning("context failed, rolling back", exc_info=True)
         await session.rollback()
@@ -106,7 +89,9 @@ async def open_session() -> AsyncGenerator[SqlaAsyncSession, None]:
         await session.close()
 
 
-async def add_session_to_request(request: Request, call_next):
+async def add_session_to_request(
+    request: Request, call_next, key: str = _DEFAULT_SESSION_KEY
+):
     """Middleware which injects a new sqla async session into every request.
 
     Handles creation of session, as well as commit, rollback, and closing of session.
@@ -121,11 +106,11 @@ async def add_session_to_request(request: Request, call_next):
         fastapi_sqla.setup(app)  # includes middleware
 
         @app.get("/users")
-        async def get_users(session: fastapi_sqla.AsyncSession = Depends()):
+        async def get_users(session: fastapi_sqla.AsyncSession):
             return await session.execute(...) # use your session here
     """
-    async with open_session() as session:
-        request.scope[_ASYNC_SESSION_KEY] = session
+    async with open_session(key) as session:
+        setattr(request.state, f"{_ASYNC_REQUEST_SESSION_KEY}_{key}", session)
         response = await call_next(request)
 
         is_dirty = bool(session.dirty or session.deleted or session.new)
@@ -154,3 +139,38 @@ async def add_session_to_request(request: Request, call_next):
             await session.rollback()
 
     return response
+
+
+class AsyncSessionDependency:
+    def __init__(self, key: str = _DEFAULT_SESSION_KEY) -> None:
+        self.key = key
+
+    def __call__(self, request: Request) -> SqlaAsyncSession:
+        """Yield the sqlalchemy async session for that request.
+
+        It is meant to be used as a FastAPI dependency::
+
+            from fastapi import APIRouter, Depends
+            from fastapi_sqla import SqlaAsyncSession, AsyncSessionDependency
+
+            router = APIRouter()
+
+            @router.get("/users")
+            async def get_users(
+                session: SqlaAsyncSession = Depends(AsyncSessionDependency())
+            ):
+                pass
+        """
+        try:
+            return getattr(request.state, f"{_ASYNC_REQUEST_SESSION_KEY}_{self.key}")
+        except AttributeError:
+            logger.exception(
+                f"No async session with key '{self.key}' found in request, "
+                "please ensure you've setup fastapi_sqla.",
+                session_key=self.key,
+            )
+            raise
+
+
+default_async_session_dep = AsyncSessionDependency()
+AsyncSession = Annotated[SqlaAsyncSession, Depends(default_async_session_dep)]

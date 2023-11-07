@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from pytest import fixture, mark
 from sqlalchemy import func, select
@@ -17,14 +17,26 @@ class NoteWithAuthorName(Note):
 
 
 @fixture
-def app(app, user_cls, note_cls):
-    from fastapi_sqla import AsyncPaginate, AsyncPagination, AsyncSession, Page
+def app(user_cls, note_cls, monkeypatch, async_sqlalchemy_url, async_session_key):
+    from fastapi_sqla import (
+        AsyncPaginate,
+        AsyncPaginateSignature,
+        AsyncPagination,
+        AsyncSession,
+        Page,
+        setup,
+    )
+
+    monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
+
+    app = FastAPI()
+    setup(app)
 
     @app.get("/v1/notes", response_model=Page[Note])
-    async def async_paginated_notes(paginate: AsyncPaginate = Depends()):
+    async def async_paginated_notes(paginate: AsyncPaginate):
         return await paginate(select(note_cls))
 
-    async def count_notes(session: AsyncSession = Depends()):
+    async def count_notes(session: AsyncSession):
         result = await session.execute(select(func.count(note_cls.id)))
         return result.scalar()
 
@@ -41,6 +53,14 @@ def app(app, user_cls, note_cls):
             scalars=False,
         )
 
+    @app.get("/v3/notes", response_model=Page[Note])
+    async def async_paginated_notes_custom_session(
+        paginate: AsyncPaginateSignature = Depends(
+            AsyncPagination(session_key=async_session_key)
+        ),
+    ):
+        return await paginate(select(note_cls))
+
     return app
 
 
@@ -55,6 +75,9 @@ def app(app, user_cls, note_cls):
         [0, 10, "/v2/notes"],
         [10, 10, "/v2/notes"],
         [920, 4, "/v2/notes"],
+        [0, 10, "/v3/notes"],
+        [10, 10, "/v3/notes"],
+        [920, 4, "/v3/notes"],
     ],
 )
 async def test_async_pagination(client, offset, items_number, path, nb_notes):

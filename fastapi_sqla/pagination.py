@@ -1,24 +1,24 @@
 import math
 from collections.abc import Callable
 from functools import singledispatch
-from typing import Iterator, Optional, Union, cast
+from typing import Annotated, Iterator, Optional, Union, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.sql import Select, func, select
 
 from fastapi_sqla.models import Page
-from fastapi_sqla.sqla import Session
+from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, SessionDependency, SqlaSession
 
 DbQuery = Union[LegacyQuery, Select]
 QueryCountDependency = Callable[..., int]
 PaginateSignature = Callable[[DbQuery, Optional[bool]], Page]
-DefaultDependency = Callable[[Session, int, int], PaginateSignature]
-WithQueryCountDependency = Callable[[Session, int, int, int], PaginateSignature]
+DefaultDependency = Callable[[SqlaSession, int, int], PaginateSignature]
+WithQueryCountDependency = Callable[[SqlaSession, int, int, int], PaginateSignature]
 PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
-def default_query_count(session: Session, query: DbQuery) -> int:
+def default_query_count(session: SqlaSession, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
     It is slower than a manually written query could be: It runs the query in a
@@ -46,7 +46,7 @@ def default_query_count(session: Session, query: DbQuery) -> int:
 @singledispatch
 def paginate_query(
     query: DbQuery,
-    session: Session,
+    session: SqlaSession,
     total_items: int,
     offset: int,
     limit: int,
@@ -59,7 +59,7 @@ def paginate_query(
 @paginate_query.register
 def _paginate_legacy(
     query: LegacyQuery,
-    session: Session,
+    session: SqlaSession,
     total_items: int,
     offset: int,
     limit: int,
@@ -81,7 +81,7 @@ def _paginate_legacy(
 @paginate_query.register
 def _paginate(
     query: Select,
-    session: Session,
+    session: SqlaSession,
     total_items: int,
     offset: int,
     limit: int,
@@ -107,12 +107,13 @@ def _paginate(
 
 
 def Pagination(
+    session_key: str = _DEFAULT_SESSION_KEY,
     min_page_size: int = 10,
     max_page_size: int = 100,
     query_count: Union[QueryCountDependency, None] = None,
 ) -> PaginateDependency:
     def default_dependency(
-        session: Session = Depends(),
+        session: SqlaSession = Depends(SessionDependency(key=session_key)),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
     ) -> PaginateSignature:
@@ -125,7 +126,7 @@ def Pagination(
         return paginate
 
     def with_query_count_dependency(
-        session: Session = Depends(),
+        session: SqlaSession = Depends(SessionDependency(key=session_key)),
         offset: int = Query(0, ge=0),
         limit: int = Query(min_page_size, ge=1, le=max_page_size),
         total_items: int = Depends(query_count),
@@ -143,4 +144,4 @@ def Pagination(
         return default_dependency
 
 
-Paginate: PaginateDependency = Pagination()
+Paginate = Annotated[PaginateSignature, Depends(Pagination())]

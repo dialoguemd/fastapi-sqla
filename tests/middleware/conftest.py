@@ -38,8 +38,11 @@ def User():
 
 
 @fixture
-def app(User):
-    from fastapi_sqla import Session, setup
+def app(User, monkeypatch, db_url):
+    from fastapi_sqla import Session, SessionDependency, SqlaSession, setup
+
+    custom_session_key = "custom"
+    monkeypatch.setenv(f"fastapi_sqla__{custom_session_key}__sqlalchemy_url", db_url)
 
     app = FastAPI()
     setup(app)
@@ -50,12 +53,20 @@ def app(User):
         last_name: str
 
     @app.post("/users")
-    def create_user(user: UserIn, session: Session = Depends()):
+    def create_user(user: UserIn, session: Session):
         session.add(User(**dict(user)))
 
     @app.get("/404")
-    def get_users(session: Session = Depends(Session)):
+    def get_users(
+        session: SqlaSession = Depends(SessionDependency(key=custom_session_key)),
+    ):
         raise HTTPException(status_code=404, detail="YOLO")
+
+    @app.get("/unknown_session_key")
+    def unknown_session_key(
+        session: SqlaSession = Depends(SessionDependency(key="unknown")),
+    ):
+        return "Shouldn't return"
 
     return app
 

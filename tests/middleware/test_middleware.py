@@ -55,13 +55,14 @@ async def test_commit_error_returns_500(client, user_1, mock_middleware):
     mock_middleware.assert_called_once()
 
 
-async def test_rollback_on_http_exception(client, mock_middleware):
+async def test_all_sessions_rollback_on_http_exception(client, mock_middleware):
     with patch("fastapi_sqla.sqla.open_session") as open_session:
         session = open_session.return_value.__enter__.return_value
 
         await client.get("/404")
 
-        session.rollback.assert_called_once_with()
+        # Default and custom session are rolled back
+        assert session.rollback.call_count == 2
         mock_middleware.assert_called_once()
 
 
@@ -76,3 +77,18 @@ async def test_rollback_on_http_exception_silent(client, mock_middleware):
         "log_level": "warning",
         "status_code": 404,
     } not in caplog
+
+
+async def test_session_dependency_raises_unknown_key(client):
+    with capture_logs() as caplog:
+        res = await client.get("/unknown_session_key")
+
+    assert res.status_code == 500
+
+    assert {
+        "event": "No session with key 'unknown' found in request, "
+        "please ensure you've setup fastapi_sqla.",
+        "log_level": "error",
+        "exc_info": True,
+        "session_key": "unknown",
+    } in caplog

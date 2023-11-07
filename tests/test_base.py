@@ -16,14 +16,14 @@ def setup_tear_down(engine):
 
 def test_startup_reflect_test_table():
     from fastapi_sqla.models import Base
-    from fastapi_sqla.sqla import _Session, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     class TestTable(Base):
         __tablename__ = "test_table"
 
     startup()
 
-    session = _Session()
+    session = _session_factories[_DEFAULT_SESSION_KEY]()
     session.add(TestTable(id=1))
     session.add(TestTable(id=2))
 

@@ -19,7 +19,7 @@ def module_setup_tear_down(sqla_connection):
 
 @fixture(scope="module")
 def test_table_cls():
-    from fastapi_sqla import Base
+    from fastapi_sqla.sqla import Base
 
     class TestTable(Base):
         __tablename__ = "test_table"
@@ -29,18 +29,18 @@ def test_table_cls():
 
 @fixture
 def startup(sqla_connection):
-    from fastapi_sqla.sqla import _Session, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     startup()
-    _Session.configure(bind=sqla_connection)
+    _session_factories[_DEFAULT_SESSION_KEY].configure(bind=sqla_connection)
 
 
 @fixture
-async def async_startup(async_sqla_connection):
-    from fastapi_sqla.async_sqla import _AsyncSession, startup
+async def async_startup(async_session_key, async_sqla_connection):
+    from fastapi_sqla.async_sqla import _async_session_factories, startup
 
-    await startup()
-    _AsyncSession.configure(bind=async_sqla_connection)
+    await startup(async_session_key)
+    _async_session_factories[async_session_key].configure(bind=async_sqla_connection)
 
 
 @mark.sqlalchemy("1.4")
@@ -55,10 +55,10 @@ def test_open_session(startup):
 
 @mark.sqlalchemy("1.4")
 @mark.require_asyncpg
-async def test_open_async_session(async_startup):
+async def test_open_async_session(async_startup, async_session_key):
     from fastapi_sqla.async_sqla import open_session
 
-    async with open_session() as session:
+    async with open_session(async_session_key) as session:
         res = await session.execute(text("select 123"))
 
     assert res.scalar() == 123
@@ -69,9 +69,6 @@ def test_open_session_rollback_when_error_occurs_in_context(startup, test_table_
     from fastapi_sqla.sqla import open_session
 
     error = Exception("Error in context")
-
-    class Custom(Exception):
-        pass
 
     with raises(Exception) as raise_info:
         with open_session() as session:
@@ -89,14 +86,14 @@ def test_open_session_rollback_when_error_occurs_in_context(startup, test_table_
 @mark.sqlalchemy("1.4")
 @mark.require_asyncpg
 async def test_open_async_session_rollback_when_error_occurs_in_context(
-    async_startup, test_table_cls
+    async_startup, async_session_key, test_table_cls
 ):
     from fastapi_sqla.async_sqla import open_session
 
     error = Exception("Error in context")
 
     with raises(Exception) as raise_info:
-        async with open_session() as session:
+        async with open_session(async_session_key) as session:
             await session.execute(
                 insert(test_table_cls).values(id=1, value="bobby drop tables")
             )
@@ -133,7 +130,7 @@ def test_open_session_re_raise_exception_when_commit_fails(
 @mark.sqlalchemy("1.4")
 @mark.require_asyncpg
 async def test_open_async_session_re_raise_exception_when_commit_fails(
-    async_startup, test_table_cls, async_session
+    async_startup, async_session_key, test_table_cls, async_session
 ):
     from fastapi_sqla.async_sqla import open_session
 
@@ -146,9 +143,31 @@ async def test_open_async_session_re_raise_exception_when_commit_fails(
     await async_session.flush()
 
     with raises(Exception) as raise_info:
-        async with open_session() as session:
+        async with open_session(async_session_key) as session:
             session.add(
                 test_table_cls(id=existing_record_id, value="bobby already exists")
             )
 
     assert isinstance(raise_info.value, IntegrityError)
+
+
+def test_open_session_raises_unknown_key(startup):
+    from fastapi_sqla.sqla import open_session
+
+    with raises(KeyError) as raise_info:
+        with open_session(key="unknown"):
+            pass
+
+    assert "No session with key" in raise_info.value.args[0]
+
+
+@mark.sqlalchemy("1.4")
+@mark.require_asyncpg
+async def test_open_async_session_raises_unknown_key(async_startup):
+    from fastapi_sqla.async_sqla import open_session
+
+    with raises(KeyError) as raise_info:
+        async with open_session(key="unknown"):
+            pass
+
+    assert "No async session with key" in raise_info.value.args[0]

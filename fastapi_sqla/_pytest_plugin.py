@@ -6,6 +6,7 @@ from alembic import command
 from alembic.config import Config
 from pytest import fixture
 from sqlalchemy import create_engine, text
+from sqlalchemy.orm.session import sessionmaker
 
 try:
     import asyncpg  # noqa
@@ -106,7 +107,6 @@ def sqla_reflection(sqla_modules, sqla_connection):
 @fixture
 def patch_engine_from_config(request, sqla_connection, sqla_transaction):
     """So that all DB operations are never written to db for real."""
-    from fastapi_sqla.sqla import _Session
 
     if "dont_patch_engines" in request.keywords:  # pragma: no cover
         yield
@@ -114,7 +114,6 @@ def patch_engine_from_config(request, sqla_connection, sqla_transaction):
     else:
         with patch("fastapi_sqla.sqla.engine_from_config") as engine_from_config:
             engine_from_config.return_value = sqla_connection
-            _Session.configure(bind=sqla_connection)
             yield engine_from_config
 
 
@@ -126,17 +125,26 @@ def sqla_transaction(sqla_connection):
 
 
 @fixture
+def session_factory():
+    return sessionmaker()
+
+
+@fixture
 def session(
-    sqla_transaction, sqla_connection, sqla_reflection, patch_engine_from_config
+    session_factory,
+    sqla_connection,
+    sqla_transaction,
+    sqla_reflection,
+    patch_engine_from_config,
 ):
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
     access any record committed with that session.
     """
-    import fastapi_sqla.sqla
-
-    yield fastapi_sqla.sqla._Session(bind=sqla_connection)
+    session = session_factory(bind=sqla_connection)
+    yield session
+    session.close()
 
 
 def format_async_async_sqlalchemy_url(url):
@@ -171,9 +179,8 @@ if asyncio_support:  # noqa: C901
             await transaction.rollback()
 
     @fixture
-    async def patch_new_engine(async_sqlalchemy_url, async_sqla_connection, request):
+    async def patch_new_engine(request, async_sqla_connection, async_sqla_transaction):
         """So that all async DB operations are never written to db for real."""
-        from fastapi_sqla.async_sqla import _AsyncSession
 
         if "dont_patch_engines" in request.keywords:  # pragma: no cover
             yield
@@ -181,9 +188,6 @@ if asyncio_support:  # noqa: C901
         else:
             with patch("fastapi_sqla.async_sqla.new_engine") as new_engine:
                 new_engine.return_value = async_sqla_connection
-                _AsyncSession.configure(
-                    bind=async_sqla_connection, expire_on_commit=False
-                )
                 yield new_engine
 
     @fixture
@@ -193,14 +197,19 @@ if asyncio_support:  # noqa: C901
         await async_sqla_connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
     @fixture
+    def async_session_factory():
+        from fastapi_sqla.async_sqla import SqlaAsyncSession
+
+        return sessionmaker(class_=SqlaAsyncSession)
+
+    @fixture
     async def async_session(
+        async_session_factory,
         async_sqla_connection,
         async_sqla_transaction,
         async_sqla_reflection,
         patch_new_engine,
     ):
-        from fastapi_sqla.async_sqla import _AsyncSession
-
-        session = _AsyncSession(bind=async_sqla_connection)
+        session = async_session_factory(bind=async_sqla_connection)
         yield session
         await session.close()

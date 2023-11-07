@@ -29,37 +29,48 @@ def boto_client_mock():
 
 
 def test_startup():
-    from fastapi_sqla.sqla import _Session, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     startup()
 
-    session = _Session()
+    session = _session_factories[_DEFAULT_SESSION_KEY]()
 
     assert session.execute(text("SELECT 123")).scalar() == 123
 
 
 def test_startup_case_insensitive(environ):
-    from fastapi_sqla.sqla import _Session, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
 
     values = {k.upper(): v for k, v in environ.items()}
     with patch.dict("os.environ", values=values, clear=True):
         startup()
 
-    session = _Session()
+    session = _session_factories[_DEFAULT_SESSION_KEY]()
+
+    assert session.execute(text("SELECT 123")).scalar() == 123
+
+
+def test_startup_with_key(monkeypatch, db_url):
+    from fastapi_sqla.sqla import _session_factories, startup
+
+    key = "potato"
+    monkeypatch.setenv(f"fastapi_sqla__{key}__sqlalchemy_url", db_url)
+
+    startup(key)
+
+    session = _session_factories[key]()
 
     assert session.execute(text("SELECT 123")).scalar() == 123
 
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-async def test_startup_configure_async_session(monkeypatch, async_sqlalchemy_url):
-    from fastapi_sqla.async_sqla import _AsyncSession, startup
+async def test_startup_configure_async_session(async_session_key):
+    from fastapi_sqla.async_sqla import _async_session_factories, startup
 
-    monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
+    await startup(async_session_key)
 
-    await startup()
-
-    async with _AsyncSession() as session:
+    async with _async_session_factories[async_session_key]() as session:
         res = await session.execute(text("SELECT 123"))
 
     assert res.scalar() == 123
@@ -70,14 +81,14 @@ async def test_startup_configure_async_session(monkeypatch, async_sqlalchemy_url
 async def test_startup_configure_async_session_with_default_alchemy_url(
     monkeypatch, async_sqlalchemy_url
 ):
-    from fastapi_sqla.async_sqla import _AsyncSession, startup
+    from fastapi_sqla.async_sqla import _async_session_factories, startup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
-    monkeypatch.delenv("async_sqlalchemy_url")
     monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
 
     await startup()
 
-    async with _AsyncSession() as session:
+    async with _async_session_factories[_DEFAULT_SESSION_KEY]() as session:
         res = await session.execute(text("SELECT 123"))
 
     assert res.scalar() == 123
@@ -95,14 +106,14 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
+    from fastapi_sqla.async_sqla import startup
+
     monkeypatch.setenv(
-        "async_sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
+        "sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
     )
 
     with raises(Exception):
-        from fastapi_sqla import async_sqla
-
-        await async_sqla.startup()
+        await startup()
 
 
 @mark.require_boto3
@@ -124,14 +135,13 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 async def test_async_startup_with_aws_rds_iam_enabled(
-    monkeypatch, async_sqlalchemy_url, boto_session, boto_client_mock, db_host, db_user
+    monkeypatch, async_session_key, boto_session, boto_client_mock, db_host, db_user
 ):
     from fastapi_sqla.async_sqla import startup
 
     monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
-    monkeypatch.setenv("async_sqlalchemy_url", async_sqlalchemy_url)
 
-    await startup()
+    await startup(async_session_key)
 
     boto_client_mock.generate_db_auth_token.assert_called_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
@@ -139,15 +149,15 @@ async def test_async_startup_with_aws_rds_iam_enabled(
 
 
 async def test_fastapi_integration():
-    from fastapi_sqla import setup
-    from fastapi_sqla.sqla import _Session
+    from fastapi_sqla.base import setup
+    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories
 
     app = FastAPI()
     setup(app)
 
     @app.get("/one")
     def now():
-        session = _Session()
+        session = _session_factories[_DEFAULT_SESSION_KEY]()
         result = session.execute(text("SELECT 1")).scalar()
         session.close()
         return result

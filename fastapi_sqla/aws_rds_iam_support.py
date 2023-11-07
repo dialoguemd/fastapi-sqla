@@ -1,4 +1,5 @@
 from os import environ
+from typing import Any
 
 try:
     import boto3
@@ -11,9 +12,10 @@ except ImportError as err:
 from functools import lru_cache
 
 from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 
-def setup(engine):
+def setup(engine: Engine):
     lc_environ = {k.lower(): v for k, v in environ.items()}
     aws_rds_iam_enabled = lc_environ.get("fastapi_sqla_aws_rds_iam_enabled") == "true"
 
@@ -30,13 +32,13 @@ def get_rds_client():
     return session.client("rds")
 
 
-def get_authentication_token(host, port, user):
+def get_authentication_token(host: str, port: int, user: str):
     client = get_rds_client()
     token = client.generate_db_auth_token(DBHostname=host, Port=port, DBUsername=user)
     return token
 
 
-def set_connection_token(dialect, conn_rec, cargs, cparams):
+def set_connection_token(dialect, conn_rec, cargs, cparams: dict[str, Any]):
     cparams["password"] = get_authentication_token(
         host=cparams["host"], port=cparams.get("port", 5432), user=cparams["user"]
     )

@@ -6,25 +6,47 @@ orbs:
   python: dialogue/python@3.19.3
   utils: dialogue/utils@3.17.3
 
+aliases:
+  - &executor
+    executor:
+      name: python/python
+      version: "3.10"
+
+executors:
+  python-postgres:
+    parameters:
+      python_version:
+        type: string
+        default: "3.10"
+    docker:
+      - image: cimg/python:<< parameters.python_version >>
+      - image: postgres:14.4
+        name: postgres
+        environment:
+          POSTGRES_HOST_AUTH_METHOD: trust
+
 workflows:
   ci:
     jobs:
       - python/pylama:
           name: pylama
+          <<: *executor
           context: code-validator
       
       - python/isort:
           name: isort
+          <<: *executor
           context: code-validator
       
       - python/black:
           name: black
+          <<: *executor
           context: code-validator
       
       - python/run:
           name: mypy
           run: mypy .
-          executor: python
+          <<: *executor
           context: code-validator
       
       - test:
@@ -115,7 +137,7 @@ jobs:
           codecov_flag: python_version<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
 
   publish:
-    executor: python
+    <<: *executor
     working_directory: ~/project/.
     steps:
       - base/setup
@@ -125,19 +147,3 @@ jobs:
           command: |
             poetry config http-basic.pypi __token__ $PYPI_TOKEN
             poetry publish --build --no-interaction
-
-executors:
-  python:
-    docker:
-      - image: cimg/python:3.10
-  python-postgres:
-    parameters:
-      python_version:
-        type: string
-        default: "3.10"
-    docker:
-      - image: cimg/python:<< parameters.python_version >>
-      - image: postgres:14.4
-        name: postgres
-        environment:
-          POSTGRES_HOST_AUTH_METHOD: trust
