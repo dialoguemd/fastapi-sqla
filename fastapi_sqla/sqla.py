@@ -112,8 +112,7 @@ async def add_session_to_request(
             return session.execute(...) # use your session here
     """
     async with contextmanager_in_threadpool(open_session(key)) as session:
-        # TODO: This should use request.state
-        request.scope[f"{_REQUEST_SESSION_KEY}_{key}"] = session
+        request.state[f"{_REQUEST_SESSION_KEY}_{key}"] = session
 
         response = await call_next(request)
 
@@ -166,7 +165,7 @@ class SessionDependency:
                 pass
         """
         try:
-            return request.scope[f"{_REQUEST_SESSION_KEY}_{self.key}"]
+            return request.state[f"{_REQUEST_SESSION_KEY}_{self.key}"]
         except KeyError:
             logger.exception(
                 f"No session with key '{self.key}' found in request, "
