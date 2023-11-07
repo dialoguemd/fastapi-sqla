@@ -207,12 +207,9 @@ router = APIRouter()
 
 # Preferred
 
-read_only_session_dep = SessionDependency(key="read_only")
-ReadOnlySession = Annotated[SqlaSession, Depends(read_only_session_dep)]
-
-async_read_only_session_dep = AsyncSessionDependency(key="read_only")
+ReadOnlySession = Annotated[SqlaSession, Depends(SessionDependency(key="read_only"))]
 AsyncReadOnlySession = Annotated[
-    SqlaAsyncSession, Depends(async_read_only_session_dep)
+    SqlaAsyncSession, Depends(AsyncSessionDependency(key="read_only"))
 ]
 
 @router.get("/example")
