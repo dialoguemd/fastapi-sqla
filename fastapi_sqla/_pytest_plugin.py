@@ -160,7 +160,7 @@ if asyncio_support:  # noqa: C901
         return create_async_engine(async_sqlalchemy_url)
 
     @fixture
-    async def async_sqla_connection(async_engine, event_loop):
+    async def async_sqla_connection(async_engine):
         async with async_engine.connect() as connection:
             yield connection
 
