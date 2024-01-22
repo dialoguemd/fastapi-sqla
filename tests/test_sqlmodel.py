@@ -4,7 +4,7 @@ import httpx
 from asgi_lifespan import LifespanManager
 from pytest import fixture, mark
 
-pytestmark = [mark.sqlalchemy("2.0")]
+pytestmark = [mark.sqlalchemy("2.0"), mark.require_sqlmodel]
 
 
 @fixture(scope="module")
