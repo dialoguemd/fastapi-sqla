@@ -68,7 +68,7 @@ def _paginate_legacy(
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
     return Page(
-        data=query.offset(offset).limit(limit).all(),
+        data=query.offset(offset).limit(limit).all(),  # type: ignore
         meta={
             "offset": offset,
             "total_items": total_items,
@@ -90,10 +90,10 @@ def _paginate(
 ) -> Page:
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
-    query = query.offset(offset).limit(limit)
+    query = query.offset(offset).limit(limit)  # type: ignore
     result = session.execute(query)
     data = iter(
-        cast(Iterator, result.unique().scalars() if scalars else result.mappings())
+        cast(Iterator, result.unique().scalars() if scalars else result.mappings())  # type: ignore  # noqa
     )
     return Page(
         data=data,

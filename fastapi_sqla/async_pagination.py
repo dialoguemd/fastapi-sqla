@@ -19,7 +19,7 @@ PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
 async def default_query_count(session: SqlaAsyncSession, query: Select) -> int:
-    result = await session.execute(select(func.count()).select_from(query.subquery()))
+    result = await session.execute(select(func.count()).select_from(query.subquery()))  # type: ignore # noqa
     return cast(int, result.scalar())
 
 
@@ -34,10 +34,10 @@ async def paginate_query(
 ) -> Page:
     total_pages = math.ceil(total_items / limit)
     page_number = offset / limit + 1
-    query = query.offset(offset).limit(limit)
+    query = query.offset(offset).limit(limit)  # type: ignore
     result = await session.execute(query)
     data = iter(
-        cast(Iterator, result.unique().scalars() if scalars else result.mappings())
+        cast(Iterator, result.unique().scalars() if scalars else result.mappings())  # type: ignore # noqa
     )
     return Page(
         data=data,

@@ -70,11 +70,12 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
         raise
 
     Base.prepare(engine)
+
     if has_sqlmodel:
-        class_ = SQLModelSession
+        _session_factories[key] = sessionmaker(bind=engine, class_=SQLModelSession)
+
     else:
-        class_ = SqlaSession
-    _session_factories[key] = sessionmaker(bind=engine, class_=class_)
+        _session_factories[key] = sessionmaker(bind=engine, class_=SqlaSession)
 
     logger.info("engine startup", engine_key=key, engine=engine)
 
@@ -208,4 +209,4 @@ if has_sqlmodel:
 
 else:
     default_session_dep = SessionDependency[SqlaSession]()
-    Session = Annotated[SqlaSession, Depends(default_session_dep)]
+    Session = Annotated[SqlaSession, Depends(default_session_dep)]  # type: ignore
