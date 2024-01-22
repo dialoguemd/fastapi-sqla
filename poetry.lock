@@ -1508,9 +1508,10 @@ files = [
 [extras]
 asyncpg = ["asyncpg"]
 aws-rds-iam = ["boto3"]
-tests = ["Faker", "alembic", "asgi_lifespan", "black", "greenlet", "httpx", "isort", "mypy", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "sqlmodel", "tox"]
+sqlmodel = ["sqlmodel"]
+tests = ["Faker", "alembic", "asgi_lifespan", "black", "greenlet", "httpx", "isort", "mypy", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "f345049f51140edf906df17f774b77ec5eb1a33edb014e7b51ef9f4ca6f16146"
+content-hash = "f7e837f6f6b08aeedc54003b68dbaacb31ec37bff638f3f4494e8862a24e7b74"
