@@ -55,10 +55,10 @@ workflows:
           matrix:
             parameters:
               python_version: ["3.9", "3.10", "3.11"]
-              sqlalchemy_version: ["1.4", "2.0"]
+              sqlalchemy_version: ["1.4", "2.0", "-sqlmodel"]
               asyncpg: ["asyncpg", "noasyncpg"]
               aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
-              pydantic_version: ["1.10", "2.0", "2.1"]
+              pydantic_version: ["1", "2"]
       
       - release/release:
           name: release
@@ -97,7 +97,7 @@ jobs:
           Specify which version of python to run the tests against
       sqlalchemy_version:
         type: enum
-        enum: ["2.0", "1.4", "1.3"]
+        enum: ["-sqlmodel", "2.0", "1.4", "1.3"]
         description: |
           Specify which version of sqlalchemy to run the tests against
       asyncpg:
@@ -110,7 +110,7 @@ jobs:
         description: To run tests with and without asyncpg installed.
       pydantic_version:
         type: enum
-        enum: ["1.10", "2.0", "2.1"]
+        enum: ["1", "2"]
     executor:
       name: python-postgres
       python_version: <<parameters.python_version>>
