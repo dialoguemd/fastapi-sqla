@@ -170,7 +170,7 @@ async def add_session_to_request(
     return response
 
 
-S = TypeVar("SessionClass", bound=SqlaSession)
+S = TypeVar("S", bound=SqlaSession)
 
 
 class SessionDependency(Generic[S]):

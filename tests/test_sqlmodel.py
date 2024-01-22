@@ -1,3 +1,5 @@
+from typing import Optional
+
 import httpx
 from asgi_lifespan import LifespanManager
 from pytest import fixture, mark
@@ -10,10 +12,10 @@ def Hero():
     from sqlmodel import Field, SQLModel
 
     class Hero(SQLModel, table=True):
-        id: int | None = Field(default=None, primary_key=True)
+        id: Optional[int] = Field(default=None, primary_key=True)
         name: str
         secret_name: str
-        age: int | None = None
+        age: Optional[int] = None
 
     return Hero
 
@@ -33,8 +35,9 @@ def module_setup_tear_down(engine, Hero):
 @fixture
 def app(Hero):
     from fastapi import FastAPI
-    from fastapi_sqla import Collection, Session, setup
     from sqlmodel import select
+
+    from fastapi_sqla import Collection, Session, setup
 
     app = FastAPI()
     setup(app)

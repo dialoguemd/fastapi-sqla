@@ -16,8 +16,8 @@ def setup_tear_down(engine):
 
 def test_startup_reflect_test_table():
     from fastapi_sqla.sqla import (
-        Base,
         _DEFAULT_SESSION_KEY,
+        Base,
         _session_factories,
         startup,
     )
