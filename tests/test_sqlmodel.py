@@ -3,44 +3,50 @@ from typing import Optional
 import httpx
 from asgi_lifespan import LifespanManager
 from pytest import fixture, mark
+from sqlalchemy import text
 
 pytestmark = [mark.sqlalchemy("2.0"), mark.require_sqlmodel]
 
 
-@fixture(scope="module")
-def Hero():
-    from sqlmodel import Field, SQLModel
+@fixture(autouse=True, scope="module")
+def module_setup_tear_down(sqla_connection):
+
+    with sqla_connection.begin():
+        sqla_connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS hero (
+                    id integer primary key,
+                    name varchar not null,
+                    secret_name varchar not null,
+                    age integer
+                )
+                """
+            )
+        )
+        sqla_connection.execute(
+            text("INSERT INTO hero VALUES (123, 'Rusty-Man', 'Tommy Sharp', 48)")
+        )
+    yield
+    with sqla_connection.begin():
+        sqla_connection.execute(text("DROP TABLE hero"))
+
+
+@fixture
+def app():
+    from fastapi import FastAPI
+    from sqlmodel import Field, SQLModel, select
+
+    from fastapi_sqla import Collection, Session, setup
+
+    app = FastAPI()
+    setup(app)
 
     class Hero(SQLModel, table=True):
         id: Optional[int] = Field(default=None, primary_key=True)
         name: str
         secret_name: str
         age: Optional[int] = None
-
-    return Hero
-
-
-@fixture(autouse=True, scope="module")
-def module_setup_tear_down(engine, Hero):
-    from sqlmodel import Session, SQLModel
-
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        session.add(Hero(name="Rusty-Man", secret_name="Tommy Sharp", age=48))
-        session.commit()
-    yield
-    SQLModel.metadata.drop_all(engine)
-
-
-@fixture
-def app(Hero):
-    from fastapi import FastAPI
-    from sqlmodel import select
-
-    from fastapi_sqla import Collection, Session, setup
-
-    app = FastAPI()
-    setup(app)
 
     @app.get("/heros", response_model=Collection[Hero])
     def list_hero(session: Session) -> Collection[Hero]:
@@ -69,7 +75,7 @@ async def test_it(client):
     hero = data[0]
     assert hero == {
         "age": 48,
-        "id": 1,
+        "id": 123,
         "name": "Rusty-Man",
         "secret_name": "Tommy Sharp",
     }
