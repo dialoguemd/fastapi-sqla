@@ -8,7 +8,7 @@
 
 
 Fastapi-SQLA is an [SQLAlchemy] extension for [FastAPI] easy to setup with support for
-pagination, asyncio, and [pytest].
+pagination, asyncio, [SQLModel] and [pytest].
 It supports SQLAlchemy>=1.3 and is fully compliant with [SQLAlchemy 2.0].
 It is developped, maintained and used on production by the team at [@dialoguemd] with
 love from Montreal 🇨🇦.
@@ -539,6 +539,31 @@ async def async_all_users_alt(
     return await paginate(select(User))
 ```
 
+# SQLModel support
+
+If your project uses [SQLModel], then `Session` dependency is an SQLModel session::
+
+```python
+    from fastapi import FastAPI
+    from fastapi_sqla import Collection, Session, setup
+    from sqlmodel import Field, SQLModel, select
+
+    class Hero(SQLModel, table=True):
+        id: int | None = Field(default=None, primary_key=True)
+        name: str
+        secret_name: str
+        age: int | None = None
+
+
+    app = FastAPI()
+    setup(app)
+
+    @app.get("/heros", response_model=Collection[Hero])
+    def list_hero(session: Session) -> Collection[Hero]:
+        return {"data": session.exec(select(Hero)).all()}
+
+```
+
 # Pytest fixtures
 
 This library provides a set of utility fixtures, through its PyTest plugin, which is
@@ -709,6 +734,7 @@ $ poetry run tox
 [FastAPI background tasks]: https://fastapi.tiangolo.com/tutorial/background-tasks/
 [SQLAlchemy]: http://sqlalchemy.org/
 [SQLAlchemy 2.0]: https://docs.sqlalchemy.org/en/20/changelog/migration_20.html
+[SQLModel]: https://sqlmodel.tiangolo.com
 [`asyncpg`]: https://magicstack.github.io/asyncpg/current/
 [scalars]: https://docs.sqlalchemy.org/en/20/core/connections.html#sqlalchemy.engine.Result.scalars
 [alembic]: https://alembic.sqlalchemy.org/

@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Annotated
+from typing import Annotated, Generic, TypeVar
 
 import structlog
 from fastapi import Depends, Request
@@ -10,17 +10,37 @@ from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
-from fastapi_sqla.models import Base
+
+try:
+    from sqlalchemy.orm import DeclarativeBase
+except ImportError:
+    from sqlalchemy.ext.declarative import declarative_base
+
+    DeclarativeBase = declarative_base()  # type: ignore
+
+try:
+    from sqlmodel import Session as SQLModelSession
+
+    has_sqlmodel = True
+
+except ImportError:
+    has_sqlmodel = False
+
 
 logger = structlog.get_logger(__name__)
 
 _DEFAULT_SESSION_KEY = "default"
 _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
+
+
+class Base(DeclarativeBase, DeferredReflection):
+    __abstract__ = True
 
 
 def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Engine:
@@ -50,7 +70,11 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
         raise
 
     Base.prepare(engine)
-    _session_factories[key] = sessionmaker(bind=engine)
+    if has_sqlmodel:
+        class_ = SQLModelSession
+    else:
+        class_ = SqlaSession
+    _session_factories[key] = sessionmaker(bind=engine, class_=class_)
 
     logger.info("engine startup", engine_key=key, engine=engine)
 
@@ -146,11 +170,14 @@ async def add_session_to_request(
     return response
 
 
-class SessionDependency:
+S = TypeVar("SessionClass", bound=SqlaSession)
+
+
+class SessionDependency(Generic[S]):
     def __init__(self, key: str = _DEFAULT_SESSION_KEY) -> None:
         self.key = key
 
-    def __call__(self, request: Request) -> SqlaSession:
+    def __call__(self, request: Request) -> S:
         """Yield the sqlalchemy session for that request.
 
         It is meant to be used as a FastAPI dependency::
@@ -175,5 +202,10 @@ class SessionDependency:
             raise
 
 
-default_session_dep = SessionDependency()
-Session = Annotated[SqlaSession, Depends(default_session_dep)]
+if has_sqlmodel:
+    default_session_dep = SessionDependency[SQLModelSession]()
+    Session = Annotated[SQLModelSession, Depends(default_session_dep)]
+
+else:
+    default_session_dep = SessionDependency[SqlaSession]()
+    Session = Annotated[SqlaSession, Depends(default_session_dep)]
