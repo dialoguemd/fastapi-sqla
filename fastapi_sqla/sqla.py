@@ -208,5 +208,5 @@ if has_sqlmodel:
     Session = Annotated[SQLModelSession, Depends(default_session_dep)]
 
 else:
-    default_session_dep = SessionDependency[SqlaSession]()
+    default_session_dep = SessionDependency[SqlaSession]()  # type: ignore
     Session = Annotated[SqlaSession, Depends(default_session_dep)]  # type: ignore
