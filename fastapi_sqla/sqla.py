@@ -24,7 +24,7 @@ except ImportError:
     DeclarativeBase = declarative_base()  # type: ignore
 
 try:
-    from sqlmodel import Session as SqlaSession  # noqa # type: ignore
+    from sqlmodel import Session as SqlaSession  # type: ignore  # noqa
 
 except ImportError:
     pass
