@@ -24,12 +24,10 @@ except ImportError:
     DeclarativeBase = declarative_base()  # type: ignore
 
 try:
-    from sqlmodel import Session as SQLModelSession
-
-    has_sqlmodel = True
+    from sqlmodel import Session as SqlaSession  # noqa
 
 except ImportError:
-    has_sqlmodel = False
+    pass
 
 
 logger = structlog.get_logger(__name__)
@@ -71,11 +69,7 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
 
     Base.prepare(engine)
 
-    if has_sqlmodel:
-        _session_factories[key] = sessionmaker(bind=engine, class_=SQLModelSession)
-
-    else:
-        _session_factories[key] = sessionmaker(bind=engine, class_=SqlaSession)
+    _session_factories[key] = sessionmaker(bind=engine, class_=SqlaSession)
 
     logger.info("engine startup", engine_key=key, engine=engine)
 
@@ -203,10 +197,5 @@ class SessionDependency(Generic[S]):
             raise
 
 
-if has_sqlmodel:
-    default_session_dep = SessionDependency[SQLModelSession]()
-    Session = Annotated[SQLModelSession, Depends(default_session_dep)]
-
-else:
-    default_session_dep = SessionDependency[SqlaSession]()  # type: ignore
-    Session = Annotated[SqlaSession, Depends(default_session_dep)]  # type: ignore
+default_session_dep = SessionDependency[SqlaSession]()
+Session = Annotated[SqlaSession, Depends(default_session_dep)]
