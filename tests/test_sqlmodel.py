@@ -37,8 +37,9 @@ def app():
     from http import HTTPStatus
 
     from fastapi import FastAPI, HTTPException
-    from fastapi_sqla import Item, Page, Paginate, Session, setup
     from sqlmodel import Field, SQLModel, select
+
+    from fastapi_sqla import Item, Page, Paginate, Session, setup
 
     class Hero(SQLModel, table=True):
         id: Optional[int] = Field(default=None, primary_key=True)
