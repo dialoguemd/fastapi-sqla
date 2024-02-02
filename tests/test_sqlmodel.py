@@ -32,25 +32,33 @@ def module_setup_tear_down(sqla_connection):
         sqla_connection.execute(text("DROP TABLE hero"))
 
 
-@fixture
+@fixture(scope="module")
 def app():
-    from fastapi import FastAPI
+    from http import HTTPStatus
+
+    from fastapi import FastAPI, HTTPException
+    from fastapi_sqla import Item, Page, Paginate, Session, setup
     from sqlmodel import Field, SQLModel, select
 
-    from fastapi_sqla import Collection, Session, setup
+    class Hero(SQLModel, table=True):
+        id: int | None = Field(default=None, primary_key=True)
+        name: str
+        secret_name: str
+        age: int | None = None
 
     app = FastAPI()
     setup(app)
 
-    class Hero(SQLModel, table=True):
-        id: Optional[int] = Field(default=None, primary_key=True)
-        name: str
-        secret_name: str
-        age: Optional[int] = None
+    @app.get("/heros", response_model=Page[Hero])
+    def list_hero(paginate: Paginate) -> Page[Hero]:
+        return paginate(select(Hero))
 
-    @app.get("/heros", response_model=Collection[Hero])
-    def list_hero(session: Session) -> Collection[Hero]:
-        return {"data": session.exec(select(Hero)).all()}
+    @app.get("/heros/{hero_id}", response_model=Item[Hero])
+    def get_hero(hero_id: int, session: Session) -> Item[Hero]:
+        hero = session.get(Hero, hero_id)
+        if hero is None:
+            raise HTTPException(HTTPStatus.NOT_FOUND)
+        return {"data": hero}
 
     return app
 
@@ -65,7 +73,7 @@ async def client(app):
             yield client
 
 
-async def test_it(client):
+async def test_pagination(client):
     res = await client.get("/heros")
 
     assert res.status_code == 200, (res.status_code, res.content)
@@ -73,6 +81,22 @@ async def test_it(client):
     assert len(data) == 1
 
     hero = data[0]
+    assert hero == {
+        "age": 48,
+        "id": 123,
+        "name": "Rusty-Man",
+        "secret_name": "Tommy Sharp",
+    }
+
+    meta = res.json()["meta"]
+    assert meta == {"offset": 0, "page_number": 1, "total_items": 1, "total_pages": 1}
+
+
+async def test_get_item(client):
+    res = await client.get("/heros/123")
+    assert res.status_code == 200, (res.status_code, res.content)
+
+    hero = res.json()["data"]
     assert hero == {
         "age": 48,
         "id": 123,

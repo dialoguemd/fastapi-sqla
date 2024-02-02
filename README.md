@@ -539,13 +539,15 @@ async def async_all_users_alt(
     return await paginate(select(User))
 ```
 
-# SQLModel support
+# SQLModel support 🎉
 
 If your project uses [SQLModel], then `Session` dependency is an SQLModel session::
 
 ```python
-    from fastapi import FastAPI
-    from fastapi_sqla import Collection, Session, setup
+    from http import HTTPStatus
+
+    from fastapi import FastAPI, HTTPException
+    from fastapi_sqla import Item, Page, Paginate, Session, setup
     from sqlmodel import Field, SQLModel, select
 
     class Hero(SQLModel, table=True):
@@ -558,9 +560,17 @@ If your project uses [SQLModel], then `Session` dependency is an SQLModel sessio
     app = FastAPI()
     setup(app)
 
-    @app.get("/heros", response_model=Collection[Hero])
-    def list_hero(session: Session) -> Collection[Hero]:
-        return {"data": session.exec(select(Hero)).all()}
+    @app.get("/heros", response_model=Page[Hero])
+    def list_hero(paginate: Paginate) -> Page[Hero]:
+        return paginate(select(Hero))
+
+
+    @app.get("/heros/{hero_id}", response_model=Item[Hero])
+    def get_hero(hero_id: int, session: Session) -> Item[Hero]:
+        hero = session.get(Hero, hero_id)
+        if hero is None:
+            raise HTTPException(HTTPStatus.NOT_FOUND)
+        return {"data": hero}
 
 ```
 
