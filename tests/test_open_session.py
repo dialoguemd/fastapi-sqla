@@ -19,7 +19,7 @@ def module_setup_tear_down(sqla_connection):
 
 @fixture(scope="module")
 def test_table_cls():
-    from fastapi_sqla.sqla import Base
+    from fastapi_sqla import Base
 
     class TestTable(Base):
         __tablename__ = "test_table"

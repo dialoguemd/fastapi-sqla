@@ -25,6 +25,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "require_boto3: skip test if boto3 is not installed"
     )
+    config.addinivalue_line(
+        "markers", "require_sqlmodel: skip test if sqlmodel is not installed"
+    )
 
 
 @fixture(scope="session")
@@ -47,6 +50,15 @@ def is_asyncpg_installed():
 def is_boto3_installed():
     try:
         import boto3  # noqa
+    except ImportError:
+        return False
+    else:
+        return True
+
+
+def is_sqlmodel_installed():
+    try:
+        import sqlmodel  # noqa
     except ImportError:
         return False
     else:
@@ -125,6 +137,14 @@ def check_bobo3(request):
     marker = request.node.get_closest_marker("require_boto3")
     if marker and not is_boto3_installed():
         skip("This test requires boto3. Skipping as boto3 is not installed.")
+
+
+@fixture(autouse=True)
+def check_sqlmodel(request):
+    "Skip test marked with mark.require_sqlmodel if sqlmodel is not installed."
+    marker = request.node.get_closest_marker("require_sqlmodel")
+    if marker and not is_sqlmodel_installed():
+        skip("This test requires sqlmodel. Skipping as sqlmodel is not installed.")
 
 
 @fixture(scope="session")

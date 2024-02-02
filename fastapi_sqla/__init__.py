@@ -1,7 +1,13 @@
 from fastapi_sqla.base import setup
-from fastapi_sqla.models import Base, Collection, Item, Page
+from fastapi_sqla.models import Collection, Item, Page
 from fastapi_sqla.pagination import Paginate, PaginateSignature, Pagination
-from fastapi_sqla.sqla import Session, SessionDependency, SqlaSession, open_session
+from fastapi_sqla.sqla import (
+    Base,
+    Session,
+    SessionDependency,
+    SqlaSession,
+    open_session,
+)
 
 __all__ = [
     "Base",
