@@ -32,7 +32,7 @@ def module_setup_tear_down(sqla_connection):
         sqla_connection.execute(text("DROP TABLE hero"))
 
 
-@fixture(scope="module")
+@fixture
 def app():
     from http import HTTPStatus
 
@@ -41,7 +41,8 @@ def app():
 
     from fastapi_sqla import Item, Page, Paginate, Session, setup
 
-    class Hero(SQLModel, table=True):
+    class Hero(SQLModel, table=True, extend_existing=True):
+        __table_args__ = {"extend_existing": True}
         id: Optional[int] = Field(default=None, primary_key=True)
         name: str
         secret_name: str
