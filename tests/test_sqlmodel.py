@@ -41,10 +41,10 @@ def app():
     from sqlmodel import Field, SQLModel, select
 
     class Hero(SQLModel, table=True):
-        id: int | None = Field(default=None, primary_key=True)
+        id: Optional[int] = Field(default=None, primary_key=True)
         name: str
         secret_name: str
-        age: int | None = None
+        age: Optional[int] = None
 
     app = FastAPI()
     setup(app)
