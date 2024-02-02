@@ -29,7 +29,6 @@ try:
 except ImportError:
     pass
 
-SQLASession = SqlaSession  # To keep backward compatibility
 
 logger = structlog.get_logger(__name__)
 
@@ -70,20 +69,20 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
 
     Base.prepare(engine)
 
-    _session_factories[key] = sessionmaker(bind=engine, class_=SQLASession)
+    _session_factories[key] = sessionmaker(bind=engine, class_=SqlaSession)
 
     logger.info("engine startup", engine_key=key, engine=engine)
 
 
 @contextmanager
-def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SQLASession, None, None]:
+def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None, None]:
     """Context manager that opens a session and properly closes session when exiting.
 
     If no exception is raised before exiting context, session is committed when exiting
     context. If an exception is raised, session is rollbacked.
     """
     try:
-        session: SQLASession = _session_factories[key]()
+        session: SqlaSession = _session_factories[key]()
     except KeyError as exc:
         raise KeyError(
             f"No session with key '{key}' found, "
@@ -166,7 +165,7 @@ async def add_session_to_request(
     return response
 
 
-S = TypeVar("S", bound=SQLASession)
+S = TypeVar("S", bound=SqlaSession)
 
 
 class SessionDependency(Generic[S]):
@@ -179,12 +178,12 @@ class SessionDependency(Generic[S]):
         It is meant to be used as a FastAPI dependency::
 
             from fastapi import APIRouter, Depends
-            from fastapi_sqla import SQLASession, SessionDependency
+            from fastapi_sqla import SqlaSession, SessionDependency
 
             router = APIRouter()
 
             @router.get("/users")
-            def get_users(session: SQLASession = Depends(SessionDependency())):
+            def get_users(session: SqlaSession = Depends(SessionDependency())):
                 pass
         """
         try:
@@ -198,5 +197,5 @@ class SessionDependency(Generic[S]):
             raise
 
 
-default_session_dep = SessionDependency[SQLASession]()
-Session = Annotated[SQLASession, Depends(default_session_dep)]
+default_session_dep = SessionDependency[SqlaSession]()
+Session = Annotated[SqlaSession, Depends(default_session_dep)]
