@@ -1439,7 +1439,7 @@ files = [
 asyncpg = ["asyncpg"]
 aws-rds-iam = ["boto3"]
 sqlmodel = ["sqlmodel"]
-tests = ["Faker", "alembic", "asgi_lifespan", "black", "greenlet", "httpx", "isort", "mypy", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "pytest-watch", "tox"]
+tests = ["Faker", "alembic", "asgi_lifespan", "black", "greenlet", "httpx", "isort", "mypy", "pdbpp", "psycopg2", "pylama", "pytest", "pytest-asyncio", "pytest-cov", "tox"]
 
 [metadata]
 lock-version = "2.0"
