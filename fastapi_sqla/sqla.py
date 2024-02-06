@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Annotated, Generic, TypeVar
+from typing import Annotated
 
 import structlog
 from fastapi import Depends, Request
@@ -165,14 +165,11 @@ async def add_session_to_request(
     return response
 
 
-S = TypeVar("S", bound=SqlaSession)
-
-
-class SessionDependency(Generic[S]):
+class SessionDependency:
     def __init__(self, key: str = _DEFAULT_SESSION_KEY) -> None:
         self.key = key
 
-    def __call__(self, request: Request) -> S:
+    def __call__(self, request: Request) -> SqlaSession:
         """Yield the sqlalchemy session for that request.
 
         It is meant to be used as a FastAPI dependency::
@@ -197,5 +194,5 @@ class SessionDependency(Generic[S]):
             raise
 
 
-default_session_dep = SessionDependency[SqlaSession]()
+default_session_dep = SessionDependency()
 Session = Annotated[SqlaSession, Depends(default_session_dep)]
