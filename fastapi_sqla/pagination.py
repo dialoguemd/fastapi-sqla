@@ -7,7 +7,7 @@ from fastapi import Depends, Query
 from sqlalchemy.orm import Query as LegacyQuery
 from sqlalchemy.sql import Select, func, select
 
-from fastapi_sqla.models import Page
+from fastapi_sqla.models import Meta, Page
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, SessionDependency, SqlaSession
 
 DbQuery = Union[LegacyQuery, Select]
@@ -66,15 +66,15 @@ def _paginate_legacy(
     scalars: bool = True,
 ) -> Page:
     total_pages = math.ceil(total_items / limit)
-    page_number = offset / limit + 1
+    page_number = math.floor(offset / limit + 1)
     return Page(
-        data=query.offset(offset).limit(limit).all(),  # type: ignore
-        meta={
-            "offset": offset,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "page_number": page_number,
-        },
+        data=query.offset(offset).limit(limit).all(),
+        meta=Meta(
+            offset=offset,
+            total_items=total_items,
+            total_pages=total_pages,
+            page_number=page_number,
+        ),
     )
 
 
@@ -89,20 +89,20 @@ def _paginate(
     scalars: bool = True,
 ) -> Page:
     total_pages = math.ceil(total_items / limit)
-    page_number = offset / limit + 1
-    query = query.offset(offset).limit(limit)  # type: ignore
+    page_number = math.floor(offset / limit + 1)
+    query = query.offset(offset).limit(limit)
     result = session.execute(query)
     data = iter(
-        cast(Iterator, result.unique().scalars() if scalars else result.mappings())  # type: ignore  # noqa
+        cast(Iterator, result.unique().scalars() if scalars else result.mappings())
     )
     return Page(
-        data=data,
-        meta={
-            "offset": offset,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "page_number": page_number,
-        },
+        data=data,  # type: ignore # Expected to be a list
+        meta=Meta(
+            offset=offset,
+            total_items=total_items,
+            total_pages=total_pages,
+            page_number=page_number,
+        ),
     )
 
 
