@@ -4,12 +4,7 @@ from sqlalchemy.orm import joinedload
 
 @mark.parametrize(
     "offset,limit,total_pages,page_number",
-    [
-        (0, 5, 9, 1),
-        (10, 10, 5, 2),
-        (40, 10, 5, 5),
-        (36, 10, 5, 4),
-    ],
+    [(0, 5, 9, 1), (10, 10, 5, 2), (40, 10, 5, 5), (36, 10, 5, 4)],
 )
 def test_pagination(
     session, user_cls, offset, limit, total_pages, page_number, nb_users
