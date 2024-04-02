@@ -1,10 +1,10 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.21.5
-  release: dialogue/release@2.17.6
-  python: dialogue/python@3.20.2
-  utils: dialogue/utils@3.17.6
+  base: dialogue/base@1.21.7
+  release: dialogue/release@2.17.8
+  python: dialogue/python@3.20.4
+  utils: dialogue/utils@3.17.8
 
 aliases:
   - &executor
