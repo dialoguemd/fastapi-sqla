@@ -147,6 +147,9 @@ ignore = [
   "TD001", # Enable FIXMEs
   "TD002", # Enable TODOs without author
   "TD003", # Enable TODOs without issue link
+  "N802", # FastAPI dependency conventions is title cased
+  "N803", # Same as N802
+  "N806", # Same as N802
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
