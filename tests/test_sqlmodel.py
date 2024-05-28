@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import ClassVar, Optional
 
 import httpx
 from asgi_lifespan import LifespanManager
@@ -41,7 +41,7 @@ def app():
     from fastapi_sqla import Item, Page, Paginate, Session, setup
 
     class Hero(SQLModel, table=True, extend_existing=True):
-        __table_args__ = {"extend_existing": True}
+        __table_args__: ClassVar = {"extend_existing": True}
         id: Optional[int] = Field(default=None, primary_key=True)
         name: str
         secret_name: str
