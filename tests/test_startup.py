@@ -162,10 +162,10 @@ async def test_fastapi_integration():
         session.close()
         return result
 
-    async with LifespanManager(app):
-        async with httpx.AsyncClient(
-            app=app, base_url="http://example.local"
-        ) as client:
-            res = await client.get("/one")
+    async with (
+        LifespanManager(app),
+        httpx.AsyncClient(app=app, base_url="http://example.local") as client,
+    ):
+        res = await client.get("/one")
 
     assert res.json() == 1

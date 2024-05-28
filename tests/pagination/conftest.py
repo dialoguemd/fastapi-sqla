@@ -208,8 +208,8 @@ def app(user_cls, note_cls, monkeypatch, db_url):
 
 @fixture
 async def client(app):
-    async with LifespanManager(app):
-        async with httpx.AsyncClient(
-            app=app, base_url="http://example.local"
-        ) as client:
-            yield client
+    async with (
+        LifespanManager(app),
+        httpx.AsyncClient(app=app, base_url="http://example.local") as client,
+    ):
+        yield client
