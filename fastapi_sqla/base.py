@@ -30,7 +30,10 @@ def setup(app: FastAPI):
                 functools.partial(sqla.add_session_to_request, key=key)
             )
         else:
-            assert has_asyncio_support, asyncio_support_err
+            if not has_asyncio_support:
+                raise ImportError(
+                    f"asyncio is required for async dialect: {asyncio_support_err}"
+                )
             app.add_event_handler(
                 "startup", functools.partial(async_sqla.startup, key=key)
             )
