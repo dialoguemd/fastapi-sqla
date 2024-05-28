@@ -157,6 +157,7 @@ ignore = [
   "S101", # Enable assert
   "S105", # Disable passwords check
   "S106", # Disable passwords check
+  "S608", # Allow SQL string construction
 ]
 
 [tool.ruff.lint.pydocstyle]
