@@ -4,6 +4,7 @@ import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from pytest import fixture, mark, raises
+from sqlalchemy import exc as sqlalcemy_exception
 from sqlalchemy import text
 
 
@@ -99,20 +100,22 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
 
     monkeypatch.setenv("sqlalchemy_url", "postgresql://postgres@localhost/notexisting")
 
-    with raises(Exception):
+    with raises(sqlalcemy_exception.OperationalError):
         startup()
 
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
+    from asyncpg.exceptions import InvalidCatalogNameError
+
     from fastapi_sqla.async_sqla import startup
 
     monkeypatch.setenv(
         "sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
     )
 
-    with raises(Exception):
+    with raises(InvalidCatalogNameError):
         await startup()
 
 

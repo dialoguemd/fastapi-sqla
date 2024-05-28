@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 from pytest import mark, raises
+from sqlalchemy import exc as sqlalcemy_exception
 from sqlalchemy import text
 
 
@@ -15,7 +16,7 @@ def test_sync_disconnects_on_readonly_error(monkeypatch):
 
     session = _session_factories[_DEFAULT_SESSION_KEY]()
     connection = session.connection(execution_options={"postgresql_readonly": True})
-    with raises(Exception):
+    with raises(sqlalcemy_exception.InternalError):
         connection.execute(text("CREATE TABLE fail(id integer)"))
 
     assert connection.invalidated
@@ -35,7 +36,7 @@ async def test_async_disconnects_on_readonly_error(monkeypatch, async_session_ke
     connection = await session.connection(
         execution_options={"postgresql_readonly": True}
     )
-    with raises(Exception):
+    with raises(sqlalcemy_exception.DBAPIError):
         await connection.execute(text("CREATE TABLE fail(id integer)"))
 
     assert connection.invalidated
