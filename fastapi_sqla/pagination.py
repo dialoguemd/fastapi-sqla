@@ -1,7 +1,7 @@
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from functools import singledispatch
-from typing import Annotated, Iterator, Optional, Union, cast
+from typing import Annotated, Optional, Union, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.orm import Query as LegacyQuery
@@ -52,7 +52,7 @@ def paginate_query(
     limit: int,
     scalars: bool = True,
 ) -> Page:  # pragma: no cover
-    "Dispatch on registered functions based on `query` type"
+    """Dispatch on registered functions based on `query` type"""
     raise NotImplementedError(f"no paginate_query registered for type {type(query)!r}")
 
 

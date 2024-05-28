@@ -10,7 +10,6 @@ pytestmark = [mark.sqlalchemy("2.0"), mark.require_sqlmodel]
 
 @fixture(autouse=True, scope="module")
 def module_setup_tear_down(sqla_connection):
-
     with sqla_connection.begin():
         sqla_connection.execute(
             text(
