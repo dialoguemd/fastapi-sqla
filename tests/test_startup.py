@@ -95,10 +95,12 @@ async def test_startup_configure_async_session_with_default_alchemy_url(
     assert res.scalar() == 123
 
 
-def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
+def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch, db_user, db_host):
     from fastapi_sqla.sqla import startup
 
-    monkeypatch.setenv("sqlalchemy_url", "postgresql://postgres@localhost/notexisting")
+    monkeypatch.setenv(
+        "sqlalchemy_url", f"postgresql://{db_user}@{db_host}/notexisting"
+    )
 
     with raises(sqlalcemy_exception.OperationalError):
         startup()
@@ -106,15 +108,16 @@ def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
+async def test_async_startup_fail_on_bad_async_sqlalchemy_url(
+    monkeypatch, db_user, db_host
+):
     from asyncpg.exceptions import InvalidCatalogNameError
 
     from fastapi_sqla.async_sqla import startup
 
     monkeypatch.setenv(
-        "sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
+        "sqlalchemy_url", f"postgresql+asyncpg://{db_user}@{db_host}/notexisting"
     )
-
     with raises(InvalidCatalogNameError):
         await startup()
 
