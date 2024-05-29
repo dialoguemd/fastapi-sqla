@@ -47,10 +47,8 @@ structlog = ">=20"
 alembic = { version = "^1.4.3", optional = true}
 asgi_lifespan = { version = "^1.0.1", optional = true}
 asyncpg = {version = "^0.28.0", optional = true}
-black = {version = "^22.8.0", optional = true}
 Faker = {version = "^14.2.0", optional = true}
 httpx = {version = "^0.23.0", optional = true}
-isort = { version = "^5.5.3", optional = true}
 pdbpp = { version = "^0.10.2", optional = true}
 psycopg2 = { version = "^2.8.6", optional = true}
 pytest = {version = "^7.2.1", optional = true}
@@ -69,12 +67,10 @@ sqlmodel = { version = "^0.0.14", optional = true }
 tests = [
     "alembic",
     "asgi_lifespan",
-    "black",
     "coverage",
     "Faker",
     "greenlet",
     "httpx",
-    "isort",
     "mypy",
     "pdbpp",
     "psycopg2",
@@ -217,10 +213,6 @@ extras =
 
 commands = pytest -vv --cov={envsitepackagesdir}/fastapi_sqla --cov-report xml --cov-report html --junitxml=test-reports/pytest/junit.xml
 """
-
-[tool.black]
-exclude = ".mypy_cache|.pytest_cache|.vscode|.eggs|venv"
---skip-magic-trailing-comma = true
 
 [tool.mypy]
 exclude = ["tests"]
