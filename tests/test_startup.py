@@ -137,6 +137,19 @@ def test_sync_startup_with_aws_rds_iam_enabled(
     )
 
 
+@mark.require_no_boto3
+def test_sync_startup_with_aws_rds_iam_enabled_no_boto(monkeypatch):
+    from fastapi_sqla.sqla import startup
+
+    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
+
+    with raises(ImportError) as error:
+        startup()
+    assert (
+        error.value.args[0] == "boto3 is required for RDS IAM : No module named 'boto3'"
+    )
+
+
 @mark.require_boto3
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")

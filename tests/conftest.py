@@ -26,6 +26,9 @@ def pytest_configure(config):
         "markers", "require_boto3: skip test if boto3 is not installed"
     )
     config.addinivalue_line(
+        "markers", "require_no_boto3: skip test if boto3 is installed"
+    )
+    config.addinivalue_line(
         "markers", "require_sqlmodel: skip test if sqlmodel is not installed"
     )
 
@@ -132,11 +135,19 @@ def check_asyncpg(request):
 
 
 @fixture(autouse=True)
-def check_bobo3(request):
+def check_boto3(request):
     """Skip test marked with mark.require_boto3 if boto3  is not installed."""
     marker = request.node.get_closest_marker("require_boto3")
     if marker and not is_boto3_installed():
         skip("This test requires boto3. Skipping as boto3 is not installed.")
+
+
+@fixture(autouse=True)
+def check_no_boto3(request):
+    """Skip test marked with mark.require_no_boto3 if boto3is installed."""
+    marker = request.node.get_closest_marker("require_no_boto3")
+    if marker and is_boto3_installed():
+        skip("This test requires boto3 to be absent. Skipping as boto3 is installed.")
 
 
 @fixture(autouse=True)
