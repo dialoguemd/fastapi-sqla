@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import ClassVar, Optional
 
 import httpx
 from asgi_lifespan import LifespanManager
@@ -10,7 +10,6 @@ pytestmark = [mark.sqlalchemy("2.0"), mark.require_sqlmodel]
 
 @fixture(autouse=True, scope="module")
 def module_setup_tear_down(sqla_connection):
-
     with sqla_connection.begin():
         sqla_connection.execute(
             text(
@@ -42,7 +41,7 @@ def app():
     from fastapi_sqla import Item, Page, Paginate, Session, setup
 
     class Hero(SQLModel, table=True, extend_existing=True):
-        __table_args__ = {"extend_existing": True}
+        __table_args__: ClassVar = {"extend_existing": True}
         id: Optional[int] = Field(default=None, primary_key=True)
         name: str
         secret_name: str

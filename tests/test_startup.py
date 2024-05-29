@@ -4,6 +4,7 @@ import httpx
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from pytest import fixture, mark, raises
+from sqlalchemy import exc as sqlalcemy_exception
 from sqlalchemy import text
 
 
@@ -94,25 +95,30 @@ async def test_startup_configure_async_session_with_default_alchemy_url(
     assert res.scalar() == 123
 
 
-def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch):
+def test_startup_fail_on_bad_sqlalchemy_url(monkeypatch, db_user, db_host):
     from fastapi_sqla.sqla import startup
 
-    monkeypatch.setenv("sqlalchemy_url", "postgresql://postgres@localhost/notexisting")
+    monkeypatch.setenv(
+        "sqlalchemy_url", f"postgresql://{db_user}@{db_host}/notexisting"
+    )
 
-    with raises(Exception):
+    with raises(sqlalcemy_exception.OperationalError):
         startup()
 
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-async def test_async_startup_fail_on_bad_async_sqlalchemy_url(monkeypatch):
+async def test_async_startup_fail_on_bad_async_sqlalchemy_url(
+    monkeypatch, db_user, db_host
+):
+    from asyncpg.exceptions import InvalidCatalogNameError
+
     from fastapi_sqla.async_sqla import startup
 
     monkeypatch.setenv(
-        "sqlalchemy_url", "postgresql+asyncpg://postgres@localhost/notexisting"
+        "sqlalchemy_url", f"postgresql+asyncpg://{db_user}@{db_host}/notexisting"
     )
-
-    with raises(Exception):
+    with raises(InvalidCatalogNameError):
         await startup()
 
 
@@ -128,6 +134,19 @@ def test_sync_startup_with_aws_rds_iam_enabled(
 
     boto_client_mock.generate_db_auth_token.assert_called_once_with(
         DBHostname=db_host, Port=5432, DBUsername=db_user
+    )
+
+
+@mark.require_no_boto3
+def test_sync_startup_with_aws_rds_iam_enabled_no_boto(monkeypatch):
+    from fastapi_sqla.sqla import startup
+
+    monkeypatch.setenv("fastapi_sqla_aws_rds_iam_enabled", "true")
+
+    with raises(ImportError) as error:
+        startup()
+    assert (
+        error.value.args[0] == "boto3 is required for RDS IAM : No module named 'boto3'"
     )
 
 
@@ -162,10 +181,10 @@ async def test_fastapi_integration():
         session.close()
         return result
 
-    async with LifespanManager(app):
-        async with httpx.AsyncClient(
-            app=app, base_url="http://example.local"
-        ) as client:
-            res = await client.get("/one")
+    async with (
+        LifespanManager(app),
+        httpx.AsyncClient(app=app, base_url="http://example.local") as client,
+    ):
+        res = await client.get("/one")
 
     assert res.json() == 1

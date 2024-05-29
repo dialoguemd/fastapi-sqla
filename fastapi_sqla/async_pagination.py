@@ -1,6 +1,6 @@
 import math
-from collections.abc import Awaitable, Callable
-from typing import Annotated, Iterator, Optional, Union, cast
+from collections.abc import Awaitable, Callable, Iterator
+from typing import Annotated, Optional, Union, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.sql import Select, func, select

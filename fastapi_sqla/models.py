@@ -3,7 +3,7 @@ from typing import Generic, TypeVar
 from pydantic import BaseModel, Field
 from pydantic import __version__ as pydantic_version
 
-major, _, _ = [int(v) for v in pydantic_version.split(".")]
+major, _, _ = (int(v) for v in pydantic_version.split("."))
 is_pydantic2 = major == 2
 if is_pydantic2:
     GenericModel = BaseModel

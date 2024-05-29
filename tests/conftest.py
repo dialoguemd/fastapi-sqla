@@ -26,13 +26,16 @@ def pytest_configure(config):
         "markers", "require_boto3: skip test if boto3 is not installed"
     )
     config.addinivalue_line(
+        "markers", "require_no_boto3: skip test if boto3 is installed"
+    )
+    config.addinivalue_line(
         "markers", "require_sqlmodel: skip test if sqlmodel is not installed"
     )
 
 
 @fixture(scope="session")
 def sqla_version_tuple():
-    "Return sqla version major and minor in a tuple: '1.3.10' -> (1, 3)"
+    """Return sqla version major and minor in a tuple: '1.3.10' -> (1, 3)"""
     from sqlalchemy import __version__
 
     return tuple(int(i) for i in __version__.split("."))[:2]
@@ -79,9 +82,9 @@ def environ(db_url, sqla_version_tuple, async_session_key, async_sqlalchemy_url)
     }
 
     if sqla_version_tuple >= (1, 4) and is_asyncpg_installed():
-        values[
-            f"fastapi_sqla__{async_session_key}__sqlalchemy_url"
-        ] = async_sqlalchemy_url
+        values[f"fastapi_sqla__{async_session_key}__sqlalchemy_url"] = (
+            async_sqlalchemy_url
+        )
 
     with patch.dict("os.environ", values=values, clear=True):
         yield values
@@ -110,7 +113,7 @@ def sqla_modules():
 
 @fixture(autouse=True)
 def check_sqlalchemy_version(request, sqla_version_tuple):
-    "Mark test with `mark.sqlalchemy('x.y')` to skip on unexpected sqla version."
+    """Mark test with `mark.sqlalchemy('x.y')` to skip on unexpected sqla version."""
     from sqlalchemy import __version__
 
     marker = request.node.get_closest_marker("sqlalchemy")
@@ -125,23 +128,31 @@ def check_sqlalchemy_version(request, sqla_version_tuple):
 
 @fixture(autouse=True)
 def check_asyncpg(request):
-    "Skip test marked with mark.require_asyncpg if asyncpg is not installed."
+    """Skip test marked with mark.require_asyncpg if asyncpg is not installed."""
     marker = request.node.get_closest_marker("require_asyncpg")
     if marker and not is_asyncpg_installed():
         skip("This test requires asyncpg. Skipping as asyncpg is not installed.")
 
 
 @fixture(autouse=True)
-def check_bobo3(request):
-    "Skip test marked with mark.require_boto3 if boto3  is not installed."
+def check_boto3(request):
+    """Skip test marked with mark.require_boto3 if boto3  is not installed."""
     marker = request.node.get_closest_marker("require_boto3")
     if marker and not is_boto3_installed():
         skip("This test requires boto3. Skipping as boto3 is not installed.")
 
 
 @fixture(autouse=True)
+def check_no_boto3(request):
+    """Skip test marked with mark.require_no_boto3 if boto3is installed."""
+    marker = request.node.get_closest_marker("require_no_boto3")
+    if marker and is_boto3_installed():
+        skip("This test requires boto3 to be absent. Skipping as boto3 is installed.")
+
+
+@fixture(autouse=True)
 def check_sqlmodel(request):
-    "Skip test marked with mark.require_sqlmodel if sqlmodel is not installed."
+    """Skip test marked with mark.require_sqlmodel if sqlmodel is not installed."""
     marker = request.node.get_closest_marker("require_sqlmodel")
     if marker and not is_sqlmodel_installed():
         skip("This test requires sqlmodel. Skipping as sqlmodel is not installed.")

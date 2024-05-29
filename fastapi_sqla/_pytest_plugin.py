@@ -28,7 +28,6 @@ def db_host():
     When CI key is set in environment variables, it uses `postgres` as host name else,
     host used is `localhost`
     """
-
     return "postgres" if "CI" in os.environ else "localhost"
 
 
@@ -38,7 +37,6 @@ def db_user():
 
     postgres
     """
-
     return "postgres"
 
 
@@ -48,7 +46,6 @@ def db_url(db_host, db_user):
 
     db url example postgresql://{db_user}@{db_host}/postgres
     """
-
     return f"postgresql://{db_user}@{db_host}/postgres"
 
 
@@ -107,7 +104,6 @@ def sqla_reflection(sqla_modules, sqla_connection):
 @fixture
 def patch_engine_from_config(request, sqla_connection):
     """So that all DB operations are never written to db for real."""
-
     if "dont_patch_engines" in request.keywords:
         yield
     else:
@@ -153,7 +149,7 @@ def async_sqlalchemy_url(db_url):
     return format_async_async_sqlalchemy_url(db_url)
 
 
-if asyncio_support:  # noqa: C901
+if asyncio_support:
 
     @fixture
     def async_engine(async_sqlalchemy_url):
@@ -167,7 +163,6 @@ if asyncio_support:  # noqa: C901
     @fixture
     async def patch_new_engine(request, async_sqla_connection):
         """So that all async DB operations are never written to db for real."""
-
         if "dont_patch_engines" in request.keywords:
             yield
         else:

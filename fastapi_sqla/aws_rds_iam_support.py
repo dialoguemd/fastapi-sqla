@@ -20,7 +20,8 @@ def setup(engine: Engine):
     aws_rds_iam_enabled = lc_environ.get("fastapi_sqla_aws_rds_iam_enabled") == "true"
 
     if aws_rds_iam_enabled:
-        assert boto3_installed, boto3_installed_err
+        if not boto3_installed:
+            raise ImportError(f"boto3 is required for RDS IAM : {boto3_installed_err}")
         # Cache the client at startup
         get_rds_client()
         event.listen(engine, "do_connect", set_connection_token)

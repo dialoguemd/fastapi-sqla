@@ -28,29 +28,19 @@ executors:
 workflows:
   ci:
     jobs:
-      - python/pylama:
-          name: pylama
-          <<: *executor
-          context: code-validator
-      
-      - python/isort:
-          name: isort
-          <<: *executor
-          context: code-validator
-      
-      - python/black:
-          name: black
+      - python/lint:
+          name: 👮 lint
           <<: *executor
           context: code-validator
       
       - python/run:
-          name: mypy
+          name: 👮 mypy
           run: mypy .
           <<: *executor
           context: code-validator
       
       - test:
-          name: test py<<matrix.python_version>> sqlalchemy-<<matrix.sqlalchemy_version >> pydantic-<<matrix.pydantic_version>> <<matrix.asyncpg>> <<matrix.aws_rds_iam>>
+          name: 🧪 test py<<matrix.python_version>> sqlalchemy-<<matrix.sqlalchemy_version >> pydantic-<<matrix.pydantic_version>> <<matrix.asyncpg>> <<matrix.aws_rds_iam>>
           context: code-validator
           matrix:
             parameters:
@@ -61,12 +51,11 @@ workflows:
               pydantic_version: ["1", "2"]
       
       - release/release:
-          name: release
+          name: 🕊 release
           requires:
-            - pylama
-            - black
-            - isort
             - test
+            - 👮 lint
+            - 👮 mypy
           context:
             - slack-release
             - base-github-ci
@@ -77,7 +66,7 @@ workflows:
   publish:
     jobs:
       - publish:
-          name: publish
+          name: 🚀 publish
           context: code-validator # Needed to build, the upload token is in the CI env vars
           filters:
             tags:

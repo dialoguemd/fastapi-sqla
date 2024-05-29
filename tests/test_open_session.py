@@ -70,12 +70,9 @@ def test_open_session_rollback_when_error_occurs_in_context(startup, test_table_
 
     error = Exception("Error in context")
 
-    with raises(Exception) as raise_info:
-        with open_session() as session:
-            session.execute(
-                insert(test_table_cls).values(id=1, value="bobby drop tables")
-            )
-            raise error
+    with raises(Exception) as raise_info, open_session() as session:
+        session.execute(insert(test_table_cls).values(id=1, value="bobby drop tables"))
+        raise error
 
     assert raise_info.value == error
 
@@ -118,11 +115,8 @@ def test_open_session_re_raise_exception_when_commit_fails(
     )
     session.flush()
 
-    with raises(Exception) as raise_info:
-        with open_session() as session:
-            session.add(
-                test_table_cls(id=existing_record_id, value="bobby already exists")
-            )
+    with raises(Exception) as raise_info, open_session() as session:
+        session.add(test_table_cls(id=existing_record_id, value="bobby already exists"))
 
     assert isinstance(raise_info.value, IntegrityError)
 
@@ -154,9 +148,8 @@ async def test_open_async_session_re_raise_exception_when_commit_fails(
 def test_open_session_raises_unknown_key(startup):
     from fastapi_sqla.sqla import open_session
 
-    with raises(KeyError) as raise_info:
-        with open_session(key="unknown"):
-            pass
+    with raises(KeyError) as raise_info, open_session(key="unknown"):
+        pass
 
     assert "No session with key" in raise_info.value.args[0]
 
