@@ -163,7 +163,7 @@ app = FastAPI(lifespan=lifespan)
 fastapi_sqla.setup_middlewares(app)
 ```
 
-## Setup the app using startup/shutdown events (legacy):
+## Setup the app using startup/shutdown events (deprecated):
 
 ```python
 import fastapi_sqla
