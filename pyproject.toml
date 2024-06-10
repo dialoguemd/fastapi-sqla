@@ -60,6 +60,7 @@ boto3 = {version = "^1.24.74", optional = true}
 greenlet = {version = "^3.0.3", optional = true}
 mypy = {version = "^1.0.0", extras = ["tests"], optional = true}
 sqlmodel = { version = "^0.0.14", optional = true }
+deprecated = "^1.2.14"
 
 [tool.poetry.extras]
 # Test dependencies as extras so they can be set as extras in tox config

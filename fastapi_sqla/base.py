@@ -2,6 +2,7 @@ import functools
 import os
 import re
 
+from deprecated import deprecated
 from fastapi import FastAPI
 from sqlalchemy.engine import Engine
 
@@ -44,7 +45,9 @@ def setup_middlewares(app: FastAPI):
             )
 
 
-# TODO: Remove this function in the next major release
+@deprecated(
+    reason="FastAPI events are deprecated. This function will be remove in the next major release."  # noqa: E501
+)
 def setup(app: FastAPI):
     engine_keys = _get_engine_keys()
     engines = {key: sqla.new_engine(key) for key in engine_keys}
