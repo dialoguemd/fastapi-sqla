@@ -27,6 +27,7 @@ unique `email`:
 
 ```python
 # main.py
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi_sqla import Base, engines_statup, Item, Page, Paginate, Session, setup_middlewares
 from pydantic import BaseModel, EmailStr
@@ -161,8 +162,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 fastapi_sqla.setup_middlewares(app)
 ```
-
-
 
 ## Setup the app using startup/shutdown events (legacy):
 
