@@ -44,7 +44,7 @@ def setup_middlewares(app: FastAPI):
             )
 
 
-# TODO: Remove this function once all FastAPI apps stops using startup/shutdown events
+# TODO: Remove this function in the next major release
 def setup(app: FastAPI):
     engine_keys = _get_engine_keys()
     engines = {key: sqla.new_engine(key) for key in engine_keys}
