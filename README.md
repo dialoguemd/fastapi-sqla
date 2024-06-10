@@ -29,7 +29,7 @@ unique `email`:
 # main.py
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
-from fastapi_sqla import Base, engines_statup, Item, Page, Paginate, Session, setup_middlewares
+from fastapi_sqla import Base, Item, Page, Paginate, Session, setup_middlewares, startup
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -37,12 +37,12 @@ from sqlalchemy.exc import IntegrityError
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await fastapi_sqla.engines_statup(app)
+    await startup(app)
     yield
 
 
 app = FastAPI(lifespan=lifespan)
-fastapi_sqla.setup_middlewares(app)
+setup_middlewares(app)
 
 
 class User(Base):
@@ -155,7 +155,7 @@ from fastapi import FastAPI
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await fastapi_sqla.engines_statup(app)
+    await fastapi_sqla.startup(app)
     yield
 
 

@@ -1,4 +1,4 @@
-from fastapi_sqla.base import engines_statup, setup, setup_middlewares
+from fastapi_sqla.base import setup, setup_middlewares, startup
 from fastapi_sqla.models import Collection, Item, Page
 from fastapi_sqla.pagination import Paginate, PaginateSignature, Pagination
 from fastapi_sqla.sqla import (
@@ -23,7 +23,7 @@ __all__ = [
     "open_session",
     "setup",
     "setup_middlewares",
-    "engines_statup",
+    "startup",
 ]
 
 
