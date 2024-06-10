@@ -217,5 +217,12 @@ commands = pytest -vv --cov={envsitepackagesdir}/fastapi_sqla --cov-report xml -
 
 [tool.mypy]
 exclude = ["tests"]
+plugins = [
+    "sqlalchemy.ext.mypy.plugin",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "deprecated",
+]
 ignore_missing_imports = true
-plugins = "sqlalchemy.ext.mypy.plugin"
