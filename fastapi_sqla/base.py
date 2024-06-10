@@ -20,7 +20,7 @@ except ImportError as err:  # pragma: no cover
 _ENGINE_KEYS_REGEX = re.compile(r"fastapi_sqla__(?!_)(.+)(?<!_)__(?!_).+")
 
 
-async def engines_statup():
+async def startup():
     engine_keys = _get_engine_keys()
     engines = {key: sqla.new_engine(key) for key in engine_keys}
     for key, engine in engines.items():
