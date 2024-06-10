@@ -182,10 +182,10 @@ async def test_engines_startup_with_sync_and_async_sqlalchemy_url(
     await engines_statup()
 
     assert async_sqla_startup_mock.call_count == 1
-    async_sqla_startup_mock.assert_awaited_once_with({"key": async_session_key})
+    async_sqla_startup_mock.assert_awaited_once_with(key=async_session_key)
 
     assert sqla_startup_mock.call_count == 1
-    sqla_startup_mock.assert_called_once_with({"key": _DEFAULT_SESSION_KEY})
+    sqla_startup_mock.assert_called_once_with(key=_DEFAULT_SESSION_KEY)
 
 
 @mark.sqlalchemy("1.4")
@@ -203,7 +203,7 @@ async def test_engines_startup_with_async_default_sqlalchemy_url(
 
     assert sqla_startup_mock.call_count == 0
     assert async_sqla_startup_mock.call_count == 1
-    async_sqla_startup_mock.assert_called_once_with({"key": _DEFAULT_SESSION_KEY})
+    async_sqla_startup_mock.assert_called_once_with(key=_DEFAULT_SESSION_KEY)
 
 
 def test_setup_middlewares_multiple_engines(db_url):
