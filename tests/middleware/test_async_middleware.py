@@ -28,7 +28,7 @@ def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
         await startup()
         yield
 
-    app = FastAPI()
+    app = FastAPI(lifespan=lifespan)
     setup_middlewares(app)
 
     class UserIn(BaseModel):
