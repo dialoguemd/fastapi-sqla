@@ -141,10 +141,10 @@ def test_setup_with_async_default_sqlalchemy_url(async_sqlalchemy_url):
     }
 
 
-async def test_engines_startup_multiple_engines(
+async def test_startup_multiple_engines(
     db_url, sqla_startup_mock, async_sqla_startup_mock
 ):
-    from fastapi_sqla.base import engines_statup
+    from fastapi_sqla.base import startup
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
     read_only_key = "read_only"
@@ -157,7 +157,7 @@ async def test_engines_startup_multiple_engines(
         },
         clear=True,
     ):
-        await engines_statup()
+        await startup()
 
     assert async_sqla_startup_mock.call_count == 0
     assert sqla_startup_mock.call_count == 2
@@ -173,13 +173,13 @@ async def test_engines_startup_multiple_engines(
 
 @mark.sqlalchemy("1.4")
 @mark.require_asyncpg
-async def test_engines_startup_with_sync_and_async_sqlalchemy_url(
+async def test_startup_with_sync_and_async_sqlalchemy_url(
     async_session_key, sqla_startup_mock, async_sqla_startup_mock
 ):
-    from fastapi_sqla.base import engines_statup
+    from fastapi_sqla.base import startup
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
-    await engines_statup()
+    await startup()
 
     assert async_sqla_startup_mock.call_count == 1
     async_sqla_startup_mock.assert_awaited_once_with(key=async_session_key)
@@ -190,16 +190,16 @@ async def test_engines_startup_with_sync_and_async_sqlalchemy_url(
 
 @mark.sqlalchemy("1.4")
 @mark.require_asyncpg
-async def test_engines_startup_with_async_default_sqlalchemy_url(
+async def test_startup_with_async_default_sqlalchemy_url(
     async_sqlalchemy_url, sqla_startup_mock, async_sqla_startup_mock
 ):
-    from fastapi_sqla.base import engines_statup
+    from fastapi_sqla.base import startup
     from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
     with patch.dict(
         "os.environ", values={"sqlalchemy_url": async_sqlalchemy_url}, clear=True
     ):
-        await engines_statup()
+        await startup()
 
     assert sqla_startup_mock.call_count == 0
     assert async_sqla_startup_mock.call_count == 1
