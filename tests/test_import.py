@@ -15,6 +15,7 @@ def test_import_sync_api():
         open_session,
         setup,
         setup_middlewares,
+        startup,
     )
 
 
@@ -29,5 +30,4 @@ def test_import_async_api():
         AsyncSessionDependency,
         SqlaAsyncSession,
         open_async_session,
-        startup,
     )
