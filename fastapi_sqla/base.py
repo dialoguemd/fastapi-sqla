@@ -46,7 +46,7 @@ def setup_middlewares(app: FastAPI):
 
 
 @deprecated(
-    reason="FastAPI events are deprecated. This function will be remove in the next major release."  # noqa: E501
+    reason="FastAPI events are deprecated. This function will be remove in the upcoming major release."  # noqa: E501
 )
 def setup(app: FastAPI):
     engine_keys = _get_engine_keys()

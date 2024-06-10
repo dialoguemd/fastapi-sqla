@@ -1350,4 +1350,4 @@ tests = ["Faker", "alembic", "asgi_lifespan", "greenlet", "httpx", "mypy", "pdbp
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "358c80d7ececc3ff14aa3b285b3158f2c5c24e819c8863eb85676ab4b41ae9e3"
+content-hash = "3264cdc258ab6d9aafd8da7a5c98c224750b613eb81dfb0e2dfd32bb00002ebb"
