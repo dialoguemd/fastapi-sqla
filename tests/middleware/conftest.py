@@ -54,7 +54,7 @@ def app(User, monkeypatch, db_url):
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        await startup(app)
+        await startup()
         yield
 
     app = FastAPI(lifespan=lifespan)

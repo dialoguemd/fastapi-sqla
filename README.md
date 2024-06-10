@@ -37,7 +37,7 @@ from sqlalchemy.exc import IntegrityError
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await startup(app)
+    await startup()
     yield
 
 
@@ -155,7 +155,7 @@ from fastapi import FastAPI
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await fastapi_sqla.startup(app)
+    await fastapi_sqla.startup()
     yield
 
 
