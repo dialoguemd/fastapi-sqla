@@ -1,8 +1,20 @@
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from pytest import mark, param
+from pytest import fixture, mark, param
 
 from fastapi_sqla import async_sqla, sqla
+
+
+@fixture
+def async_sqla_startup_mock():
+    with patch("fastapi_sqla.async_sqla.startup", new=AsyncMock()) as mock:
+        yield mock
+
+
+@fixture
+def sqla_startup_mock():
+    with patch("fastapi_sqla.sqla.startup") as mock:
+        yield mock
 
 
 def test_setup_multiple_engines(db_url):

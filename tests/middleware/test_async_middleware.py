@@ -11,17 +11,25 @@ pytestmark = [mark.sqlalchemy("1.4"), mark.require_asyncpg]
 
 @fixture
 def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
+    from contextlib import asynccontextmanager
+
     from fastapi_sqla import (
         AsyncSession,
         AsyncSessionDependency,
         SqlaAsyncSession,
-        setup,
+        setup_middlewares,
+        startup,
     )
 
     monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
 
-    app = FastAPI()
-    setup(app)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        await startup()
+        yield
+
+    app = FastAPI(lifespan=lifespan)
+    setup_middlewares(app)
 
     class UserIn(BaseModel):
         id: int
