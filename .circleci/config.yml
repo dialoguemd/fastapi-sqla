@@ -1,10 +1,11 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.23.0
-  release: dialogue/release@2.19.0
-  python: dialogue/python@3.22.1
-  utils: dialogue/utils@3.19.0
+  base: dialogue/base@1.23.1
+  release: dialogue/release@2.19.1
+  python: dialogue/python@3.22.5
+  utils: dialogue/utils@3.19.1
+  codecov: codecov/codecov@4.1.0
 
 aliases:
   - &executor
@@ -107,23 +108,20 @@ jobs:
     steps:
       - base/setup
       - python/setup
+      - python/install_deps
       - utils/with_cache:
-          key: 'python<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
           namespace: tox
+          key: 'python<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
           path: ~/project/.tox
+          strict: true
           steps:
-            - run:
-                name: "install tox"
-                command: |
-                  poetry run pip install -U tox==4.7.0
             - run:
                 name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* pydantic<<parameters.pydantic_version>> and -<<parameters.asyncpg>> and -<<parameters.aws_rds_iam>>"
                 command: |
                   poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
-      - store_test_results:
-          path: test-reports
-      - utils/send_coverage_to_codecov:
-          codecov_flag: python_version<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
+      - codecov/upload:
+          flags: python_version<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
+
 
   publish:
     <<: *executor
