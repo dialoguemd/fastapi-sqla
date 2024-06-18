@@ -185,7 +185,7 @@ commands_pre =
     poetry install
     sqlmodel: poetry install --extras "sqlmodel"
     aws_rds_iam: poetry install --extras "aws_rds_iam"
-    asyncpg-noaws_rds_iam: poetry install --extras "asyncpg"
+    asyncpg: poetry install --extras "asyncpg"
     asyncpg-aws_rds_iam: poetry install --extras "asyncpg aws_rds_iam"
     sqlmodel-noasyncpg-aws_rds_iam: poetry install --extras "sqlmodel aws_rds_iam"
     sqlmodel-asyncpg-noaws_rds_iam: poetry install --extras "sqlmodel asyncpg"
