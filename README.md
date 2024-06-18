@@ -20,6 +20,8 @@ Using [pip](https://pip.pypa.io/):
 pip install fastapi-sqla
 ```
 
+Note that you need a [SQLAlchemy compatible engine](https://docs.sqlalchemy.org/en/20/core/engines.html) adapter. We test with `psycopg2` which you can install using the `psycopg2` extra.
+
 # Quick Example
 
 Assuming it runs against a DB with a table `user` with 3 columns, `id`, `name` and
@@ -600,7 +602,7 @@ If your project uses [SQLModel], then `Session` dependency is an SQLModel sessio
 # Pytest fixtures
 
 This library provides a set of utility fixtures, through its PyTest plugin, which is
-automatically installed with the library.
+automatically installed with the library. Using the plugin requires the `pytest_plugin` extra.
 
 By default, no records are actually written to the database when running tests.
 There currently is no way to change this behaviour.
@@ -744,7 +746,7 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 ## Setup
 
 ```bash
-$ poetry install --extras tests --extras asyncpg --extras aws_rds_iam
+$ poetry install --all-extras
 ```
 
 ## Running tests
