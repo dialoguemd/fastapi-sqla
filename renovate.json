@@ -1,7 +1,0 @@
-{
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-      "local>dialoguemd/renovate-config",
-      "local>dialoguemd/renovate-config//presets/library"
-    ]
-}
