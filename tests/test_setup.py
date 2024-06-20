@@ -1,20 +1,8 @@
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
-from pytest import fixture, mark, param
+from pytest import mark, param
 
 from fastapi_sqla import async_sqla, sqla
-
-
-@fixture
-def async_sqla_startup_mock():
-    with patch("fastapi_sqla.async_sqla.startup", new=AsyncMock()) as mock:
-        yield mock
-
-
-@fixture
-def sqla_startup_mock():
-    with patch("fastapi_sqla.sqla.startup") as mock:
-        yield mock
 
 
 def test_setup_multiple_engines(db_url):
@@ -33,22 +21,6 @@ def test_setup_multiple_engines(db_url):
         clear=True,
     ):
         setup(app)
-
-    assert app.add_event_handler.call_count == 2
-    assert any(
-        call
-        for call in app.add_event_handler.call_args_list
-        if call.args[0] == "startup"
-        and call.args[1].func == sqla.startup
-        and call.args[1].keywords == {"key": _DEFAULT_SESSION_KEY}
-    )
-    assert any(
-        call
-        for call in app.add_event_handler.call_args_list
-        if call.args[0] == "startup"
-        and call.args[1].func == sqla.startup
-        and call.args[1].keywords == {"key": read_only_key}
-    )
 
     assert app.middleware.call_count == 2
     assert all(call.args[0] == "http" for call in app.middleware.call_args_list)
@@ -76,22 +48,6 @@ def test_setup_with_sync_and_async_sqlalchemy_url(async_session_key):
 
     app = Mock()
     setup(app)
-
-    assert app.add_event_handler.call_count == 2
-    assert any(
-        call
-        for call in app.add_event_handler.call_args_list
-        if call.args[0] == "startup"
-        and call.args[1].func == sqla.startup
-        and call.args[1].keywords == {"key": _DEFAULT_SESSION_KEY}
-    )
-    assert any(
-        call
-        for call in app.add_event_handler.call_args_list
-        if call.args[0] == "startup"
-        and call.args[1].func == async_sqla.startup
-        and call.args[1].keywords == {"key": async_session_key}
-    )
 
     assert app.middleware.call_count == 2
     assert all(call.args[0] == "http" for call in app.middleware.call_args_list)
@@ -122,13 +78,6 @@ def test_setup_with_async_default_sqlalchemy_url(async_sqlalchemy_url):
         "os.environ", values={"sqlalchemy_url": async_sqlalchemy_url}, clear=True
     ):
         setup(app)
-
-    app.add_event_handler.assert_called_once()
-    assert app.add_event_handler.call_args.args[0] == "startup"
-    assert app.add_event_handler.call_args.args[1].func == async_sqla.startup
-    assert app.add_event_handler.call_args.args[1].keywords == {
-        "key": _DEFAULT_SESSION_KEY
-    }
 
     app.middleware.assert_called_once_with("http")
     app.middleware.return_value.assert_called_once()

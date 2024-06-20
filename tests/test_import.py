@@ -14,8 +14,6 @@ def test_import_sync_api():
         SqlaSession,
         open_session,
         setup,
-        setup_middlewares,
-        startup,
     )
 
 

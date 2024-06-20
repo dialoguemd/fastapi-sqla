@@ -39,26 +39,13 @@ def User():
 
 @fixture
 def app(User, monkeypatch, db_url):
-    from contextlib import asynccontextmanager
-
-    from fastapi_sqla import (
-        Session,
-        SessionDependency,
-        SqlaSession,
-        setup_middlewares,
-        startup,
-    )
+    from fastapi_sqla import Session, SessionDependency, SqlaSession, setup
 
     custom_session_key = "custom"
     monkeypatch.setenv(f"fastapi_sqla__{custom_session_key}__sqlalchemy_url", db_url)
 
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        await startup()
-        yield
-
-    app = FastAPI(lifespan=lifespan)
-    setup_middlewares(app)
+    app = FastAPI()
+    setup(app)
 
     class UserIn(BaseModel):
         id: int

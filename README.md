@@ -29,22 +29,15 @@ unique `email`:
 
 ```python
 # main.py
-from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
-from fastapi_sqla import Base, Item, Page, Paginate, Session, setup_middlewares, startup
+from fastapi_sqla import Base, Item, Page, Paginate, Session, setup
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await startup()
-    yield
-
-
 app = FastAPI(lifespan=lifespan)
-setup_middlewares(app)
+setup(app)
 
 
 class User(Base):
@@ -149,23 +142,7 @@ And define the environment variable `sqlalchemy_url` with `postgres+asyncpg` sch
 export sqlalchemy_url=postgresql+asyncpg://postgres@localhost
 ```
 
-## Setup the app AsyncContextManager (recommended):
-
-```python
-import fastapi_sqla
-from fastapi import FastAPI
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await fastapi_sqla.startup()
-    yield
-
-
-app = FastAPI(lifespan=lifespan)
-fastapi_sqla.setup_middlewares(app)
-```
-
-## Setup the app using startup/shutdown events (deprecated):
+## Setup the app:
 
 ```python
 import fastapi_sqla

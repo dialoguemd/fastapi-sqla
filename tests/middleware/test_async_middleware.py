@@ -17,19 +17,13 @@ def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
         AsyncSession,
         AsyncSessionDependency,
         SqlaAsyncSession,
-        setup_middlewares,
-        startup,
+        setup,
     )
 
     monkeypatch.setenv("sqlalchemy_url", async_sqlalchemy_url)
 
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        await startup()
-        yield
-
-    app = FastAPI(lifespan=lifespan)
-    setup_middlewares(app)
+    app = FastAPI()
+    setup(app)
 
     class UserIn(BaseModel):
         id: int
