@@ -11,8 +11,6 @@ pytestmark = [mark.sqlalchemy("1.4"), mark.require_asyncpg]
 
 @fixture
 def app(User, monkeypatch, async_sqlalchemy_url, async_session_key):
-    from contextlib import asynccontextmanager
-
     from fastapi_sqla import (
         AsyncSession,
         AsyncSessionDependency,

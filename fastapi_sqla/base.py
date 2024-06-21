@@ -38,7 +38,7 @@ def setup(app: FastAPI):
 
         return wrapped_app
 
-    app.add_middleware(startup)
+    app.add_middleware(startup)  # type: ignore
 
     for key, engine in engines.items():
         if not _is_async_dialect(engine):
