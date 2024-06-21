@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Annotated
 
 import structlog
-from fastapi import Depends, Request
+from fastapi import Depends, Request, Response
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import engine_from_config, text
@@ -141,8 +141,13 @@ async def add_session_to_request(
 
         loop = asyncio.get_running_loop()
 
+        body = b""
+        async for chunk in response.body_iterator:
+            body += chunk
+
         logger.debug(
             f"returning response - {key}",
+            resp_body=body,
             resp_headers=dict(response.headers),
             resp_status=response.status_code,
             session_is_dirty=is_dirty,
@@ -151,9 +156,13 @@ async def add_session_to_request(
         # try to commit after response, so that we can return a proper 500 response
         # and not raise a true internal server error
         if response.status_code < 400:
-            logger.debug(f"trying to commit the session - {key}")
             try:
                 await loop.run_in_executor(None, session.commit)
+                response = Response(
+                    content=body,
+                    status_code=response.status_code,
+                    headers=dict(response.headers),
+                )
             except Exception:
                 logger.exception("commit failed, returning http error")
                 response = PlainTextResponse(
@@ -170,7 +179,6 @@ async def add_session_to_request(
                     status_code=response.status_code,
                 )
             # since this is no-op if session is not dirty, we can always call it
-            logger.debug(f"rolling back the session - {key}")
             await loop.run_in_executor(None, session.rollback)
 
     return response
