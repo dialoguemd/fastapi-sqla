@@ -50,21 +50,23 @@ def test_setup_multiple_engines(db_url):
         and call.args[1].keywords == {"key": read_only_key}
     )
 
-    assert app.middleware.call_count == 2
-    assert all(call.args[0] == "http" for call in app.middleware.call_args_list)
+    assert app.add_middleware.call_count == 2
+    assert all(
+        call.args[0] == sqla.SessionMiddleware
+        for call in app.middleware.call_args_list
+    )
 
-    assert app.middleware.return_value.call_count == 2
     assert any(
         call
-        for call in app.middleware.return_value.call_args_list
-        if call.args[0].func == sqla.add_session_to_request
-        and call.args[0].keywords == {"key": _DEFAULT_SESSION_KEY}
+        for call in app.add_middleware.call_args_list
+        if call.args[0] == sqla.SessionMiddleware
+        and call.kwargs["key"] == _DEFAULT_SESSION_KEY
     )
     assert any(
         call
-        for call in app.middleware.return_value.call_args_list
-        if call.args[0].func == sqla.add_session_to_request
-        and call.args[0].keywords == {"key": read_only_key}
+        for call in app.add_middleware.call_args_list
+        if call.args[0] == sqla.SessionMiddleware
+        and call.kwargs["key"] == read_only_key
     )
 
 
@@ -93,21 +95,18 @@ def test_setup_with_sync_and_async_sqlalchemy_url(async_session_key):
         and call.args[1].keywords == {"key": async_session_key}
     )
 
-    assert app.middleware.call_count == 2
-    assert all(call.args[0] == "http" for call in app.middleware.call_args_list)
-
-    assert app.middleware.return_value.call_count == 2
+    assert app.add_middleware.call_count == 2
     assert any(
         call
-        for call in app.middleware.return_value.call_args_list
-        if call.args[0].func == sqla.add_session_to_request
-        and call.args[0].keywords == {"key": _DEFAULT_SESSION_KEY}
+        for call in app.add_middleware.call_args_list
+        if call.args[0] == sqla.SessionMiddleware
+        and call.kwargs["key"] == _DEFAULT_SESSION_KEY
     )
     assert any(
         call
-        for call in app.middleware.return_value.call_args_list
-        if call.args[0].func == async_sqla.add_session_to_request
-        and call.args[0].keywords == {"key": async_session_key}
+        for call in app.add_middleware.call_args_list
+        if call.args[0] == async_sqla.AsyncSessionMiddleware
+        and call.kwargs["key"] == async_session_key
     )
 
 
@@ -130,15 +129,12 @@ def test_setup_with_async_default_sqlalchemy_url(async_sqlalchemy_url):
         "key": _DEFAULT_SESSION_KEY
     }
 
-    app.middleware.assert_called_once_with("http")
-    app.middleware.return_value.assert_called_once()
+    app.add_middleware.assert_called_once()
     assert (
-        app.middleware.return_value.call_args.args[0].func
-        == async_sqla.add_session_to_request
+        app.add_middleware.call_args.args[0]
+        == async_sqla.AsyncSessionMiddleware
     )
-    assert app.middleware.return_value.call_args.args[0].keywords == {
-        "key": _DEFAULT_SESSION_KEY
-    }
+    assert app.add_middleware.call_args.kwargs["key"] == _DEFAULT_SESSION_KEY
 
 
 @mark.parametrize(
