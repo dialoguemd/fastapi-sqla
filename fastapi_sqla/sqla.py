@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Annotated
 
 import structlog
-from fastapi import Depends, Request, Response
+from fastapi import Depends, Request
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import engine_from_config, text
@@ -13,6 +13,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 
@@ -110,9 +111,7 @@ def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None
         session.close()
 
 
-async def add_session_to_request(
-    request: Request, call_next, key: str = _DEFAULT_SESSION_KEY
-):
+class SessionMiddleware:
     """Middleware which injects a new sqla session into every request.
 
     Handles creation of session, as well as commit, rollback, and closing of session.
@@ -130,58 +129,56 @@ async def add_session_to_request(
         def get_users(session: fastapi_sqla.Session):
             return session.execute(...) # use your session here
     """
-    async with contextmanager_in_threadpool(open_session(key)) as session:
-        setattr(request.state, f"{_REQUEST_SESSION_KEY}_{key}", session)
+    def __init__(self, app: ASGIApp, key: str = _DEFAULT_SESSION_KEY) -> None:
+        self.app = app
+        self.key = key
 
-        logger.debug(f"executing fastapi-sqla middleware - {key}")
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
 
-        response = await call_next(request)
+        logger.debug(f"executing fastapi-sqla middleware - {self.key}")
 
-        is_dirty = bool(session.dirty or session.deleted or session.new)
+        async with contextmanager_in_threadpool(open_session(self.key)) as session:
+            request = Request(scope=scope, receive=receive, send=send)
+            setattr(request.state, f"{_REQUEST_SESSION_KEY}_{self.key}", session)
 
-        loop = asyncio.get_running_loop()
+            response = await self.app(scope, receive, send)
+            is_dirty = bool(session.dirty or session.deleted or session.new)
 
-        body = b""
-        async for chunk in response.body_iterator:
-            body += chunk
+            logger.debug(
+                f"returning response - {self.key}",
+                resp_headers=dict(response.headers),
+                resp_status=response.status_code,
+                session_is_dirty=is_dirty,
+            )
 
-        logger.debug(
-            f"returning response - {key}",
-            resp_body=body,
-            resp_headers=dict(response.headers),
-            resp_status=response.status_code,
-            session_is_dirty=is_dirty,
-        )
+            loop = asyncio.get_running_loop()
 
-        # try to commit after response, so that we can return a proper 500 response
-        # and not raise a true internal server error
-        if response.status_code < 400:
-            try:
-                await loop.run_in_executor(None, session.commit)
-                response = Response(
-                    content=body,
-                    status_code=response.status_code,
-                    headers=dict(response.headers),
-                )
-            except Exception:
-                logger.exception("commit failed, returning http error")
-                response = PlainTextResponse(
-                    content="Internal Server Error", status_code=500
-                )
+            # try to commit after response, so that we can return a proper 500 response
+            # and not raise a true internal server error
+            if response.status_code < 400:
+                try:
+                    await loop.run_in_executor(None, session.commit)
+                except Exception:
+                    logger.exception("commit failed, returning http error")
+                    response = PlainTextResponse(
+                        content="Internal Server Error", status_code=500
+                    )
 
-        if response.status_code >= 400:
-            # If ever a route handler returns an http exception, we do not want the
-            # session opened by current context manager to commit anything in db.
-            if is_dirty:
-                # optimistically only log if there were uncommitted changes
-                logger.warning(
-                    "http error, rolling back possibly uncommitted changes",
-                    status_code=response.status_code,
-                )
-            # since this is no-op if session is not dirty, we can always call it
-            await loop.run_in_executor(None, session.rollback)
+            if response.status_code >= 400:
+                # If ever a route handler returns an http exception, we do not want the
+                # session opened by current context manager to commit anything in db.
+                if is_dirty:
+                    # optimistically only log if there were uncommitted changes
+                    logger.warning(
+                        "http error, rolling back possibly uncommitted changes",
+                        status_code=response.status_code,
+                    )
+                # since this is no-op if session is not dirty, we can always call it
+                await loop.run_in_executor(None, session.rollback)
 
-    return response
+        return response
 
 
 class SessionDependency:
