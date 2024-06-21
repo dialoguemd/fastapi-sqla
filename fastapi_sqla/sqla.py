@@ -133,15 +133,25 @@ async def add_session_to_request(
     async with contextmanager_in_threadpool(open_session(key)) as session:
         setattr(request.state, f"{_REQUEST_SESSION_KEY}_{key}", session)
 
+        logger.debug(f"executing fastapi-sqla middleware - {key}")
+
         response = await call_next(request)
 
         is_dirty = bool(session.dirty or session.deleted or session.new)
 
         loop = asyncio.get_running_loop()
 
+        logger.debug(
+            f"returning response - {key}",
+            resp_headers=dict(response.headers),
+            resp_status=response.status_code,
+            session_is_dirty=is_dirty,
+        )
+
         # try to commit after response, so that we can return a proper 500 response
         # and not raise a true internal server error
         if response.status_code < 400:
+            logger.debug(f"trying to commit the session - {key}")
             try:
                 await loop.run_in_executor(None, session.commit)
             except Exception:
@@ -160,6 +170,7 @@ async def add_session_to_request(
                     status_code=response.status_code,
                 )
             # since this is no-op if session is not dirty, we can always call it
+            logger.debug(f"rolling back the session - {key}")
             await loop.run_in_executor(None, session.rollback)
 
     return response
