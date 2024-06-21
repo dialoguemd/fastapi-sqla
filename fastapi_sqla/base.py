@@ -38,9 +38,7 @@ def setup_middlewares(app: FastAPI):
         if not _is_async_dialect(engine):
             app.add_middleware(sqla.SessionMiddleware, key=key)
         else:
-            app.middleware("http")(
-                functools.partial(async_sqla.add_session_to_request, key=key)
-            )
+            app.add_middleware(async_sqla.AsyncSessionMiddleware, key=key)
 
 
 @deprecated(
@@ -57,9 +55,7 @@ def setup(app: FastAPI):
             app.add_event_handler(
                 "startup", functools.partial(async_sqla.startup, key=key)
             )
-            app.middleware("http")(
-                functools.partial(async_sqla.add_session_to_request, key=key)
-            )
+            app.add_middleware(async_sqla.AsyncSessionMiddleware, key=key)
 
 
 def _get_engine_keys() -> set[str]:

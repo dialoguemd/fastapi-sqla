@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.orm.session import sessionmaker
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, Base, new_engine
@@ -88,9 +89,7 @@ async def open_session(
         await session.close()
 
 
-async def add_session_to_request(
-    request: Request, call_next, key: str = _DEFAULT_SESSION_KEY
-):
+class AsyncSessionMiddleware:
     """Middleware which injects a new sqla async session into every request.
 
     Handles creation of session, as well as commit, rollback, and closing of session.
@@ -108,36 +107,58 @@ async def add_session_to_request(
         async def get_users(session: fastapi_sqla.AsyncSession):
             return await session.execute(...) # use your session here
     """
-    async with open_session(key) as session:
-        setattr(request.state, f"{_ASYNC_REQUEST_SESSION_KEY}_{key}", session)
-        response = await call_next(request)
+    def __init__(self, app: ASGIApp, key: str = _DEFAULT_SESSION_KEY) -> None:
+        self.app = app
+        self.key = key
 
-        is_dirty = bool(session.dirty or session.deleted or session.new)
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
 
-        # try to commit after response, so that we can return a proper 500 response
-        # and not raise a true internal server error
-        if response.status_code < 400:
-            try:
-                await session.commit()
-            except Exception:
-                logger.exception("commit failed, returning http error")
-                response = PlainTextResponse(
-                    content="Internal Server Error", status_code=500
-                )
+        async with open_session(self.key) as session:
+            request = Request(scope=scope, receive=receive, send=send)
+            setattr(request.state, f"{_ASYNC_REQUEST_SESSION_KEY}_{self.key}", session)
 
-        if response.status_code >= 400:
-            # If ever a route handler returns an http exception, we do not want the
-            # session opened by current context manager to commit anything in db.
-            if is_dirty:
-                # optimistically only log if there were uncommitted changes
-                logger.warning(
-                    "http error, rolling back possibly uncommitted changes",
-                    status_code=response.status_code,
-                )
-            # since this is no-op if session is not dirty, we can always call it
-            await session.rollback()
+            async def send_wrapper(message: Message) -> None:
+                if message["type"] == "http.response.start":
+                    has_responded = False
+                    status_code = message["status"]
 
-    return response
+                    is_dirty = bool(session.dirty or session.deleted or session.new)
+
+                    # try to commit after response, so that we can return a proper 500
+                    # and not raise a true internal server error
+                    if status_code < 400:
+                        try:
+                            await session.commit()
+                        except Exception:
+                            logger.exception("commit failed, returning http error")
+                            status_code = 500
+                            response = PlainTextResponse(
+                                content="Internal Server Error", status_code=500
+                            )
+                            await response(scope, receive, send)
+                            has_responded = True
+
+                    if status_code >= 400:
+                        # If ever a route handler returns an http exception,
+                        # we do not want the current session to commit anything in db.
+                        if is_dirty:
+                            # optimistically only log if there were uncommitted changes
+                            logger.warning(
+                                "http error, rolling back possibly uncommitted changes",
+                                status_code=status_code,
+                            )
+                        # since this is no-op if the session is not dirty,
+                        # we can always call it
+                        await session.rollback()
+
+                    if has_responded:
+                        return
+
+                await send(message)
+
+            await self.app(scope, receive, send_wrapper)
 
 
 class AsyncSessionDependency:
