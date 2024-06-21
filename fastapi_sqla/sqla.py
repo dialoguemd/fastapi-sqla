@@ -144,6 +144,11 @@ class SessionMiddleware:
             request = Request(scope=scope, receive=receive, send=send)
             setattr(request.state, f"{_REQUEST_SESSION_KEY}_{self.key}", session)
 
+            logger.debug(
+                f"running fastapi-sqla middleware - {self.key}",
+                request=request,
+            )
+
             async def send_wrapper(message: Message) -> None:
                 if message["type"] == "http.response.start":
                     has_responded = False
