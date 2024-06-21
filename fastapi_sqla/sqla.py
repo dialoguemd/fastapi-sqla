@@ -13,7 +13,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 
@@ -143,42 +143,47 @@ class SessionMiddleware:
             request = Request(scope=scope, receive=receive, send=send)
             setattr(request.state, f"{_REQUEST_SESSION_KEY}_{self.key}", session)
 
-            response = await self.app(scope, receive, send)
-            is_dirty = bool(session.dirty or session.deleted or session.new)
+            async def send_wrapper(message: Message) -> None:
+                if message["type"] == "http.response.start":
+                    has_responded = False
+                    status_code = message["status"]
 
-            logger.debug(
-                f"returning response - {self.key}",
-                resp_headers=dict(response.headers),
-                resp_status=response.status_code,
-                session_is_dirty=is_dirty,
-            )
+                    is_dirty = bool(session.dirty or session.deleted or session.new)
+                    loop = asyncio.get_running_loop()
 
-            loop = asyncio.get_running_loop()
+                    # try to commit after response, so that we can return a proper 500
+                    # and not raise a true internal server error
+                    if status_code < 400:
+                        try:
+                            await loop.run_in_executor(None, session.commit)
+                        except Exception:
+                            logger.exception("commit failed, returning http error")
+                            status_code = 500
+                            response = PlainTextResponse(
+                                content="Internal Server Error", status_code=status_code
+                            )
+                            await response(scope, receive, send)
+                            has_responded = True
 
-            # try to commit after response, so that we can return a proper 500 response
-            # and not raise a true internal server error
-            if response.status_code < 400:
-                try:
-                    await loop.run_in_executor(None, session.commit)
-                except Exception:
-                    logger.exception("commit failed, returning http error")
-                    response = PlainTextResponse(
-                        content="Internal Server Error", status_code=500
-                    )
+                    if status_code >= 400:
+                        # If ever a route handler returns an http exception,
+                        # we do not want the current session to commit anything in db.
+                        if is_dirty:
+                            # optimistically only log if there were uncommitted changes
+                            logger.warning(
+                                "http error, rolling back possibly uncommitted changes",
+                                status_code=status_code,
+                            )
+                        # since this is no-op if the session is not dirty,
+                        # we can always call it
+                        await loop.run_in_executor(None, session.rollback)
 
-            if response.status_code >= 400:
-                # If ever a route handler returns an http exception, we do not want the
-                # session opened by current context manager to commit anything in db.
-                if is_dirty:
-                    # optimistically only log if there were uncommitted changes
-                    logger.warning(
-                        "http error, rolling back possibly uncommitted changes",
-                        status_code=response.status_code,
-                    )
-                # since this is no-op if session is not dirty, we can always call it
-                await loop.run_in_executor(None, session.rollback)
+                    if has_responded:
+                        return
 
-        return response
+                await send(message)
+
+            await self.app(scope, receive, send_wrapper)
 
 
 class SessionDependency:
