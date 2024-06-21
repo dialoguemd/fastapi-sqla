@@ -79,8 +79,5 @@ def test_setup_middlewares_with_async_default_sqlalchemy_url(async_sqlalchemy_ur
         setup_middlewares(app)
 
     app.add_middleware.assert_called_once()
-    assert (
-        app.add_middleware.call_args.args[0]
-        == async_sqla.AsyncSessionMiddleware
-    )
+    assert app.add_middleware.call_args.args[0] == async_sqla.AsyncSessionMiddleware
     assert app.add_middleware.call_args.kwargs["key"] == _DEFAULT_SESSION_KEY

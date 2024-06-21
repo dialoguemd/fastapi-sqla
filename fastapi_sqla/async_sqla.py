@@ -107,6 +107,7 @@ class AsyncSessionMiddleware:
         async def get_users(session: fastapi_sqla.AsyncSession):
             return await session.execute(...) # use your session here
     """
+
     def __init__(self, app: ASGIApp, key: str = _DEFAULT_SESSION_KEY) -> None:
         self.app = app
         self.key = key

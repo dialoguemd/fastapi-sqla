@@ -52,8 +52,7 @@ def test_setup_multiple_engines(db_url):
 
     assert app.add_middleware.call_count == 2
     assert all(
-        call.args[0] == sqla.SessionMiddleware
-        for call in app.middleware.call_args_list
+        call.args[0] == sqla.SessionMiddleware for call in app.middleware.call_args_list
     )
 
     assert any(
@@ -130,10 +129,7 @@ def test_setup_with_async_default_sqlalchemy_url(async_sqlalchemy_url):
     }
 
     app.add_middleware.assert_called_once()
-    assert (
-        app.add_middleware.call_args.args[0]
-        == async_sqla.AsyncSessionMiddleware
-    )
+    assert app.add_middleware.call_args.args[0] == async_sqla.AsyncSessionMiddleware
     assert app.add_middleware.call_args.kwargs["key"] == _DEFAULT_SESSION_KEY
 
 
