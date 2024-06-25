@@ -28,18 +28,8 @@ def test_setup_middlewares_multiple_engines(db_url):
         for call in app.add_middleware.call_args_list
     )
 
-    assert any(
-        call
-        for call in app.add_middleware.call_args_list
-        if call.args[0] == sqla.SessionMiddleware
-        and call.kwargs["key"] == _DEFAULT_SESSION_KEY
-    )
-    assert any(
-        call
-        for call in app.add_middleware.call_args_list
-        if call.args[0] == sqla.SessionMiddleware
-        and call.kwargs["key"] == read_only_key
-    )
+    app.add_middleware.assert_any_call(sqla.SessionMiddleware, key=_DEFAULT_SESSION_KEY)
+    app.add_middleware.assert_any_call(sqla.SessionMiddleware, key=read_only_key)
 
 
 @mark.sqlalchemy("1.4")
@@ -52,17 +42,9 @@ def test_setup_middlewares_with_sync_and_async_sqlalchemy_url(async_session_key)
     setup_middlewares(app)
 
     assert app.add_middleware.call_count == 2
-    assert any(
-        call
-        for call in app.add_middleware.call_args_list
-        if call.args[0] == sqla.SessionMiddleware
-        and call.kwargs["key"] == _DEFAULT_SESSION_KEY
-    )
-    assert any(
-        call
-        for call in app.add_middleware.call_args_list
-        if call.args[0] == async_sqla.AsyncSessionMiddleware
-        and call.kwargs["key"] == async_session_key
+    app.add_middleware.assert_any_call(sqla.SessionMiddleware, key=_DEFAULT_SESSION_KEY)
+    app.add_middleware.assert_any_call(
+        async_sqla.AsyncSessionMiddleware, key=async_session_key
     )
 
 
@@ -78,6 +60,6 @@ def test_setup_middlewares_with_async_default_sqlalchemy_url(async_sqlalchemy_ur
     ):
         setup_middlewares(app)
 
-    app.add_middleware.assert_called_once()
-    assert app.add_middleware.call_args.args[0] == async_sqla.AsyncSessionMiddleware
-    assert app.add_middleware.call_args.kwargs["key"] == _DEFAULT_SESSION_KEY
+    app.add_middleware.assert_called_once_with(
+        async_sqla.AsyncSessionMiddleware, key=_DEFAULT_SESSION_KEY
+    )
