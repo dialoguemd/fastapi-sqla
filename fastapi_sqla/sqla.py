@@ -138,8 +138,6 @@ class SessionMiddleware:
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
 
-        logger.debug(f"executing fastapi-sqla middleware - {self.key}")
-
         async with contextmanager_in_threadpool(open_session(self.key)) as session:
             request = Request(scope=scope, receive=receive, send=send)
             setattr(request.state, f"{_REQUEST_SESSION_KEY}_{self.key}", session)
