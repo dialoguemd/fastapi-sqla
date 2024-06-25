@@ -57,7 +57,7 @@ asgi_lifespan = "2.1.0"
 Faker  = "25.9.1"
 greenlet = "3.0.3"
 httpx = "0.27.0"
-mypy = { version = "1.10.0", extras = ["tests"] }
+mypy = { version = "1.10.1", extras = ["tests"] }
 psycopg2 = { version = "2.9.9", extras = ["binary"] }
 pytest = "8.2.2"
 pytest-asyncio = "0.23.7"
