@@ -115,8 +115,10 @@ def test_open_session_re_raise_exception_when_commit_fails(
     )
     session.flush()
 
-    with raises(Exception) as raise_info, open_session() as session:
-        session.add(test_table_cls(id=existing_record_id, value="bobby already exists"))
+    with raises(Exception) as raise_info, open_session() as new_session:
+        new_session.add(
+            test_table_cls(id=existing_record_id, value="bobby already exists")
+        )
 
     assert isinstance(raise_info.value, IntegrityError)
 
