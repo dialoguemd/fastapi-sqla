@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   base: dialogue/base@1.23.1
   release: dialogue/release@2.19.1
-  python: dialogue/python@3.22.5
+  python: dialogue/python@3.22.6
   utils: dialogue/utils@3.19.1
   codecov: codecov/codecov@4.1.0
 
