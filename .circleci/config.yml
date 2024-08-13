@@ -21,7 +21,7 @@ executors:
         default: "3.12.3"
     docker:
       - image: cimg/python:<< parameters.python_version >>
-      - image: postgres:16.3
+      - image: postgres:16.4
         name: postgres
         environment:
           POSTGRES_HOST_AUTH_METHOD: trust
