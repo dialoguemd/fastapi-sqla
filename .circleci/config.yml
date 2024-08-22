@@ -1,24 +1,24 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.23.1
-  release: dialogue/release@2.19.1
-  python: dialogue/python@3.22.6
-  utils: dialogue/utils@3.19.1
+  base: dialogue/base@1.23.3
+  release: dialogue/release@2.19.3
+  python: dialogue/python@3.22.8
+  utils: dialogue/utils@3.19.3
   codecov: codecov/codecov@4.1.0
 
 aliases:
   - &executor
     executor:
       name: python/python
-      version: "3.12.3"
+      version: "3.12.5"
 
 executors:
   python-postgres:
     parameters:
       python_version:
         type: string
-        default: "3.12.3"
+        default: "3.12.5"
     docker:
       - image: cimg/python:<< parameters.python_version >>
       - image: postgres:16.4
