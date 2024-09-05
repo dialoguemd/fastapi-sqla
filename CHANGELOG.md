@@ -2,6 +2,107 @@
 
 
 
+## v3.4.3 (2024-09-05)
+
+### Chore
+
+* chore(deps): update dependency faker to v28.4.1 (#181)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`f6bf129`](https://github.com/dialoguemd/fastapi-sqla/commit/f6bf129c7ca29eed54d61167f6e00875706557bc))
+
+* chore(deps): lock file maintenance (#179)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`c8ddbd3`](https://github.com/dialoguemd/fastapi-sqla/commit/c8ddbd35828c847fe3454411e58986812875f0cc))
+
+* chore(deps): update dependency faker to v28.1.0 (#178)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`70687fa`](https://github.com/dialoguemd/fastapi-sqla/commit/70687fa6a6f042872d56a4df395a0ef3a1b25384))
+
+* chore(deps): update dependency sqlmodel to &gt;=0.0.14,&lt;0.0.23 (#180)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`65a8842`](https://github.com/dialoguemd/fastapi-sqla/commit/65a8842b37846444b67b1092e8aa2c981e20fe83))
+
+* chore(deps): update dependency ruff to v0.6.3 (#177)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`f9668b0`](https://github.com/dialoguemd/fastapi-sqla/commit/f9668b0fde0c3442cf29c0f0a76d485cf20f0b8c))
+
+* chore(deps): update dependency httpx to v0.27.2 (#176)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`3c61b98`](https://github.com/dialoguemd/fastapi-sqla/commit/3c61b9879a80d1f84e7cf8586eecc9a6e9fa92cb))
+
+* chore(deps): lock file maintenance (#174)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`df4848a`](https://github.com/dialoguemd/fastapi-sqla/commit/df4848ac4569d0d106a9134f9a35b69fb38a4a14))
+
+* chore(deps): update dependency mypy to v1.11.2 (#175)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`458a102`](https://github.com/dialoguemd/fastapi-sqla/commit/458a102ac1f00f1289431e901c7fa2ce30afe3f8))
+
+* chore(deps): update dependency faker to v28 (#173)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`e05cc42`](https://github.com/dialoguemd/fastapi-sqla/commit/e05cc423a176c99cf63daf7e44903fce57a49161))
+
+* chore(python): upgrade CI to support python 3.12.5 DIA-70641 (#172) ([`0f7da75`](https://github.com/dialoguemd/fastapi-sqla/commit/0f7da753cf5427126f7d9ab9cc4f30d265a7e6fb))
+
+* chore(deps): update python dev dependencies (#171)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`8bd6b7a`](https://github.com/dialoguemd/fastapi-sqla/commit/8bd6b7af097c03c17b79f5e8f6f7df411ebf07c3))
+
+* chore(deps): update dependency faker to v27.4.0 (#170)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`a35cc48`](https://github.com/dialoguemd/fastapi-sqla/commit/a35cc4810a240c807b11a269033599af24096c7a))
+
+* chore(deps): lock file maintenance (#168)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`e27fff6`](https://github.com/dialoguemd/fastapi-sqla/commit/e27fff6a354b4173befa65c52d48e36404eb5a16))
+
+* chore(deps): update dependency ruff to v0.6.1 (#169)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`1ab779f`](https://github.com/dialoguemd/fastapi-sqla/commit/1ab779f86c246e97667ef6cf5464c27ca5bed25f))
+
+* chore(deps): update dependency ruff to v0.6.0 (#167)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`49d2465`](https://github.com/dialoguemd/fastapi-sqla/commit/49d2465ce1d04ce9c3a9051df7e449a08997d65f))
+
+* chore(deps): update dependency tox to v4.18.0 (#166)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`efb5289`](https://github.com/dialoguemd/fastapi-sqla/commit/efb52897304dd97e56a49715de5f985d0df1c8a7))
+
+* chore(deps): update postgres docker tag to v16.4 (#164)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`d038303`](https://github.com/dialoguemd/fastapi-sqla/commit/d038303a7c63219c8df5d09d15528b2fec439805))
+
+* chore(deps): update python dev dependencies (#162)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`841ec9b`](https://github.com/dialoguemd/fastapi-sqla/commit/841ec9b511b0cd0f7a04a8e87dfdc571f5dd5653))
+
+* chore(deps): update dependency faker to v27 (#165)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`03353e7`](https://github.com/dialoguemd/fastapi-sqla/commit/03353e7d587481d91a84ed72e4d42328e064281a))
+
+* chore(deps): update dependency fastapi to &gt;=0.95.1,&lt;0.113 (#163)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`700b2dd`](https://github.com/dialoguemd/fastapi-sqla/commit/700b2ddb6c2b8ddf267f67d3f5fd066624601ba2))
+
+* chore(deps): update python dev dependencies (#158)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`0992105`](https://github.com/dialoguemd/fastapi-sqla/commit/0992105ac324f2b105cb986289abdaef79394846))
+
+* chore(deps): update python orb to v3.22.6 (#160)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`212935e`](https://github.com/dialoguemd/fastapi-sqla/commit/212935ea94dfd3c7c423833324d2a8a522b87239))
+
+* chore(deps): update dependency sqlmodel to &gt;=0.0.14,&lt;0.0.22 (#159)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`a91c491`](https://github.com/dialoguemd/fastapi-sqla/commit/a91c491fb0f8348890db886825a78b8826f19c32))
+
+### Fix
+
+* fix(deps): update dependency fastapi to &gt;=0.95.1,&lt;0.114 (#183)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`08519b3`](https://github.com/dialoguemd/fastapi-sqla/commit/08519b3e405499ac0789c777b5dfce9da3072756))
+
+
 ## v3.4.2 (2024-07-29)
 
 ### Chore
@@ -34,6 +135,12 @@ Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`ff80bf7
 ### Fix
 
 * fix(codeowners): add codeowners (#161) ([`e7cf2bd`](https://github.com/dialoguemd/fastapi-sqla/commit/e7cf2bd2f1177ad93e6ba683b0a2c767969a0b22))
+
+### Unknown
+
+* 3.4.2
+
+Version generated by python-semantic-release [ci skip] ([`0c52b6b`](https://github.com/dialoguemd/fastapi-sqla/commit/0c52b6b5abef0783fe3d736cc19921fee55c435f))
 
 
 ## v3.4.1 (2024-06-26)
