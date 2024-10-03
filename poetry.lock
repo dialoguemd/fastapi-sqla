@@ -1216,13 +1216,13 @@ files = [
 
 [[package]]
 name = "tox"
-version = "4.21.0"
+version = "4.21.1"
 description = "tox is a generic virtualenv management and test command line tool"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "tox-4.21.0-py3-none-any.whl", hash = "sha256:693ac51378255d34ad7aab6dd2ce9ab6a1cf1924eb930183fde850ad503b681d"},
-    {file = "tox-4.21.0.tar.gz", hash = "sha256:e64dd9847ff3a7ec90368be412d7efe61a39caf043222ffbe9ad638ea435f6f6"},
+    {file = "tox-4.21.1-py3-none-any.whl", hash = "sha256:092bbdcfeabc824db621dab5be9f0866a34a0a4fc874e9746bf04c0d5462d78b"},
+    {file = "tox-4.21.1.tar.gz", hash = "sha256:b2ce4222772693b302d75e2e4f7727d67bb60925d740479bb09845098562589f"},
 ]
 
 [package.dependencies]
@@ -1395,4 +1395,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "eef733b489e0af54d916e6f73f2444907b1fca202b162a5b070a11879bd7cb44"
+content-hash = "e29e9b3859ce62eaa87c9304a7360e62c40379d0201d37644aff1b0206a406ea"
