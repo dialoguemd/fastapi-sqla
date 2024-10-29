@@ -19,7 +19,9 @@ PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
 async def default_query_count(session: SqlaAsyncSession, query: Select) -> int:
-    result = await session.execute(select(func.count()).select_from(query.subquery()))
+    count_query = query.with_only_columns([func.count()]).order_by(None)
+    result = await session.execute(count_query)
+    # result = await session.execute(select(func.count()).select_from(query.subquery()))
     return cast(int, result.scalar())
 
 
