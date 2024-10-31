@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable, Iterator
 from typing import Annotated, Optional, Union, cast
 
 from fastapi import Depends, Query
-from sqlalchemy.sql import Select, func, select
+from sqlalchemy.sql import Select, func
 
 from fastapi_sqla.async_sqla import AsyncSessionDependency, SqlaAsyncSession
 from fastapi_sqla.models import Meta, Page

@@ -5,7 +5,7 @@ from typing import Annotated, Optional, Union, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.orm import Query as LegacyQuery
-from sqlalchemy.sql import Select, func, select
+from sqlalchemy.sql import Select, func
 
 from fastapi_sqla.models import Meta, Page
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, SessionDependency, SqlaSession
