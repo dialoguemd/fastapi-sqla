@@ -32,11 +32,13 @@ def default_query_count(session: SqlaSession, query: DbQuery) -> int:
     elif isinstance(query, Select):
         result = cast(
             int,
-            session.execute(
-                query.with_only_columns(
-                    func.count(), maintain_column_froms=True
-                ).order_by(None)
-            ).scalar(),
+            session.execute(  # type: ignore
+                query.add_columns(func.count().over().label("overall_count")).order_by(
+                    None
+                )
+            )
+            .first()
+            .overall_count,
         )
 
     else:  # pragma: no cover
