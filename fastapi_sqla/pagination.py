@@ -33,7 +33,9 @@ def default_query_count(session: SqlaSession, query: DbQuery) -> int:
         result = cast(
             int,
             session.execute(
-                select(func.count()).select_from(query.subquery())
+                query.with_only_columns(
+                    func.count(), maintain_column_froms=True
+                ).order_by(None)
             ).scalar(),
         )
 
