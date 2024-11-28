@@ -210,6 +210,8 @@ def app(user_cls, note_cls, monkeypatch, db_url):
 async def client(app):
     async with (
         LifespanManager(app),
-        httpx.AsyncClient(app=app, base_url="http://example.local") as client,
+        httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://example.local"
+        ) as client,
     ):
         yield client

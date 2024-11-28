@@ -183,7 +183,9 @@ async def test_fastapi_integration():
 
     async with (
         LifespanManager(app),
-        httpx.AsyncClient(app=app, base_url="http://example.local") as client,
+        httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://example.local"
+        ) as client,
     ):
         res = await client.get("/one")
 
