@@ -59,7 +59,7 @@ greenlet = "3.1.1"
 httpx = "0.28.0"
 mypy = { version = "1.13.0", extras = ["tests"] }
 psycopg2 = { version = "2.9.10", extras = ["binary"] }
-pytest = "8.3.3"
+pytest = "8.3.4"
 pytest-asyncio = "0.24.0"
 pytest-cov = "6.0.0"
 ruff = "0.8.1"
