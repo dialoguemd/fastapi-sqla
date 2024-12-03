@@ -108,7 +108,7 @@ jobs:
     steps:
       - base/setup
       - python/setup:
-          poetry_version: "1.8.4"
+          poetry_version: "1.8.2"
       - python/install_deps
       - utils/with_cache:
           namespace: tox
