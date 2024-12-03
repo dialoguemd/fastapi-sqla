@@ -33,24 +33,24 @@ workflows:
           name: 👮 lint
           <<: *executor
           context: code-validator
-      
+
       - python/run:
           name: 👮 mypy
           run: mypy .
           <<: *executor
           context: code-validator
-      
+
       - test:
           name: 🧪 test py<<matrix.python_version>> sqlalchemy-<<matrix.sqlalchemy_version >> pydantic-<<matrix.pydantic_version>> <<matrix.asyncpg>> <<matrix.aws_rds_iam>>
           context: code-validator
           matrix:
             parameters:
-              python_version: ["3.9", "3.10", "3.11", "3.12"]
+              python_version: ["3.10", "3.11", "3.12", "3.13"]
               sqlalchemy_version: ["1.4", "2.0", "2.0-sqlmodel"]
               asyncpg: ["asyncpg", "noasyncpg"]
               aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
               pydantic_version: ["1", "2"]
-      
+
       - release/release:
           name: 🕊 release
           requires:
@@ -82,7 +82,7 @@ jobs:
     parameters:
       python_version:
         type: enum
-        enum: ["3.9", "3.10", "3.11", "3.12"]
+        enum: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         description: |
           Specify which version of python to run the tests against
       sqlalchemy_version:
