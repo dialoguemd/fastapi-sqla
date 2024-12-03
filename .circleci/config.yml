@@ -107,8 +107,8 @@ jobs:
     working_directory: ~/project/.
     steps:
       - base/setup
-      - python/setup:
-          poetry_version: "1.8.4"
+      - python/setup
+          # poetry_version: "1.8.4"
       - python/install_deps
       - utils/with_cache:
           namespace: tox
