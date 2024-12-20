@@ -5,7 +5,7 @@ from typing import Annotated, Optional, Union, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.orm import Query as LegacyQuery
-from sqlalchemy.sql import Select, func, select
+from sqlalchemy.sql import Select, func
 
 from fastapi_sqla.models import Meta, Page
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, SessionDependency, SqlaSession
@@ -32,9 +32,13 @@ def default_query_count(session: SqlaSession, query: DbQuery) -> int:
     elif isinstance(query, Select):
         result = cast(
             int,
-            session.execute(
-                select(func.count()).select_from(query.subquery())
-            ).scalar(),
+            session.execute(  # type: ignore
+                query.add_columns(func.count().over().label("overall_count")).order_by(
+                    None
+                )
+            )
+            .first()
+            .overall_count,
         )
 
     else:  # pragma: no cover
