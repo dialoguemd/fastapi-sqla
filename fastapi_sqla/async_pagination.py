@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable, Iterator
 from typing import Annotated, Optional, Union, cast
 
 from fastapi import Depends, Query
-from sqlalchemy.sql import Select, func, select
+from sqlalchemy.sql import Select, func
 
 from fastapi_sqla.async_sqla import AsyncSessionDependency, SqlaAsyncSession
 from fastapi_sqla.models import Meta, Page
@@ -19,8 +19,11 @@ PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
 async def default_query_count(session: SqlaAsyncSession, query: Select) -> int:
-    result = await session.execute(select(func.count()).select_from(query.subquery()))
-    return cast(int, result.scalar())
+    count_query = query.add_columns(
+        func.count().over().label("overall_count")
+    ).order_by(None)
+    result = await session.execute(count_query)
+    return cast(int, result.first().overall_count)  # type: ignore
 
 
 async def paginate_query(
