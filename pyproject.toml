@@ -42,7 +42,7 @@ python = ">=3.9,<3.14"
 fastapi = ">=0.95.1,<0.116"
 pydantic = ">=1,<3"
 sqlalchemy = ">=1.3,<3"
-structlog = ">=20,<25"
+structlog = ">=20,<26"
 deprecated = ">=1.2,<2"
 
 alembic = { version = ">=1.4.3,<2", optional = true }
