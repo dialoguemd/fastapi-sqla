@@ -54,7 +54,7 @@ sqlmodel = { version = ">=0.0.14,<0.0.23", optional = true }
 [tool.poetry.group.dev.dependencies]
 alembic = "1.14.1"
 asgi_lifespan = "2.1.0"
-Faker = "35.0.0"
+Faker = "35.2.0"
 greenlet = "3.1.1"
 httpx = "0.28.1"
 mypy = { version = "1.14.1", extras = ["tests"] }
@@ -62,7 +62,7 @@ psycopg2 = { version = "2.9.10", extras = ["binary"] }
 pytest = "8.3.4"
 pytest-asyncio = "0.25.3"
 pytest-cov = "6.0.0"
-ruff = "0.9.3"
+ruff = "0.9.4"
 tox = "4.24.1"
 
 [tool.poetry.extras]
