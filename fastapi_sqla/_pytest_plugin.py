@@ -153,14 +153,14 @@ if asyncio_support:
 
     @fixture
     def async_engine(async_sqlalchemy_url):
-        return create_async_engine(async_sqlalchemy_url)
+        engine = create_async_engine(async_sqlalchemy_url)
+        yield engine
+        engine.dispose()
 
     @fixture
     async def async_sqla_connection(async_engine):
         async with async_engine.connect() as connection:
             yield connection
-            await connection.close()
-            await async_engine.dispose()
 
     @fixture
     async def patch_new_engine(request, async_sqla_connection):
