@@ -159,6 +159,8 @@ if asyncio_support:
     async def async_sqla_connection(async_engine):
         async with async_engine.connect() as connection:
             yield connection
+            await connection.close()
+            await async_engine.dispose()
 
     @fixture
     async def patch_new_engine(request, async_sqla_connection):
