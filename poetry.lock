@@ -350,13 +350,13 @@ test = ["pytest (>=6)"]
 
 [[package]]
 name = "faker"
-version = "36.2.0"
+version = "36.2.2"
 description = "Faker is a Python package that generates fake data for you."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "Faker-36.2.0-py3-none-any.whl", hash = "sha256:ad193bf1e20f6d3917d287b0317e17ec7470b68abac0f22a0179dcd4dde0a112"},
-    {file = "faker-36.2.0.tar.gz", hash = "sha256:cdd7bb720f8e78e6e05736e96e200a54fc85b48a55f28fbf1e7cae6b371cdc9e"},
+    {file = "faker-36.2.2-py3-none-any.whl", hash = "sha256:14adc340dc8abed5264142ffafe6f1a0f99cf7a7525bc6863755efd5fbbd0692"},
+    {file = "faker-36.2.2.tar.gz", hash = "sha256:758bc63a26dc878fa0d76aa7639b8b65327927980ed0c3683b23bd8a5182f33f"},
 ]
 
 [package.dependencies]
@@ -1468,4 +1468,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.14"
-content-hash = "3da73c6ad2075929ede59a67da11b52b2a8689aa6b65c8eebcfda1a82ac69934"
+content-hash = "89a687c5a8ac43347a3fc08b38dc22bbe39bf3e5c1042390772d11dbe9749d4f"
