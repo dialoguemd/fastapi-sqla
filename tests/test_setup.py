@@ -153,6 +153,6 @@ def test_setup_with_async_default_sqlalchemy_url(async_sqlalchemy_url):
 def test_get_engine_keys(env_vars, expected_keys):
     from fastapi_sqla.base import _get_engine_keys
 
-    env_vars = {var: "test" for var in env_vars}
+    env_vars = dict.fromkeys(env_vars, "test")
     with patch.dict("os.environ", values=env_vars, clear=True):
         assert _get_engine_keys() == expected_keys
