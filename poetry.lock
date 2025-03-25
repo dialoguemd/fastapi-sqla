@@ -350,13 +350,13 @@ test = ["pytest (>=6)"]
 
 [[package]]
 name = "faker"
-version = "37.0.2"
+version = "37.1.0"
 description = "Faker is a Python package that generates fake data for you."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "faker-37.0.2-py3-none-any.whl", hash = "sha256:8955706c56c28099585e9e2b6f814eb0a3a227eb36a2ee3eb9ab577c4764eacc"},
-    {file = "faker-37.0.2.tar.gz", hash = "sha256:948bd27706478d3aa0b6f9f58b9f25207098f6ca79852c7b49c44a8ced2bc59b"},
+    {file = "faker-37.1.0-py3-none-any.whl", hash = "sha256:dc2f730be71cb770e9c715b13374d80dbcee879675121ab51f9683d262ae9a1c"},
+    {file = "faker-37.1.0.tar.gz", hash = "sha256:ad9dc66a3b84888b837ca729e85299a96b58fdaef0323ed0baace93c9614af06"},
 ]
 
 [package.dependencies]
@@ -965,17 +965,18 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments
 
 [[package]]
 name = "pytest-asyncio"
-version = "0.25.3"
+version = "0.26.0"
 description = "Pytest support for asyncio"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pytest_asyncio-0.25.3-py3-none-any.whl", hash = "sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3"},
-    {file = "pytest_asyncio-0.25.3.tar.gz", hash = "sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a"},
+    {file = "pytest_asyncio-0.26.0-py3-none-any.whl", hash = "sha256:7b51ed894f4fbea1340262bdae5135797ebbe21d8638978e35d31c6d19f72fb0"},
+    {file = "pytest_asyncio-0.26.0.tar.gz", hash = "sha256:c4df2a697648241ff39e7f0e4a73050b03f123f760673956cf0d72a4990e312f"},
 ]
 
 [package.dependencies]
 pytest = ">=8.2,<9"
+typing-extensions = {version = ">=4.12", markers = "python_version < \"3.10\""}
 
 [package.extras]
 docs = ["sphinx (>=5.3)", "sphinx-rtd-theme (>=1)"]
@@ -1468,4 +1469,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.14"
-content-hash = "3d82cee7c221b1b7e9632368703e8bd25d9c91102aa2c539db707033e4355613"
+content-hash = "e7f56884578dcd629150e139b02ed1547e51cc1b5f32a75856e68a1facbcf4fc"
