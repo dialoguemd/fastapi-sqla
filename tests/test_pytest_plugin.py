@@ -89,23 +89,23 @@ async def test_async_session_fixture_dont_patch_engine_writes_in_db(
 
 @mark.sqlalchemy("1.4")
 def test_all_opened_sessions_are_within_the_same_transaction(
-    sqla_connection, session, session_factory, singer_cls
+    session, session_factory, singer_cls
 ):
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
 
-    other_session = session_factory(bind=sqla_connection)
+    other_session = session_factory()
 
     assert other_session.get(singer_cls, 1)
 
 
 def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
-    sqla_connection, session, session_factory, singer_cls
+    session, session_factory, singer_cls
 ):
     session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     session.commit()
 
-    other_session = session_factory(bind=sqla_connection)
+    other_session = session_factory()
 
     assert other_session.query(singer_cls).get(1)
 
@@ -113,12 +113,12 @@ def test_sqla_13_all_opened_sessions_are_within_the_same_transaction(
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
 async def test_all_opened_async_sessions_are_within_the_same_transaction(
-    async_sqla_connection, async_session, async_session_factory, singer_cls
+    async_session, async_session_factory, singer_cls
 ):
     async_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
     await async_session.commit()
 
-    other_session = async_session_factory(bind=async_sqla_connection)
+    other_session = async_session_factory()
     assert await other_session.get(singer_cls, 1)
 
 
@@ -181,3 +181,38 @@ def test_format_async_sqlalchemy_url(monkeypatch, conftest, testdir, url, expect
     from fastapi_sqla._pytest_plugin import format_async_async_sqlalchemy_url
 
     assert format_async_async_sqlalchemy_url(url) == expected
+
+
+async def test_session_fixture_patch_startup(session, singer_cls):
+    from fastapi_sqla import open_session, startup
+
+    await startup()
+
+    with open_session() as new_session:
+        new_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
+
+    assert session.query(singer_cls).get(1)
+
+
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
+async def test_async_session_fixture_patch_startup(async_session, singer_cls):
+    from fastapi_sqla import open_async_session
+    from fastapi_sqla.async_sqla import startup
+
+    await startup()
+
+    async with open_async_session() as new_session:
+        new_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
+
+    assert await async_session.get(singer_cls, 1)
+
+
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
+async def test_async_session_fixture_doesnt_expire_on_commit(async_session, singer_cls):
+    singer = singer_cls(id=1, name="Bob Marley", country="Jamaica")
+    async_session.add(singer)
+    await async_session.commit()
+
+    assert singer.name == "Bob Marley"

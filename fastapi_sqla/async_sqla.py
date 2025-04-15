@@ -1,18 +1,23 @@
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Annotated
+from typing import Annotated, Union
 
 import structlog
 from fastapi import Depends, Request, Response
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import (
+    AsyncConnection,
+    AsyncEngine,
+    async_engine_from_config,
+)
 from sqlalchemy.ext.asyncio import AsyncSession as SqlaAsyncSession
 from sqlalchemy.orm.session import sessionmaker
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
-from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, Base, new_engine
+from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, Base, get_envvar_prefix
 
 logger = structlog.get_logger(__name__)
 
@@ -20,19 +25,29 @@ _ASYNC_REQUEST_SESSION_KEY = "fastapi_sqla_async_session"
 _async_session_factories: dict[str, sessionmaker] = {}
 
 
-def new_async_engine(key: str = _DEFAULT_SESSION_KEY):
-    engine = new_engine(key)
-    return AsyncEngine(engine)
+def new_async_engine(
+    key: str = _DEFAULT_SESSION_KEY,
+) -> Union[AsyncEngine, AsyncConnection]:
+    envvar_prefix = get_envvar_prefix(key)
+    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
+    lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
+    return async_engine_from_config(lowercase_environ, prefix=envvar_prefix)
 
 
 async def startup(key: str = _DEFAULT_SESSION_KEY):
-    engine = new_async_engine(key)
-    aws_rds_iam_support.setup(engine.sync_engine)
-    aws_aurora_support.setup(engine.sync_engine)
+    engine_or_connection = new_async_engine(key)
+    aws_rds_iam_support.setup(engine_or_connection.sync_engine)
+    aws_aurora_support.setup(engine_or_connection.sync_engine)
+
+    async_engine = (
+        engine_or_connection
+        if isinstance(engine_or_connection, AsyncEngine)
+        else engine_or_connection.engine
+    )
 
     # Fail early
     try:
-        async with engine.connect() as connection:
+        async with async_engine.connect() as connection:
             await connection.execute(text("select 'ok'"))
     except Exception:
         logger.critical(
@@ -41,14 +56,15 @@ async def startup(key: str = _DEFAULT_SESSION_KEY):
         )
         raise
 
-    async with engine.connect() as connection:
+    async with async_engine.connect() as connection:
         await connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
+    # TODO: Use async_sessionmaker once only supporting 2.x+
     _async_session_factories[key] = sessionmaker(
-        class_=SqlaAsyncSession, bind=engine, expire_on_commit=False
-    )
+        class_=SqlaAsyncSession, bind=engine_or_connection, expire_on_commit=False
+    )  # type: ignore
 
-    logger.info("engine startup", engine_key=key, async_engine=engine)
+    logger.info("engine startup", engine_key=key, async_engine=engine_or_connection)
 
 
 @asynccontextmanager

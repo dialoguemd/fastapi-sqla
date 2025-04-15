@@ -2,14 +2,14 @@ import asyncio
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Annotated
+from typing import Annotated, Union
 
 import structlog
 from fastapi import Depends, Request, Response
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import engine_from_config, text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
@@ -42,24 +42,29 @@ class Base(DeclarativeBase, DeferredReflection):
     __abstract__ = True
 
 
-def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Engine:
+def get_envvar_prefix(key: str) -> str:
     envvar_prefix = "sqlalchemy_"
     if key != _DEFAULT_SESSION_KEY:
         envvar_prefix = f"fastapi_sqla__{key}__{envvar_prefix}"
 
+    return envvar_prefix
+
+
+def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
+    envvar_prefix = get_envvar_prefix(key)
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
     return engine_from_config(lowercase_environ, prefix=envvar_prefix)
 
 
 def startup(key: str = _DEFAULT_SESSION_KEY):
-    engine = new_engine(key)
-    aws_rds_iam_support.setup(engine.engine)
-    aws_aurora_support.setup(engine.engine)
+    engine_or_connection = new_engine(key)
+    aws_rds_iam_support.setup(engine_or_connection.engine)
+    aws_aurora_support.setup(engine_or_connection.engine)
 
     # Fail early
     try:
-        with engine.connect() as connection:
+        with engine_or_connection.engine.connect() as connection:
             connection.execute(text("select 'OK'"))
     except Exception:
         logger.critical(
@@ -68,11 +73,13 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
         )
         raise
 
-    Base.prepare(engine)
+    Base.prepare(engine_or_connection.engine)
 
-    _session_factories[key] = sessionmaker(bind=engine, class_=SqlaSession)
+    _session_factories[key] = sessionmaker(
+        bind=engine_or_connection, class_=SqlaSession
+    )
 
-    logger.info("engine startup", engine_key=key, engine=engine)
+    logger.info("engine startup", engine_key=key, engine=engine_or_connection)
 
 
 @contextmanager
