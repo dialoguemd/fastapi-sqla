@@ -28,19 +28,17 @@ def test_table_cls():
 
 
 @fixture
-def startup(sqla_connection):
-    from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, _session_factories, startup
+def startup(session):
+    from fastapi_sqla.sqla import startup
 
     startup()
-    _session_factories[_DEFAULT_SESSION_KEY].configure(bind=sqla_connection)
 
 
 @fixture
-async def async_startup(async_session_key, async_sqla_connection):
-    from fastapi_sqla.async_sqla import _async_session_factories, startup
+async def async_startup(async_session, async_session_key):
+    from fastapi_sqla.async_sqla import startup
 
     await startup(async_session_key)
-    _async_session_factories[async_session_key].configure(bind=async_sqla_connection)
 
 
 @mark.sqlalchemy("1.4")
@@ -65,13 +63,15 @@ async def test_open_async_session(async_startup, async_session_key):
 
 
 @mark.sqlalchemy("1.4")
-def test_open_session_rollback_when_error_occurs_in_context(startup, test_table_cls):
+def test_open_session_rollback_when_error_occurs_in_context(
+    startup, test_table_cls, session
+):
     from fastapi_sqla.sqla import open_session
 
     error = Exception("Error in context")
 
-    with raises(Exception) as raise_info, open_session() as session:
-        session.execute(insert(test_table_cls).values(id=1, value="bobby drop tables"))
+    with raises(Exception) as raise_info, open_session() as new_session:
+        new_session.add(test_table_cls(id=1, value="bobby drop tables"))
         raise error
 
     assert raise_info.value == error
@@ -83,22 +83,20 @@ def test_open_session_rollback_when_error_occurs_in_context(startup, test_table_
 @mark.sqlalchemy("1.4")
 @mark.require_asyncpg
 async def test_open_async_session_rollback_when_error_occurs_in_context(
-    async_startup, async_session_key, test_table_cls
+    async_startup, async_session_key, test_table_cls, async_session
 ):
     from fastapi_sqla.async_sqla import open_session
 
     error = Exception("Error in context")
 
     with raises(Exception) as raise_info:
-        async with open_session(async_session_key) as session:
-            await session.execute(
-                insert(test_table_cls).values(id=1, value="bobby drop tables")
-            )
+        async with open_session(async_session_key) as new_session:
+            new_session.add(test_table_cls(id=1, value="bobby drop tables"))
             raise error
 
     assert raise_info.value == error
 
-    res = (await session.execute(select(test_table_cls))).fetchall()
+    res = (await async_session.execute(select(test_table_cls))).fetchall()
     assert res == [], "insert has not been rolled back"
 
 
@@ -139,8 +137,8 @@ async def test_open_async_session_re_raise_exception_when_commit_fails(
     await async_session.flush()
 
     with raises(Exception) as raise_info:
-        async with open_session(async_session_key) as session:
-            session.add(
+        async with open_session(async_session_key) as new_session:
+            new_session.add(
                 test_table_cls(id=existing_record_id, value="bobby already exists")
             )
 
