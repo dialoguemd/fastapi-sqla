@@ -104,7 +104,7 @@ def sqla_modules():
 def sqla_reflection(sqla_modules, sqla_connection: Connection):
     import fastapi_sqla
 
-    fastapi_sqla.Base.metadata.bind = sqla_connection
+    fastapi_sqla.Base.metadata.bind = sqla_connection  # type: ignore
     fastapi_sqla.Base.prepare(sqla_connection.engine)
 
 
@@ -197,12 +197,13 @@ if asyncio_support:
         async_sqla_connection: AsyncConnection,
         async_sqla_reflection,
         patch_new_async_engine,
-    ) -> sessionmaker[AsyncSession]:
-        return sessionmaker(bind=async_sqla_connection, class_=AsyncSession)
+    ) -> sessionmaker[AsyncSession]:  # type: ignore
+        # TODO: Use async_sessionmaker once only supporting 2.x+
+        return sessionmaker(bind=async_sqla_connection, class_=AsyncSession)  # type: ignore
 
     @fixture
     async def async_session(
-        async_session_factory: sessionmaker[AsyncSession],
+        async_session_factory: sessionmaker[AsyncSession],  # type: ignore
     ) -> AsyncGenerator[AsyncSession]:
         session = async_session_factory()
         yield session

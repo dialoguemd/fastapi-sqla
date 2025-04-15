@@ -42,11 +42,16 @@ class Base(DeclarativeBase, DeferredReflection):
     __abstract__ = True
 
 
-def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
+def get_envvar_prefix(key: str) -> str:
     envvar_prefix = "sqlalchemy_"
     if key != _DEFAULT_SESSION_KEY:
         envvar_prefix = f"fastapi_sqla__{key}__{envvar_prefix}"
 
+    return envvar_prefix
+
+
+def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
+    envvar_prefix = get_envvar_prefix(key)
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
     return engine_from_config(lowercase_environ, prefix=envvar_prefix)
