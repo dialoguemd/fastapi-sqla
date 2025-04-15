@@ -124,18 +124,18 @@ def patch_new_engine(request: FixtureRequest, sqla_connection: Connection):
 @fixture
 def session_factory(
     sqla_connection: Connection, sqla_reflection, patch_new_engine
-) -> sessionmaker[Session]:
+) -> sessionmaker:
     return sessionmaker(bind=sqla_connection)
 
 
 @fixture
-def session(session_factory: sessionmaker[Session]) -> Generator[Session]:
+def session(session_factory: sessionmaker) -> Generator[Session]:
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
     access any record committed with that session.
     """
-    session = session_factory()
+    session: Session = session_factory()
     yield session
     session.close()
 
@@ -197,14 +197,14 @@ if asyncio_support:
         async_sqla_connection: AsyncConnection,
         async_sqla_reflection,
         patch_new_async_engine,
-    ) -> sessionmaker[AsyncSession]:  # type: ignore
+    ) -> sessionmaker:
         # TODO: Use async_sessionmaker once only supporting 2.x+
         return sessionmaker(bind=async_sqla_connection, class_=AsyncSession)  # type: ignore
 
     @fixture
     async def async_session(
-        async_session_factory: sessionmaker[AsyncSession],  # type: ignore
+        async_session_factory: sessionmaker,
     ) -> AsyncGenerator[AsyncSession]:
-        session = async_session_factory()
+        session: AsyncSession = async_session_factory()
         yield session
         await session.close()
