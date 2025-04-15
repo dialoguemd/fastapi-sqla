@@ -181,3 +181,14 @@ def test_format_async_sqlalchemy_url(monkeypatch, conftest, testdir, url, expect
     from fastapi_sqla._pytest_plugin import format_async_async_sqlalchemy_url
 
     assert format_async_async_sqlalchemy_url(url) == expected
+
+
+async def test_session_fixture_patch_startup(session, singer_cls):
+    from fastapi_sqla import open_session, startup
+
+    await startup()
+
+    with open_session() as new_session:
+        new_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
+
+    assert session.query(singer_cls).get(1)
