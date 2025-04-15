@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -31,18 +32,19 @@ async def startup(key: str = _DEFAULT_SESSION_KEY):
     aws_aurora_support.setup(engine.sync_engine)
 
     # Fail early
-    try:
-        async with engine.connect() as connection:
-            await connection.execute(text("select 'ok'"))
-    except Exception:
-        logger.critical(
-            f"Failed querying db for key '{key}': "
-            "are the the environment variables correctly configured for this key?"
-        )
-        raise
+    if not bool(os.getenv("FASTAPI_SQLA_TEST_MODE")):
+        try:
+            async with engine.connect() as connection:
+                await connection.execute(text("select 'ok'"))
+        except Exception:
+            logger.critical(
+                f"Failed querying db for key '{key}': "
+                "are the the environment variables correctly configured for this key?"
+            )
+            raise
 
-    async with engine.connect() as connection:
-        await connection.run_sync(lambda conn: Base.prepare(conn.engine))
+        async with engine.connect() as connection:
+            await connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
     _async_session_factories[key] = sessionmaker(
         class_=SqlaAsyncSession, bind=engine, expire_on_commit=False

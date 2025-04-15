@@ -1,16 +1,23 @@
 import os
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import patch
 from urllib.parse import urlsplit, urlunsplit
 
 from alembic import command
 from alembic.config import Config
-from pytest import fixture
+from pytest import FixtureRequest, MonkeyPatch, fixture
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.orm.session import Session, sessionmaker
 
 try:
     import asyncpg  # noqa
-    from sqlalchemy.ext.asyncio import create_async_engine
+    from sqlalchemy.ext.asyncio import (
+        create_async_engine,
+        AsyncEngine,
+        AsyncConnection,
+        AsyncSession,
+    )
 
     asyncio_support = True
 except ImportError:
@@ -22,7 +29,7 @@ def pytest_configure(config):
 
 
 @fixture(scope="session")
-def db_host():
+def db_host() -> str:
     """Default db host used by depending fixtures.
 
     When CI key is set in environment variables, it uses `postgres` as host name else,
@@ -32,7 +39,7 @@ def db_host():
 
 
 @fixture(scope="session")
-def db_user():
+def db_user() -> str:
     """Default db user used by depending fixtures.
 
     postgres
@@ -41,7 +48,7 @@ def db_user():
 
 
 @fixture(scope="session")
-def db_url(db_host, db_user):
+def db_url(db_host: str, db_user: str) -> str:
     """Default db url used by depending fixtures.
 
     db url example postgresql://{db_user}@{db_host}/postgres
@@ -50,24 +57,24 @@ def db_url(db_host, db_user):
 
 
 @fixture(scope="session")
-def engine(db_url):
+def engine(db_url: str) -> Engine:
     return create_engine(db_url)
 
 
 @fixture(scope="session")
-def sqla_connection(engine):
+def sqla_connection(engine: Engine) -> Generator[Connection]:
     with engine.connect() as connection:
         yield connection
 
 
 @fixture(scope="session")
-def alembic_ini_path():  # pragma: no cover
+def alembic_ini_path() -> str:  # pragma: no cover
     """Path for alembic.ini file, defaults to `./alembic.ini`."""
     return "./alembic.ini"
 
 
 @fixture(scope="session")
-def db_migration(db_url, sqla_connection, alembic_ini_path):
+def db_migration(db_url: str, sqla_connection: Connection, alembic_ini_path: str):
     """Run alembic upgrade at test session setup and downgrade at tear down.
 
     Override fixture `alembic_ini_path` to change path of `alembic.ini` file.
@@ -94,7 +101,7 @@ def sqla_modules():
 
 
 @fixture
-def sqla_reflection(sqla_modules, sqla_connection):
+def sqla_reflection(sqla_modules, sqla_connection: Connection):
     import fastapi_sqla
 
     fastapi_sqla.Base.metadata.bind = sqla_connection
@@ -102,46 +109,53 @@ def sqla_reflection(sqla_modules, sqla_connection):
 
 
 @fixture
-def patch_engine_from_config(request, sqla_connection):
+def patch_new_engine(
+    request: FixtureRequest,
+    monkeypatch: MonkeyPatch,
+    db_url: str,
+    sqla_connection: Connection,
+):
     """So that all DB operations are never written to db for real."""
     if "dont_patch_engines" in request.keywords:
         yield
     else:
-        transaction = sqla_connection.begin()
+        monkeypatch.setenv("FASTAPI_SQLA_TEST_MODE", "1")
+        engine = create_engine(db_url)
+        engine.connect = lambda: sqla_connection
 
-        with patch("fastapi_sqla.sqla.engine_from_config") as engine_from_config:
-            engine_from_config.return_value = sqla_connection
-            yield
+        with sqla_connection.begin() as transaction:
+            with patch("fastapi_sqla.sqla.new_engine", return_value=engine):
+                yield
 
-        transaction.rollback()
-
-
-@fixture
-def session_factory():
-    return sessionmaker()
+            transaction.rollback()
 
 
 @fixture
-def session(
-    session_factory, sqla_connection, sqla_reflection, patch_engine_from_config
-):
+def session_factory(
+    sqla_connection: Connection, sqla_reflection, patch_new_engine
+) -> sessionmaker[Session]:
+    return sessionmaker(bind=sqla_connection)
+
+
+@fixture
+def session(session_factory: sessionmaker[Session]) -> Generator[Session]:
     """Sqla session to use when creating db fixtures.
 
     While it does not write any record in DB, the application will still be able to
     access any record committed with that session.
     """
-    session = session_factory(bind=sqla_connection)
+    session = session_factory()
     yield session
     session.close()
 
 
-def format_async_async_sqlalchemy_url(url):
+def format_async_async_sqlalchemy_url(url: str) -> str:
     scheme, location, path, query, fragment = urlsplit(url)
     return urlunsplit([f"{scheme}+asyncpg", location, path, query, fragment])
 
 
 @fixture(scope="session")
-def async_sqlalchemy_url(db_url):
+def async_sqlalchemy_url(db_url: str) -> str:
     """Default async db url.
 
     It is the same as `db_url` with `postgresql+asyncpg://` as scheme.
@@ -152,46 +166,72 @@ def async_sqlalchemy_url(db_url):
 if asyncio_support:
 
     @fixture
-    def async_engine(async_sqlalchemy_url):
+    def async_engine(async_sqlalchemy_url: str) -> AsyncEngine:
         return create_async_engine(async_sqlalchemy_url)
 
     @fixture
-    async def async_sqla_connection(async_engine):
+    async def async_sqla_connection(
+        async_engine: AsyncEngine,
+    ) -> AsyncGenerator[AsyncConnection]:
         async with async_engine.connect() as connection:
             yield connection
 
     @fixture
-    async def patch_new_engine(request, async_sqla_connection):
+    async def patch_new_async_engine(
+        request: FixtureRequest,
+        monkeypatch: MonkeyPatch,
+        async_sqlalchemy_url: str,
+        async_sqla_connection: AsyncConnection,
+    ):
         """So that all async DB operations are never written to db for real."""
         if "dont_patch_engines" in request.keywords:
             yield
         else:
+            monkeypatch.setenv("FASTAPI_SQLA_TEST_MODE", "1")
+
+            class _AsyncEngine(AsyncEngine):
+                """Class required to be able to monkeypatch the connect function.
+
+                This is because the connect method is read-only because of quirk in
+                how the AsyncEngine is implemented.
+                """
+
+                def connect(self) -> AsyncConnection:
+                    return async_sqla_connection
+
+            async_engine = _AsyncEngine(
+                create_async_engine(async_sqlalchemy_url).sync_engine
+            )
+
             async with async_sqla_connection.begin() as transaction:
-                with patch("fastapi_sqla.async_sqla.new_engine") as new_engine:
-                    new_engine.return_value = async_sqla_connection
+                with patch(
+                    "fastapi_sqla.async_sqla.new_async_engine",
+                    return_value=async_engine,
+                ):
                     yield
 
                 await transaction.rollback()
 
     @fixture
-    async def async_sqla_reflection(sqla_modules, async_sqla_connection):
+    async def async_sqla_reflection(
+        sqla_modules, async_sqla_connection: AsyncConnection
+    ):
         from fastapi_sqla import Base
 
         await async_sqla_connection.run_sync(lambda conn: Base.prepare(conn.engine))
 
     @fixture
-    def async_session_factory():
-        from fastapi_sqla.async_sqla import SqlaAsyncSession
-
-        return sessionmaker(class_=SqlaAsyncSession)
+    def async_session_factory(
+        async_sqla_connection: AsyncConnection,
+        async_sqla_reflection,
+        patch_new_async_engine,
+    ) -> sessionmaker[AsyncSession]:
+        return sessionmaker(bind=async_sqla_connection, class_=AsyncSession)
 
     @fixture
     async def async_session(
-        async_session_factory,
-        async_sqla_connection,
-        async_sqla_reflection,
-        patch_new_engine,
-    ):
-        session = async_session_factory(bind=async_sqla_connection)
+        async_session_factory: sessionmaker[AsyncSession],
+    ) -> AsyncGenerator[AsyncSession]:
+        session = async_session_factory()
         yield session
         await session.close()

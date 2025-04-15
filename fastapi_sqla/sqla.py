@@ -58,17 +58,18 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
     aws_aurora_support.setup(engine.engine)
 
     # Fail early
-    try:
-        with engine.connect() as connection:
-            connection.execute(text("select 'OK'"))
-    except Exception:
-        logger.critical(
-            f"Failed querying db for key '{key}': "
-            "are the the environment variables correctly configured for this key?"
-        )
-        raise
+    if not bool(os.getenv("FASTAPI_SQLA_TEST_MODE")):
+        try:
+            with engine.connect() as connection:
+                connection.execute(text("select 'OK'"))
+        except Exception:
+            logger.critical(
+                f"Failed querying db for key '{key}': "
+                "are the the environment variables correctly configured for this key?"
+            )
+            raise
 
-    Base.prepare(engine)
+        Base.prepare(engine)
 
     _session_factories[key] = sessionmaker(bind=engine, class_=SqlaSession)
 
