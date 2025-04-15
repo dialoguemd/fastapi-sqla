@@ -206,3 +206,13 @@ async def test_async_session_fixture_patch_startup(async_session, singer_cls):
         new_session.add(singer_cls(id=1, name="Bob Marley", country="Jamaica"))
 
     assert await async_session.get(singer_cls, 1)
+
+
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
+async def test_async_session_fixture_doesnt_expire_on_commit(async_session, singer_cls):
+    singer = singer_cls(id=1, name="Bob Marley", country="Jamaica")
+    async_session.add(singer)
+    await async_session.commit()
+
+    assert singer.name == "Bob Marley"
