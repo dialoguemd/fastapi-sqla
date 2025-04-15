@@ -199,7 +199,9 @@ if asyncio_support:
         patch_new_async_engine,
     ) -> sessionmaker:
         # TODO: Use async_sessionmaker once only supporting 2.x+
-        return sessionmaker(bind=async_sqla_connection, class_=AsyncSession)  # type: ignore
+        return sessionmaker(
+            bind=async_sqla_connection, expire_on_commit=False, class_=AsyncSession
+        )  # type: ignore
 
     @fixture
     async def async_session(
