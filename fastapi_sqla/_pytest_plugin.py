@@ -5,7 +5,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from alembic import command
 from alembic.config import Config
-from pytest import FixtureRequest, MonkeyPatch, fixture
+from pytest import FixtureRequest, fixture
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm.session import Session, sessionmaker
@@ -109,22 +109,13 @@ def sqla_reflection(sqla_modules, sqla_connection: Connection):
 
 
 @fixture
-def patch_new_engine(
-    request: FixtureRequest,
-    monkeypatch: MonkeyPatch,
-    db_url: str,
-    sqla_connection: Connection,
-):
+def patch_new_engine(request: FixtureRequest, sqla_connection: Connection):
     """So that all DB operations are never written to db for real."""
     if "dont_patch_engines" in request.keywords:
         yield
     else:
-        monkeypatch.setenv("FASTAPI_SQLA_TEST_MODE", "1")
-        engine = create_engine(db_url)
-        engine.connect = lambda: sqla_connection
-
         with sqla_connection.begin() as transaction:
-            with patch("fastapi_sqla.sqla.new_engine", return_value=engine):
+            with patch("fastapi_sqla.sqla.new_engine", return_value=sqla_connection):
                 yield
 
             transaction.rollback()
@@ -178,35 +169,16 @@ if asyncio_support:
 
     @fixture
     async def patch_new_async_engine(
-        request: FixtureRequest,
-        monkeypatch: MonkeyPatch,
-        async_sqlalchemy_url: str,
-        async_sqla_connection: AsyncConnection,
+        request: FixtureRequest, async_sqla_connection: AsyncConnection
     ):
         """So that all async DB operations are never written to db for real."""
         if "dont_patch_engines" in request.keywords:
             yield
         else:
-            monkeypatch.setenv("FASTAPI_SQLA_TEST_MODE", "1")
-
-            class _AsyncEngine(AsyncEngine):
-                """Class required to be able to monkeypatch the connect function.
-
-                This is because the connect method is read-only because of quirk in
-                how the AsyncEngine is implemented.
-                """
-
-                def connect(self) -> AsyncConnection:
-                    return async_sqla_connection
-
-            async_engine = _AsyncEngine(
-                create_async_engine(async_sqlalchemy_url).sync_engine
-            )
-
             async with async_sqla_connection.begin() as transaction:
                 with patch(
                     "fastapi_sqla.async_sqla.new_async_engine",
-                    return_value=async_engine,
+                    return_value=async_sqla_connection,
                 ):
                     yield
 
