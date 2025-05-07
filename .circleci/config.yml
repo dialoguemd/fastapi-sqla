@@ -1,10 +1,10 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.23.7
-  release: dialogue/release@2.19.7
-  python: dialogue/python@3.25.2
-  utils: dialogue/utils@3.19.7
+  base: dialogue/base@1.26.2
+  release: dialogue/release@2.23.0
+  python: dialogue/python@3.30.0
+  utils: dialogue/utils@3.22.2
   codecov: codecov/codecov@4.1.0
 
 aliases:
@@ -58,7 +58,6 @@ workflows:
             - 👮 lint
             - 👮 mypy
           context:
-            - slack-release
             - base-github-ci
           filters:
             branches:
