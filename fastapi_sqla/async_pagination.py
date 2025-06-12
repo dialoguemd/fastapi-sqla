@@ -27,10 +27,10 @@ async def default_query_count(session: SqlaAsyncSession, query: Select) -> int:
     - https://gist.github.com/hest/8798884
     - https://datawookie.dev/blog/2021/01/sqlalchemy-efficient-counting/
     """
-    result = await session.exec(
+    result = await session.execute(
         query.with_only_columns(func.count(literal_column("1"))).order_by(None)
     )
-    return cast(int, result)
+    return cast(int, result.scalar())
 
 
 async def paginate_query(

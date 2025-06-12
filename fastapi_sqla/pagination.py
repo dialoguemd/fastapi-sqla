@@ -33,9 +33,9 @@ def default_query_count(session: SqlaSession, query: DbQuery) -> int:
     elif isinstance(query, Select):
         result = cast(
             int,
-            session.exec(
+            session.execute(
                 query.with_only_columns(func.count(literal_column("1"))).order_by(None)
-            ),
+            ).scalar(),
         )
 
     else:  # pragma: no cover
