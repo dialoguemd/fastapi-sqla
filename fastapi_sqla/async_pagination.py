@@ -19,6 +19,15 @@ PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 
 
 async def default_query_count(session: SqlaAsyncSession, query: Select) -> int:
+    """Default function used to count items returned by a query.
+
+    It includes some performance optimizations (selecting no columns, removing sorting).
+
+    See:
+    - https://gist.github.com/hest/8798884
+    - https://datawookie.dev/blog/2021/01/sqlalchemy-efficient-counting/
+    """
+    query = query.with_only_columns(1).order_by(None)
     result = await session.execute(select(func.count()).select_from(query.subquery()))
     return cast(int, result.scalar())
 

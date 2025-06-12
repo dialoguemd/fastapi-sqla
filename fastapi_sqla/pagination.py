@@ -21,15 +21,17 @@ PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
 def default_query_count(session: SqlaSession, query: DbQuery) -> int:
     """Default function used to count items returned by a query.
 
-    It is slower than a manually written query could be: It runs the query in a
-    subquery, and count the number of elements returned.
+    It includes some performance optimizations (selecting no columns, removing sorting).
 
-    See https://gist.github.com/hest/8798884
+    See:
+    - https://gist.github.com/hest/8798884
+    - https://datawookie.dev/blog/2021/01/sqlalchemy-efficient-counting/
     """
     if isinstance(query, LegacyQuery):
         result = query.count()
 
     elif isinstance(query, Select):
+        query = query.with_only_columns(1).order_by(None)
         result = cast(
             int,
             session.execute(
