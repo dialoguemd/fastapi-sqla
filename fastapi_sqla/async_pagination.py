@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable, Iterator
 from typing import Annotated, Optional, Union, cast
 
 from fastapi import Depends, Query
-from sqlalchemy.sql import Select, func, select
+from sqlalchemy.sql import Select, func, literal_column
 
 from fastapi_sqla.async_sqla import AsyncSessionDependency, SqlaAsyncSession
 from fastapi_sqla.models import Meta, Page
@@ -27,9 +27,10 @@ async def default_query_count(session: SqlaAsyncSession, query: Select) -> int:
     - https://gist.github.com/hest/8798884
     - https://datawookie.dev/blog/2021/01/sqlalchemy-efficient-counting/
     """
-    query = query.with_only_columns(1).order_by(None)
-    result = await session.execute(select(func.count()).select_from(query.subquery()))
-    return cast(int, result.scalar())
+    result = await session.exec(
+        query.with_only_columns(func.count(literal_column("1"))).order_by(None)
+    )
+    return cast(int, result)
 
 
 async def paginate_query(
