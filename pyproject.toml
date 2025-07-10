@@ -141,6 +141,7 @@ ignore = [
     "S105", # Disable passwords check
     "S106", # Disable passwords check
     "S608", # Allow SQL string construction
+    "PLC0415", # Ignore imports at top of file
 ]
 
 [tool.ruff.lint.pydocstyle]
