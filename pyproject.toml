@@ -62,7 +62,7 @@ psycopg2 = { version = "2.9.10", extras = ["binary"] }
 pytest = "8.4.1"
 pytest-asyncio = "1.0.0"
 pytest-cov = "6.2.1"
-ruff = "0.12.2"
+ruff = "0.12.3"
 tox = "4.27.0"
 
 [tool.poetry.extras]
