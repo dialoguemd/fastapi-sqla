@@ -145,6 +145,17 @@ gssauth = ["gssapi", "sspilib"]
 test = ["distro (>=1.9.0,<1.10.0)", "flake8 (>=6.1,<7.0)", "flake8-pyi (>=24.1.0,<24.2.0)", "gssapi", "k5test", "mypy (>=1.8.0,<1.9.0)", "sspilib", "uvloop (>=0.15.3)"]
 
 [[package]]
+name = "backports-asyncio-runner"
+version = "1.2.0"
+description = "Backport of asyncio.Runner, a context manager that controls event loop life cycle."
+optional = false
+python-versions = "<3.11,>=3.8"
+files = [
+    {file = "backports_asyncio_runner-1.2.0-py3-none-any.whl", hash = "sha256:0da0a936a8aeb554eccb426dc55af3ba63bcdc69fa1a600b5bb305413a4477b5"},
+    {file = "backports_asyncio_runner-1.2.0.tar.gz", hash = "sha256:a5aa7b2b7d8f8bfcaa2b57313f70792df84e32a2a746f585213373f900b42162"},
+]
+
+[[package]]
 name = "boto3"
 version = "1.39.4"
 description = "The AWS SDK for Python"
@@ -358,13 +369,13 @@ test = ["pytest (>=6)"]
 
 [[package]]
 name = "faker"
-version = "37.4.0"
+version = "37.4.2"
 description = "Faker is a Python package that generates fake data for you."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "faker-37.4.0-py3-none-any.whl", hash = "sha256:cb81c09ebe06c32a10971d1bbdb264bb0e22b59af59548f011ac4809556ce533"},
-    {file = "faker-37.4.0.tar.gz", hash = "sha256:7f69d579588c23d5ce671f3fa872654ede0e67047820255f43a4aa1925b89780"},
+    {file = "faker-37.4.2-py3-none-any.whl", hash = "sha256:b70ed1af57bfe988cbcd0afd95f4768c51eaf4e1ce8a30962e127ac5c139c93f"},
+    {file = "faker-37.4.2.tar.gz", hash = "sha256:8e281bbaea30e5658895b8bea21cc50d27aaf3a43db3f2694409ca5701c56b0a"},
 ]
 
 [package.dependencies]
@@ -982,16 +993,17 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests
 
 [[package]]
 name = "pytest-asyncio"
-version = "1.0.0"
+version = "1.1.0"
 description = "Pytest support for asyncio"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pytest_asyncio-1.0.0-py3-none-any.whl", hash = "sha256:4f024da9f1ef945e680dc68610b52550e36590a67fd31bb3b4943979a1f90ef3"},
-    {file = "pytest_asyncio-1.0.0.tar.gz", hash = "sha256:d15463d13f4456e1ead2594520216b225a16f781e144f8fdf6c5bb4667c48b3f"},
+    {file = "pytest_asyncio-1.1.0-py3-none-any.whl", hash = "sha256:5fe2d69607b0bd75c656d1211f969cadba035030156745ee09e7d71740e58ecf"},
+    {file = "pytest_asyncio-1.1.0.tar.gz", hash = "sha256:796aa822981e01b68c12e4827b8697108f7205020f24b5793b3c41555dab68ea"},
 ]
 
 [package.dependencies]
+backports-asyncio-runner = {version = ">=1.1,<2", markers = "python_version < \"3.11\""}
 pytest = ">=8.2,<9"
 typing-extensions = {version = ">=4.12", markers = "python_version < \"3.10\""}
 
@@ -1495,4 +1507,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.14"
-content-hash = "b093d50c733e25f83436fc2dc7463f654f356928cfe6e2ee3d4a2aaff8ae2f93"
+content-hash = "ecdd68dc09145941755586cd44153db9134dd5bb74f3309f511c30e3314ffa1d"
