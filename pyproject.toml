@@ -63,7 +63,7 @@ pytest = "8.4.1"
 pytest-asyncio = "1.1.0"
 pytest-cov = "6.2.1"
 ruff = "0.12.11"
-tox = "4.29.0"
+tox = "4.30.1"
 
 [tool.poetry.extras]
 asyncpg = ["asyncpg"]
