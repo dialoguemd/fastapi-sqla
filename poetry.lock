@@ -155,32 +155,32 @@ files = [
 
 [[package]]
 name = "boto3"
-version = "1.40.21"
+version = "1.40.30"
 description = "The AWS SDK for Python"
 optional = true
 python-versions = ">=3.9"
 files = [
-    {file = "boto3-1.40.21-py3-none-any.whl", hash = "sha256:3772fb828864d3b7046c8bdf2f4860aaca4a79f25b7b060206c6a5f4944ea7f9"},
-    {file = "boto3-1.40.21.tar.gz", hash = "sha256:876ccc0b25517b992bd27976282510773a11ebc771aa5b836a238ea426c82187"},
+    {file = "boto3-1.40.30-py3-none-any.whl", hash = "sha256:04e89abf61240857bf7dec160e22f097eec68c502509b2bb3c5010a22cb91052"},
+    {file = "boto3-1.40.30.tar.gz", hash = "sha256:e95db539c938710917f4cb4fc5915f71b27f2c836d949a1a95df7895d2e9ec8b"},
 ]
 
 [package.dependencies]
-botocore = ">=1.40.21,<1.41.0"
+botocore = ">=1.40.30,<1.41.0"
 jmespath = ">=0.7.1,<2.0.0"
-s3transfer = ">=0.13.0,<0.14.0"
+s3transfer = ">=0.14.0,<0.15.0"
 
 [package.extras]
 crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.40.21"
+version = "1.40.30"
 description = "Low-level, data-driven core of boto 3."
 optional = true
 python-versions = ">=3.9"
 files = [
-    {file = "botocore-1.40.21-py3-none-any.whl", hash = "sha256:574ecf9b68c1721650024a27e00e0080b6f141c281ebfce49e0d302969270ef4"},
-    {file = "botocore-1.40.21.tar.gz", hash = "sha256:f77e9c199df0252b14ea739a9ac99723940f6bde90f4c2e7802701553a62827b"},
+    {file = "botocore-1.40.30-py3-none-any.whl", hash = "sha256:1d87874ad81234bec3e83f9de13618f67ccdfefd08d6b8babc041cd45007447e"},
+    {file = "botocore-1.40.30.tar.gz", hash = "sha256:8a74f77cfe5c519826d22f7613f89544cbb8491a1a49d965031bd997f89a8e3f"},
 ]
 
 [package.dependencies]
@@ -825,13 +825,13 @@ files = [
 
 [[package]]
 name = "pydantic"
-version = "2.11.7"
+version = "2.11.9"
 description = "Data validation using Python type hints"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "pydantic-2.11.7-py3-none-any.whl", hash = "sha256:dde5df002701f6de26248661f6835bbe296a47bf73990135c7d07ce741b9623b"},
-    {file = "pydantic-2.11.7.tar.gz", hash = "sha256:d989c3c6cb79469287b1569f7447a17848c998458d49ebe294e975b9baf0f0db"},
+    {file = "pydantic-2.11.9-py3-none-any.whl", hash = "sha256:c42dd626f5cfc1c6950ce6205ea58c93efa406da65f479dcb4029d5934857da2"},
+    {file = "pydantic-2.11.9.tar.gz", hash = "sha256:6b8ffda597a14812a7975c90b82a8a2e777d9257aba3453f973acd3c032a18e2"},
 ]
 
 [package.dependencies]
@@ -1094,13 +1094,13 @@ files = [
 
 [[package]]
 name = "s3transfer"
-version = "0.13.1"
+version = "0.14.0"
 description = "An Amazon S3 Transfer Manager"
 optional = true
 python-versions = ">=3.9"
 files = [
-    {file = "s3transfer-0.13.1-py3-none-any.whl", hash = "sha256:a981aa7429be23fe6dfc13e80e4020057cbab622b08c0315288758d67cabc724"},
-    {file = "s3transfer-0.13.1.tar.gz", hash = "sha256:c3fdba22ba1bd367922f27ec8032d6a1cf5f10c934fb5d68cf60fd5a23d936cf"},
+    {file = "s3transfer-0.14.0-py3-none-any.whl", hash = "sha256:ea3b790c7077558ed1f02a3072fb3cb992bbbd253392f4b6e9e8976941c7d456"},
+    {file = "s3transfer-0.14.0.tar.gz", hash = "sha256:eff12264e7c8b4985074ccce27a3b38a485bb7f7422cc8046fee9be4983e4125"},
 ]
 
 [package.dependencies]
