@@ -2,6 +2,150 @@
 
 
 
+## v3.5.2 (2025-09-18)
+
+### Chore
+
+* chore(deps): update dependency faker to v37.8.0 (#344)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`0edeb8f`](https://github.com/dialoguemd/fastapi-sqla/commit/0edeb8fec302a8759d8730fe2528f5c73a54b81a))
+
+* chore(deps): update dependency pytest-cov to v7 (#343)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`faff502`](https://github.com/dialoguemd/fastapi-sqla/commit/faff502d6cd1ebd0fb1d18d0d02552a85f6ec408))
+
+* chore(deps): lock file maintenance (#341)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`a552a1d`](https://github.com/dialoguemd/fastapi-sqla/commit/a552a1db92b4b2cc6f5225e025ee8f9acea8cc35))
+
+* chore(deps): update python dev dependencies (#342)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`5043623`](https://github.com/dialoguemd/fastapi-sqla/commit/5043623ffa5e604506c7a011a7b680ae8db2a37b))
+
+* chore(deps): update python dev dependencies (#340)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`01dd670`](https://github.com/dialoguemd/fastapi-sqla/commit/01dd6703070e45d52a8b4af16df8cda4cf8197b8))
+
+* chore(deps): update dependency tox to v4.30.1 (#339)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`2a69885`](https://github.com/dialoguemd/fastapi-sqla/commit/2a69885a11176e11b4a0fe0ef5f8c3988cb87586))
+
+* chore(deps): lock file maintenance (#337)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`3c3cf1c`](https://github.com/dialoguemd/fastapi-sqla/commit/3c3cf1c8d88a0e4f38e3a9b0370a78d85e1e0175))
+
+* chore(deps): update dependency tox to v4.29.0 (#338)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`c1143d5`](https://github.com/dialoguemd/fastapi-sqla/commit/c1143d5c659ffc71d9d86491f37ee8a45c4852f5))
+
+* chore(deps): update dependency ruff to v0.12.11 (#336)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`630907f`](https://github.com/dialoguemd/fastapi-sqla/commit/630907f6c4b742acfa4665ac8830642aa7583425))
+
+* chore(deps): update dependency alembic to v1.16.5 (#335)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`ce52a79`](https://github.com/dialoguemd/fastapi-sqla/commit/ce52a7970082f7d64df68e2dc922a04f6f3e0fc1))
+
+* chore(deps): update dependency faker to v37.6.0 (#334)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`ca64e19`](https://github.com/dialoguemd/fastapi-sqla/commit/ca64e19776326cbc5f8f4ad07597f9ca4dc4f39c))
+
+* chore(deps): lock file maintenance (#333)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`26a0306`](https://github.com/dialoguemd/fastapi-sqla/commit/26a030678c54c402a45506ffce843487ebca2059))
+
+* chore(deps): update dependency ruff to v0.12.10 (#332)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`513292e`](https://github.com/dialoguemd/fastapi-sqla/commit/513292e860642024c75cba19496cb8ebdb39be35))
+
+* chore(deps): lock file maintenance (#331)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`95a2951`](https://github.com/dialoguemd/fastapi-sqla/commit/95a2951b7223503afd23a667bb52d481bd7eab05))
+
+* chore(deps): lock file maintenance (#328)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`70c433e`](https://github.com/dialoguemd/fastapi-sqla/commit/70c433e94d3cc37b084bf419769978064155147a))
+
+* chore(deps): update dependency ruff to v0.12.9 (#330)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`117d085`](https://github.com/dialoguemd/fastapi-sqla/commit/117d0854e132078f75f0159b604f8317af5e8cbe))
+
+* chore(deps): update python dev dependencies (#329)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`87b9e92`](https://github.com/dialoguemd/fastapi-sqla/commit/87b9e92c610e17e2ab326c949caa15cfba48b359))
+
+* chore(deps): update python dev dependencies (#327)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`c03274b`](https://github.com/dialoguemd/fastapi-sqla/commit/c03274b3b9579d1d905f21057ce6420106acaede))
+
+* chore(deps): update dependency faker to v37.5.3 (#326)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`756bb2e`](https://github.com/dialoguemd/fastapi-sqla/commit/756bb2e6febdc8bf015125d14574041223f7727e))
+
+* chore(deps): update dependency ruff to v0.12.7 (#325)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`ea39355`](https://github.com/dialoguemd/fastapi-sqla/commit/ea39355e5934702db62b368d77e16cf93af7444c))
+
+* chore(deps): lock file maintenance (#323)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`b671284`](https://github.com/dialoguemd/fastapi-sqla/commit/b671284f4039847d754859fe308205542adce108))
+
+* chore(deps): update dependency tox to v4.28.3 (#324)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`058edd1`](https://github.com/dialoguemd/fastapi-sqla/commit/058edd178473647ccfdddf770eea616f48e6c6ec))
+
+* chore(deps): update dependency ruff to v0.12.5 (#322)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`c4455e3`](https://github.com/dialoguemd/fastapi-sqla/commit/c4455e3b88be164ac483428e722d2a3775270d27))
+
+* chore(deps): update dependency tox to v4.28.1 (#321)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`f5ad970`](https://github.com/dialoguemd/fastapi-sqla/commit/f5ad970e87b70fa468cb2adbc0eb190aab85e7c1))
+
+* chore(deps): lock file maintenance (#320)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`506a646`](https://github.com/dialoguemd/fastapi-sqla/commit/506a6469a0a5bfd80453ed495a732a78030d2a24))
+
+* chore(deps): update python dev dependencies (#319)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`407f6b0`](https://github.com/dialoguemd/fastapi-sqla/commit/407f6b06dc64c4000c082b58c0cf63fbd88ab4ec))
+
+* chore(deps): update python dev dependencies (#318)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`590ebf7`](https://github.com/dialoguemd/fastapi-sqla/commit/590ebf716d937611a54a1e57d27d6060570ed437))
+
+* chore(deps): update dependency mypy to v1.17.0 (#317)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`23d86fe`](https://github.com/dialoguemd/fastapi-sqla/commit/23d86feba44cab0d093caed27f4802cd6943ae4c))
+
+* chore(deps): lock file maintenance (#316)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`6c79068`](https://github.com/dialoguemd/fastapi-sqla/commit/6c790681665e0e5a5160384691fa3efecb0436e3))
+
+* chore(deps): update dependency ruff to v0.12.3 (#315)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`70d69c8`](https://github.com/dialoguemd/fastapi-sqla/commit/70d69c851cd8434091bc1d6a3672f3cdd2a73ac0))
+
+* chore(deps): update python dev dependencies (#309)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt;
+Co-authored-by: Arthur Loiselle &lt;arthur.loiselle@dialogue.co&gt; ([`aa9d390`](https://github.com/dialoguemd/fastapi-sqla/commit/aa9d39047727f33fa77411afd678411635cb413f))
+
+* chore(deps): lock file maintenance (#310)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`760c42d`](https://github.com/dialoguemd/fastapi-sqla/commit/760c42d49707fe33a018476bc8d297f234de6176))
+
+* chore(deps): update dependency pytest-asyncio to v1 (#311)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`4652f61`](https://github.com/dialoguemd/fastapi-sqla/commit/4652f614f5936278a5eadf9a17bfca18a868a4a0))
+
+### Fix
+
+* fix(deps): update dependency sqlmodel to &gt;=0.0.14,&lt;0.0.26 (#345)
+
+Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`a125682`](https://github.com/dialoguemd/fastapi-sqla/commit/a125682b687bc7a99835749c96533df0c54a52c2))
+
+
 ## v3.5.1 (2025-07-10)
 
 ### Chore
@@ -45,6 +189,10 @@ Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`ff93e56
 Co-authored-by: Renovate Bot &lt;renovate@whitesourcesoftware.com&gt; ([`5e55016`](https://github.com/dialoguemd/fastapi-sqla/commit/5e55016e009b582821ca49e5d2319bf7845f7040))
 
 ### Unknown
+
+* 3.5.1
+
+Version generated by python-semantic-release [ci skip] ([`93cc4f0`](https://github.com/dialoguemd/fastapi-sqla/commit/93cc4f0adc92d1ae94211dc39c609bdd1a08072b))
 
 * chore(orbs) decommission slack (PLAT-98) (#308) ([`e66eeb5`](https://github.com/dialoguemd/fastapi-sqla/commit/e66eeb51cd0cf78b1ff88e02335ba0dca11cc636))
 
