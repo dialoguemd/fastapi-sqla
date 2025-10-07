@@ -54,7 +54,7 @@ sqlmodel = { version = ">=0.0.14,<0.0.26", optional = true }
 [tool.poetry.group.dev.dependencies]
 alembic = "1.16.5"
 asgi_lifespan = "2.1.0"
-Faker = "37.8.0"
+Faker = "37.11.0"
 greenlet = "3.2.4"
 httpx = "0.28.1"
 mypy = { version = "1.18.2", extras = ["tests"] }
