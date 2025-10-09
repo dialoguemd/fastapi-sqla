@@ -1571,5 +1571,5 @@ sqlmodel = ["sqlmodel"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.9,<3.14"
-content-hash = "28b17435936543ae367233bb5a22caf741267298ba51a90f158cae0ef80d5118"
+python-versions = ">=3.9,<3.15"
+content-hash = "bcb9793d7db893bef1aa0b9efd553a96f56eb50a9a2685d964e9ff3ab3560043"
