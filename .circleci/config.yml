@@ -1,24 +1,24 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.26.2
-  release: dialogue/release@2.23.0
-  python: dialogue/python@3.30.0
-  utils: dialogue/utils@3.22.2
+  base: dialogue/base@1.27.0
+  release: dialogue/release@2.24.0
+  python: dialogue/python@3.33.0
+  utils: dialogue/utils@3.23.0
   codecov: codecov/codecov@4.1.0
 
 aliases:
   - &executor
     executor:
       name: python/python
-      version: "3.12.5"
+      version: "3.13"
 
 executors:
   python-postgres:
     parameters:
       python_version:
         type: string
-        default: "3.12.5"
+        default: "3.13"
     docker:
       - image: cimg/python:<< parameters.python_version >>
       - image: postgres:16.4
@@ -45,7 +45,7 @@ workflows:
           context: code-validator
           matrix:
             parameters:
-              python_version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+              python_version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
               sqlalchemy_version: ["1.4", "2.0", "2.0-sqlmodel"]
               asyncpg: ["asyncpg", "noasyncpg"]
               aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
@@ -81,7 +81,7 @@ jobs:
     parameters:
       python_version:
         type: enum
-        enum: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        enum: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         description: |
           Specify which version of python to run the tests against
       sqlalchemy_version:
