@@ -45,7 +45,7 @@ workflows:
           context: code-validator
           matrix:
             parameters:
-              python_version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+              python_version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
               sqlalchemy_version: ["1.4", "2.0", "2.0-sqlmodel"]
               asyncpg: ["asyncpg", "noasyncpg"]
               aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
@@ -81,7 +81,7 @@ jobs:
     parameters:
       python_version:
         type: enum
-        enum: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        enum: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         description: |
           Specify which version of python to run the tests against
       sqlalchemy_version:
