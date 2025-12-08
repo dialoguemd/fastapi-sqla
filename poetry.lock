@@ -434,13 +434,13 @@ tzdata = "*"
 
 [[package]]
 name = "fastapi"
-version = "0.123.0"
+version = "0.124.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fastapi-0.123.0-py3-none-any.whl", hash = "sha256:cb56e69e874afa897bd3416c8a3dbfdae1730d0a308d4c63303f3f4b44136ae4"},
-    {file = "fastapi-0.123.0.tar.gz", hash = "sha256:1410678b3c44418245eec85088b15140d894074b86e66061017e2b492c09b138"},
+    {file = "fastapi-0.124.0-py3-none-any.whl", hash = "sha256:91596bdc6dde303c318f06e8d2bc75eafb341fc793a0c9c92c0bc1db1ac52480"},
+    {file = "fastapi-0.124.0.tar.gz", hash = "sha256:260cd178ad75e6d259991f2fd9b0fee924b224850079df576a3ba604ce58f4e6"},
 ]
 
 [package.dependencies]
@@ -1662,4 +1662,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.14"
-content-hash = "83b33c0ebe8a2114cad2994293b05a1da8ab519da2487645c1bcf65287be1c61"
+content-hash = "944cbd86c6b3c9138a7d5bfd19ee40bc99a0c1181bf16eb158f0fae1c0983dd7"
