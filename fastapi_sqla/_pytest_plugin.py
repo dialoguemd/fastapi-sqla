@@ -142,7 +142,8 @@ def session(session_factory: sessionmaker) -> Generator[Session]:
 
 def format_async_async_sqlalchemy_url(url: str) -> str:
     scheme, location, path, query, fragment = urlsplit(url)
-    return urlunsplit([f"{scheme}+asyncpg", location, path, query, fragment])
+    bare_scheme = scheme.split("+")[0]
+    return urlunsplit([f"{bare_scheme}+asyncpg", location, path, query, fragment])
 
 
 @fixture(scope="session")

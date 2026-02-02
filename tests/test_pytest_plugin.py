@@ -175,6 +175,11 @@ def test_sqla_modules_fixture_raises_exception_when_not_overriden(testdir, conft
     [
         ("postgresql://localhost/db", "postgresql+asyncpg://localhost/db"),
         ("postgresql://u:p@localhost/db", "postgresql+asyncpg://u:p@localhost/db"),
+        ("postgresql+psycopg://localhost/db", "postgresql+asyncpg://localhost/db"),
+        (
+            "postgresql+psycopg://u:p@localhost/db",
+            "postgresql+asyncpg://u:p@localhost/db",
+        ),
     ],
 )
 def test_format_async_sqlalchemy_url(monkeypatch, conftest, testdir, url, expected):
