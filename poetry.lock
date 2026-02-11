@@ -1331,13 +1331,13 @@ sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
 name = "sqlmodel"
-version = "0.0.32"
+version = "0.0.33"
 description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
 optional = true
 python-versions = ">=3.9"
 files = [
-    {file = "sqlmodel-0.0.32-py3-none-any.whl", hash = "sha256:d62f0702599592046c1a136d3512feab3d5a80e2988642ef0ed2c89b9b8b297b"},
-    {file = "sqlmodel-0.0.32.tar.gz", hash = "sha256:48e8fe4c8c3d7d8bf8468db17fa92ca680421e86cfec8b352217ef40736767be"},
+    {file = "sqlmodel-0.0.33-py3-none-any.whl", hash = "sha256:9045bb4d97d2ba099c5a068ee9525af2d106972dda1ff8488e187ce50556bf73"},
+    {file = "sqlmodel-0.0.33.tar.gz", hash = "sha256:b473544ed5fc2097894d89033049e569e1f138363dd3ec2ed4b6932cc9f29f5f"},
 ]
 
 [package.dependencies]
@@ -1663,4 +1663,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.14"
-content-hash = "03e7b248350b767741bd479bee401903fad00cce596976af6814f5a9b173b76a"
+content-hash = "3f9714a8ecea6a1b8f5b7a7b2a8a9d38e1d325e3ee1bb92d0c7f5572a21663d5"
