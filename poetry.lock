@@ -203,8 +203,8 @@ files = [
 jmespath = ">=0.7.1,<2.0.0"
 python-dateutil = ">=2.1,<3.0.0"
 urllib3 = [
-    {version = ">=1.25.4,<1.27", markers = "python_version < \"3.10\""},
     {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >= \"3.10\""},
+    {version = ">=1.25.4,<1.27", markers = "python_version < \"3.10\""},
 ]
 
 [package.extras]
@@ -1663,4 +1663,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.14"
-content-hash = "0b313dd4b3f78625a70d5fb47d7bc3ec8c2e164c6cdc9dc92a1a3970a042c4c4"
+content-hash = "389300dcfb28e58e1b7ab505c3e8ac443e5978012c519d92010d947c459feae2"
