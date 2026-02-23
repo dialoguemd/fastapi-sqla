@@ -54,12 +54,12 @@ sqlmodel = { version = ">=0.0.14,<0.0.38", optional = true }
 [tool.poetry.group.dev.dependencies]
 alembic = "1.16.5"
 asgi_lifespan = "2.1.0"
-Faker = "37.11.0"
+Faker = "40.5.1"
 greenlet = "3.2.4"
 httpx = "0.28.1"
 mypy = { version = "1.18.2", extras = ["tests"] }
 psycopg2 = { version = "2.9.10", extras = ["binary"] }
-pytest = "8.4.2"
+pytest = "9.0.2"
 pytest-asyncio = "1.2.0"
 pytest-cov = "7.0.0"
 ruff = "0.14.0"
