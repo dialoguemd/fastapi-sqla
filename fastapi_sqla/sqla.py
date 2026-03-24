@@ -54,7 +54,7 @@ def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
     envvar_prefix = get_envvar_prefix(key)
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
-    return engine_from_config(lowercase_environ, prefix=envvar_prefix)
+    return engine_from_config(lowercase_environ, prefix=envvar_prefix, hide_parameters=True)
 
 
 def startup(key: str = _DEFAULT_SESSION_KEY):
