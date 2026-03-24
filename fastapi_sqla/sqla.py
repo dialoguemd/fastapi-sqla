@@ -50,12 +50,21 @@ def get_envvar_prefix(key: str) -> str:
     return envvar_prefix
 
 
+def _resolve_hide_parameters(lowercase_environ: dict, envvar_prefix: str) -> bool:
+    key = f"{envvar_prefix}hide_parameters"
+    value = lowercase_environ.pop(key, None)
+    if value is None:
+        return True
+    return value.lower() == "true"
+
+
 def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
     envvar_prefix = get_envvar_prefix(key)
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
+    hide_parameters = _resolve_hide_parameters(lowercase_environ, envvar_prefix)
     return engine_from_config(
-        lowercase_environ, prefix=envvar_prefix, hide_parameters=True
+        lowercase_environ, prefix=envvar_prefix, hide_parameters=hide_parameters
     )
 
 
