@@ -192,6 +192,16 @@ async def test_fastapi_integration():
     assert res.json() == 1
 
 
+def test_apply_engine_defaults_non_bool():
+    from fastapi_sqla.sqla import _apply_engine_defaults
+
+    environ = {"sqlalchemy_echo": "debug"}
+    result = _apply_engine_defaults(environ, "sqlalchemy_", {"echo": "info"})
+
+    assert result == {"echo": "debug"}
+    assert "sqlalchemy_echo" not in environ
+
+
 def test_new_engine_hides_parameters_by_default():
     from fastapi_sqla.sqla import new_engine
 
