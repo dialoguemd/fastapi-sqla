@@ -50,21 +50,37 @@ def get_envvar_prefix(key: str) -> str:
     return envvar_prefix
 
 
-def _resolve_hide_parameters(lowercase_environ: dict, envvar_prefix: str) -> bool:
-    key = f"{envvar_prefix}hide_parameters"
-    value = lowercase_environ.pop(key, None)
-    if value is None:
-        return True
-    return value.lower() == "true"
+_ENGINE_DEFAULTS = {
+    "hide_parameters": True,
+}
+
+
+def _apply_engine_defaults(
+    lowercase_environ: dict,
+    envvar_prefix: str,
+    defaults: dict = _ENGINE_DEFAULTS,
+) -> dict:
+    """Resolve opinionated engine defaults from env vars."""
+    result = {}
+    for param, default in defaults.items():
+        env_key = f"{envvar_prefix}{param}"
+        value = lowercase_environ.pop(env_key, None)
+        if value is None:
+            result[param] = default
+        elif isinstance(default, bool):
+            result[param] = value.lower() == "true"
+        else:
+            result[param] = value
+    return result
 
 
 def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
     envvar_prefix = get_envvar_prefix(key)
     lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
     lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
-    hide_parameters = _resolve_hide_parameters(lowercase_environ, envvar_prefix)
+    engine_defaults = _apply_engine_defaults(lowercase_environ, envvar_prefix)
     return engine_from_config(
-        lowercase_environ, prefix=envvar_prefix, hide_parameters=hide_parameters
+        lowercase_environ, prefix=envvar_prefix, **engine_defaults
     )
 
 
