@@ -227,7 +227,9 @@ async def test_new_async_engine_hide_parameters_can_be_disabled(
 ):
     from fastapi_sqla.async_sqla import new_async_engine
 
-    monkeypatch.setenv("sqlalchemy_hide_parameters", "false")
+    monkeypatch.setenv(
+        f"fastapi_sqla__{async_session_key}__sqlalchemy_hide_parameters", "false"
+    )
 
     engine_or_conn = new_async_engine(async_session_key)
 
