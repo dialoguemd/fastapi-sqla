@@ -58,16 +58,21 @@ _ENGINE_DEFAULTS = {
 def _get_engine_config(
     envvar_prefix: str,
     defaults: dict = _ENGINE_DEFAULTS,
-) -> dict:
+) -> dict[str, Union[str, bool]]:
     """Build engine config dict with opinionated defaults and type coercion."""
-    lowercase_env = {k.lower(): v for k, v in os.environ.items()}
+    lowercase_env: dict[str, Union[str, bool]] = {
+        k.lower(): v for k, v in os.environ.items()
+    }
     lowercase_env.pop(f"{envvar_prefix}warn_20", None)
     for param, default in defaults.items():
         env_key = f"{envvar_prefix}{param}"
         if env_key not in lowercase_env:
             lowercase_env[env_key] = default
         elif isinstance(default, bool):
-            lowercase_env[env_key] = lowercase_env[env_key].lower() == "true"
+            env_val = lowercase_env[env_key]
+            lowercase_env[env_key] = (
+                isinstance(env_val, str) and env_val.lower() == "true"
+            )
     return lowercase_env
 
 
