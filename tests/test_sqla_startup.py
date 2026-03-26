@@ -192,14 +192,22 @@ async def test_fastapi_integration():
     assert res.json() == 1
 
 
-def test_apply_engine_defaults_non_bool():
-    from fastapi_sqla.sqla import _apply_engine_defaults
+def test_get_engine_config_non_bool_default(monkeypatch):
+    from fastapi_sqla.sqla import _get_engine_config
 
-    environ = {"sqlalchemy_echo": "debug"}
-    result = _apply_engine_defaults(environ, "sqlalchemy_", {"echo": "info"})
+    monkeypatch.setenv("sqlalchemy_echo", "debug")
+    config = _get_engine_config("sqlalchemy_", defaults={"echo": "info"})
 
-    assert result == {"echo": "debug"}
-    assert "sqlalchemy_echo" not in environ
+    assert config["sqlalchemy_echo"] == "debug"
+
+
+def test_get_engine_config_non_bool_default_not_set(monkeypatch):
+    from fastapi_sqla.sqla import _get_engine_config
+
+    monkeypatch.delenv("sqlalchemy_echo", raising=False)
+    config = _get_engine_config("sqlalchemy_", defaults={"echo": "info"})
+
+    assert config["sqlalchemy_echo"] == "info"
 
 
 def test_new_engine_hides_parameters_by_default():

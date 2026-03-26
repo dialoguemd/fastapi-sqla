@@ -20,7 +20,7 @@ from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 from fastapi_sqla.sqla import (
     _DEFAULT_SESSION_KEY,
     Base,
-    _apply_engine_defaults,
+    _get_engine_config,
     get_envvar_prefix,
 )
 
@@ -34,12 +34,8 @@ def new_async_engine(
     key: str = _DEFAULT_SESSION_KEY,
 ) -> Union[AsyncEngine, AsyncConnection]:
     envvar_prefix = get_envvar_prefix(key)
-    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
-    lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
-    engine_defaults = _apply_engine_defaults(lowercase_environ, envvar_prefix)
-    return async_engine_from_config(
-        lowercase_environ, prefix=envvar_prefix, **engine_defaults
-    )
+    config = _get_engine_config(envvar_prefix)
+    return async_engine_from_config(config, prefix=envvar_prefix)
 
 
 async def startup(key: str = _DEFAULT_SESSION_KEY):

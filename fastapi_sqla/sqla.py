@@ -55,33 +55,26 @@ _ENGINE_DEFAULTS = {
 }
 
 
-def _apply_engine_defaults(
-    lowercase_environ: dict,
+def _get_engine_config(
     envvar_prefix: str,
     defaults: dict = _ENGINE_DEFAULTS,
 ) -> dict:
-    """Resolve opinionated engine defaults from env vars."""
-    result = {}
+    """Build engine config dict with opinionated defaults and type coercion."""
+    lowercase_env = {k.lower(): v for k, v in os.environ.items()}
+    lowercase_env.pop(f"{envvar_prefix}warn_20", None)
     for param, default in defaults.items():
         env_key = f"{envvar_prefix}{param}"
-        value = lowercase_environ.pop(env_key, None)
-        if value is None:
-            result[param] = default
+        if env_key not in lowercase_env:
+            lowercase_env[env_key] = default
         elif isinstance(default, bool):
-            result[param] = value.lower() == "true"
-        else:
-            result[param] = value
-    return result
+            lowercase_env[env_key] = lowercase_env[env_key].lower() == "true"
+    return lowercase_env
 
 
 def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
     envvar_prefix = get_envvar_prefix(key)
-    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
-    lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
-    engine_defaults = _apply_engine_defaults(lowercase_environ, envvar_prefix)
-    return engine_from_config(
-        lowercase_environ, prefix=envvar_prefix, **engine_defaults
-    )
+    config = _get_engine_config(envvar_prefix)
+    return engine_from_config(config, prefix=envvar_prefix)
 
 
 def startup(key: str = _DEFAULT_SESSION_KEY):
