@@ -80,8 +80,7 @@ else:
             extra = "allow"
 
         @root_validator(pre=True)
-        @classmethod
-        def coerce_booleans(cls, values):
+        def coerce_booleans(cls, values):  # noqa: N805
             return _coerce_bool_strings(values)
 
 
@@ -111,7 +110,7 @@ def _get_engine_config(
         for k, v in lowercase_env.items()
         if k.startswith(envvar_prefix)
     }
-    config = _EngineConfig(**overrides)
+    config = _EngineConfig(**overrides)  # type: ignore[arg-type]
     coerced = config.model_dump() if _pydantic_major == 2 else config.dict()
     for param, value in coerced.items():
         lowercase_env[f"{envvar_prefix}{param}"] = value
