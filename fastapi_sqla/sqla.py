@@ -53,9 +53,7 @@ def _coerce_bool_string(value):
 
 
 def _coerce_bool_strings(data):
-    if isinstance(data, dict):
-        return {k: _coerce_bool_string(v) for k, v in data.items()}
-    return data
+    return {k: _coerce_bool_string(v) for k, v in data.items()}
 
 
 if _pydantic_major == 2:
