@@ -233,25 +233,28 @@ def test_new_engine_hide_parameters(monkeypatch, env_value, expected):
 
 @mark.require_asyncpg
 @mark.sqlalchemy("1.4")
-async def test_new_async_engine_hides_parameters_by_default(async_session_key):
-    from fastapi_sqla.async_sqla import new_async_engine
-
-    engine_or_conn = new_async_engine(async_session_key)
-
-    assert engine_or_conn.sync_engine.hide_parameters is True
-
-
-@mark.require_asyncpg
-@mark.sqlalchemy("1.4")
-async def test_new_async_engine_hide_parameters_can_be_disabled(
-    monkeypatch, async_session_key
+@mark.parametrize(
+    "env_value, expected",
+    [
+        (None, True),
+        ("false", False),
+    ],
+)
+async def test_new_async_engine_hide_parameters(
+    monkeypatch, async_session_key, env_value, expected
 ):
     from fastapi_sqla.async_sqla import new_async_engine
 
-    monkeypatch.setenv(
-        f"fastapi_sqla__{async_session_key}__sqlalchemy_hide_parameters", "false"
-    )
+    if env_value is not None:
+        monkeypatch.setenv(
+            f"fastapi_sqla__{async_session_key}__sqlalchemy_hide_parameters", env_value
+        )
+    else:
+        monkeypatch.delenv(
+            f"fastapi_sqla__{async_session_key}__sqlalchemy_hide_parameters",
+            raising=False,
+        )
 
     engine_or_conn = new_async_engine(async_session_key)
 
-    assert engine_or_conn.sync_engine.hide_parameters is False
+    assert engine_or_conn.sync_engine.hide_parameters is expected
