@@ -104,7 +104,7 @@ def _get_engine_config(
     lowercase_env.pop(f"{envvar_prefix}warn_20", None)
 
     overrides = {
-        k[len(envvar_prefix):]: v
+        k[len(envvar_prefix) :]: v
         for k, v in lowercase_env.items()
         if k.startswith(envvar_prefix)
     }
