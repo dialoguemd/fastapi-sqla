@@ -77,7 +77,7 @@ else:
         class Config:
             extra = "allow"
 
-        @root_validator(pre=True)
+        @root_validator(pre=True, allow_reuse=True)
         def coerce_booleans(cls, values):  # noqa: N805
             return _coerce_bool_strings(values)
 
