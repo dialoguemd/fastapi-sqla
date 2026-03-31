@@ -8,6 +8,8 @@ import structlog
 from fastapi import Depends, Request, Response
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
+from pydantic import __version__ as pydantic_version
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -16,6 +18,8 @@ from sqlalchemy.orm.session import sessionmaker
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
+
+_pydantic_major = int(pydantic_version.split(".")[0])
 
 try:
     from sqlalchemy.orm import DeclarativeBase
@@ -36,9 +40,49 @@ logger = structlog.get_logger(__name__)
 _DEFAULT_SESSION_KEY = "default"
 _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
-_ENGINE_DEFAULTS = {
-    "hide_parameters": True,
-}
+
+
+def _coerce_bool_string(value):
+    if isinstance(value, str):
+        lowered = value.lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+    return value
+
+
+def _coerce_bool_strings(data):
+    if isinstance(data, dict):
+        return {k: _coerce_bool_string(v) for k, v in data.items()}
+    return data
+
+
+if _pydantic_major == 2:
+    from pydantic import model_validator
+
+    class _EngineConfig(BaseModel):
+        model_config = {"extra": "allow"}
+        hide_parameters: bool = True
+
+        @model_validator(mode="before")
+        @classmethod
+        def coerce_booleans(cls, data):
+            return _coerce_bool_strings(data)
+
+else:
+    from pydantic import root_validator
+
+    class _EngineConfig(BaseModel):  # type: ignore[no-redef]
+        hide_parameters: bool = True
+
+        class Config:
+            extra = "allow"
+
+        @root_validator(pre=True)
+        @classmethod
+        def coerce_booleans(cls, values):
+            return _coerce_bool_strings(values)
 
 
 class Base(DeclarativeBase, DeferredReflection):
@@ -55,22 +99,23 @@ def get_envvar_prefix(key: str) -> str:
 
 def _get_engine_config(
     envvar_prefix: str,
-    defaults: dict = _ENGINE_DEFAULTS,
 ) -> dict[str, Union[str, bool]]:
     """Build engine config dict with opinionated defaults and type coercion."""
     lowercase_env: dict[str, Union[str, bool]] = {
         k.lower(): v for k, v in os.environ.items()
     }
     lowercase_env.pop(f"{envvar_prefix}warn_20", None)
-    for param, default in defaults.items():
-        env_key = f"{envvar_prefix}{param}"
-        if env_key not in lowercase_env:
-            lowercase_env[env_key] = default
-        elif isinstance(default, bool):
-            env_val = lowercase_env[env_key]
-            lowercase_env[env_key] = (
-                isinstance(env_val, str) and env_val.lower() == "true"
-            )
+
+    overrides = {
+        k[len(envvar_prefix):]: v
+        for k, v in lowercase_env.items()
+        if k.startswith(envvar_prefix)
+    }
+    config = _EngineConfig(**overrides)
+    coerced = config.model_dump() if _pydantic_major == 2 else config.dict()
+    for param, value in coerced.items():
+        lowercase_env[f"{envvar_prefix}{param}"] = value
+
     return lowercase_env
 
 

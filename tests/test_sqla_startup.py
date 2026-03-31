@@ -195,18 +195,16 @@ async def test_fastapi_integration():
 @mark.parametrize(
     "env_value, expected",
     [
+        ("true", True),
+        ("false", False),
         ("debug", "debug"),
-        (None, "info"),
     ],
 )
-def test_get_engine_config_non_bool_default(monkeypatch, env_value, expected):
+def test_get_engine_config_coerces_bool_strings(monkeypatch, env_value, expected):
     from fastapi_sqla.sqla import _get_engine_config
 
-    if env_value is not None:
-        monkeypatch.setenv("sqlalchemy_echo", env_value)
-    else:
-        monkeypatch.delenv("sqlalchemy_echo", raising=False)
-    config = _get_engine_config("sqlalchemy_", defaults={"echo": "info"})
+    monkeypatch.setenv("sqlalchemy_echo", env_value)
+    config = _get_engine_config("sqlalchemy_")
 
     assert config["sqlalchemy_echo"] == expected
 
