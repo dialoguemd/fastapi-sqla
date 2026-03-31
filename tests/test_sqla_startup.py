@@ -192,40 +192,43 @@ async def test_fastapi_integration():
     assert res.json() == 1
 
 
-def test_get_engine_config_non_bool_default(monkeypatch):
+@mark.parametrize(
+    "env_value, expected",
+    [
+        ("debug", "debug"),
+        (None, "info"),
+    ],
+)
+def test_get_engine_config_non_bool_default(monkeypatch, env_value, expected):
     from fastapi_sqla.sqla import _get_engine_config
 
-    monkeypatch.setenv("sqlalchemy_echo", "debug")
+    if env_value is not None:
+        monkeypatch.setenv("sqlalchemy_echo", env_value)
+    else:
+        monkeypatch.delenv("sqlalchemy_echo", raising=False)
     config = _get_engine_config("sqlalchemy_", defaults={"echo": "info"})
 
-    assert config["sqlalchemy_echo"] == "debug"
+    assert config["sqlalchemy_echo"] == expected
 
 
-def test_get_engine_config_non_bool_default_not_set(monkeypatch):
-    from fastapi_sqla.sqla import _get_engine_config
-
-    monkeypatch.delenv("sqlalchemy_echo", raising=False)
-    config = _get_engine_config("sqlalchemy_", defaults={"echo": "info"})
-
-    assert config["sqlalchemy_echo"] == "info"
-
-
-def test_new_engine_hides_parameters_by_default():
+@mark.parametrize(
+    "env_value, expected",
+    [
+        (None, True),
+        ("false", False),
+    ],
+)
+def test_new_engine_hide_parameters(monkeypatch, env_value, expected):
     from fastapi_sqla.sqla import new_engine
+
+    if env_value is not None:
+        monkeypatch.setenv("sqlalchemy_hide_parameters", env_value)
+    else:
+        monkeypatch.delenv("sqlalchemy_hide_parameters", raising=False)
 
     engine_or_conn = new_engine()
 
-    assert engine_or_conn.engine.hide_parameters is True
-
-
-def test_new_engine_hide_parameters_can_be_disabled(monkeypatch):
-    from fastapi_sqla.sqla import new_engine
-
-    monkeypatch.setenv("sqlalchemy_hide_parameters", "false")
-
-    engine_or_conn = new_engine()
-
-    assert engine_or_conn.engine.hide_parameters is False
+    assert engine_or_conn.engine.hide_parameters is expected
 
 
 @mark.require_asyncpg
