@@ -36,6 +36,9 @@ logger = structlog.get_logger(__name__)
 _DEFAULT_SESSION_KEY = "default"
 _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
+_ENGINE_DEFAULTS = {
+    "hide_parameters": True,
+}
 
 
 class Base(DeclarativeBase, DeferredReflection):
@@ -48,11 +51,6 @@ def get_envvar_prefix(key: str) -> str:
         envvar_prefix = f"fastapi_sqla__{key}__{envvar_prefix}"
 
     return envvar_prefix
-
-
-_ENGINE_DEFAULTS = {
-    "hide_parameters": True,
-}
 
 
 def _get_engine_config(
