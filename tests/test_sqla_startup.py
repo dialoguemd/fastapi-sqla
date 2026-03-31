@@ -210,6 +210,22 @@ def test_get_engine_config_coerces_bool_strings(monkeypatch, env_value, expected
 
 
 @mark.parametrize(
+    "value, expected",
+    [
+        ("true", True),
+        ("false", False),
+        ("debug", "debug"),
+        (True, True),
+        (42, 42),
+    ],
+)
+def test_coerce_bool_string(value, expected):
+    from fastapi_sqla.sqla import _coerce_bool_string
+
+    assert _coerce_bool_string(value) == expected
+
+
+@mark.parametrize(
     "env_value, expected",
     [
         (None, True),
