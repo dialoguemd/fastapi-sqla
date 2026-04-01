@@ -26,11 +26,6 @@ except ImportError:
     DeclarativeBase = declarative_base()  # type: ignore
 
 try:
-    from pydantic import ConfigDict as _ConfigDict
-except ImportError:
-    _ConfigDict = None  # type: ignore[assignment,misc]
-
-try:
     from sqlmodel import Session as SqlaSession  # type: ignore
 
 except ImportError:
@@ -44,23 +39,13 @@ _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
 
 
-if _ConfigDict is not None:
+class _EngineConfig(BaseModel):
+    """Engine configuration with typed defaults and bool coercion."""
 
-    class _EngineConfig(BaseModel):
-        """Engine configuration with typed defaults and bool coercion."""
+    hide_parameters: bool = True
 
-        model_config = _ConfigDict(extra="allow")
-        hide_parameters: bool = True
-
-else:
-
-    class _EngineConfig(BaseModel):  # type: ignore[no-redef]
-        """Engine configuration with typed defaults and bool coercion."""
-
-        hide_parameters: bool = True
-
-        class Config:
-            extra = "allow"
+    class Config:
+        extra = "allow"
 
 
 class Base(DeclarativeBase, DeferredReflection):
@@ -90,7 +75,7 @@ def _get_engine_config(
         if k.startswith(envvar_prefix)
     }
     config = _EngineConfig(**overrides)  # type: ignore[arg-type]
-    coerced = config.model_dump() if hasattr(config, "model_dump") else config.dict()
+    coerced = config.dict()
     for param, value in coerced.items():
         lowercase_env[f"{envvar_prefix}{param}"] = value
 
