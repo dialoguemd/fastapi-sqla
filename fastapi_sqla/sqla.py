@@ -42,24 +42,23 @@ _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
 
 
-def _coerce_bool_string(value):
-    if isinstance(value, str):
-        lowered = value.lower()
-        if lowered == "true":
-            return True
-        if lowered == "false":
-            return False
-    return value
-
-
-def _coerce_bool_strings(data):
-    return {k: _coerce_bool_string(v) for k, v in data.items()}
+def _coerce_bool_strings(data: dict) -> dict:
+    """Coerce 'true'/'false' strings to bool in a dict."""
+    coerced = {}
+    for k, v in data.items():
+        if isinstance(v, str) and v.lower() in ("true", "false"):
+            coerced[k] = v.lower() == "true"
+        else:
+            coerced[k] = v
+    return coerced
 
 
 if _pydantic_major == 2:
     from pydantic import model_validator
 
     class _EngineConfig(BaseModel):
+        """Engine configuration with typed defaults and bool coercion."""
+
         model_config = {"extra": "allow"}
         hide_parameters: bool = True
 
@@ -72,6 +71,8 @@ else:
     from pydantic import root_validator
 
     class _EngineConfig(BaseModel):  # type: ignore[no-redef]
+        """Engine configuration with typed defaults and bool coercion."""
+
         hide_parameters: bool = True
 
         class Config:

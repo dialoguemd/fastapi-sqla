@@ -209,20 +209,12 @@ def test_get_engine_config_coerces_bool_strings(monkeypatch, env_value, expected
     assert config["sqlalchemy_echo"] == expected
 
 
-@mark.parametrize(
-    "value, expected",
-    [
-        ("true", True),
-        ("false", False),
-        ("debug", "debug"),
-        (True, True),
-        (42, 42),
-    ],
-)
-def test_coerce_bool_string(value, expected):
-    from fastapi_sqla.sqla import _coerce_bool_string
+def test_coerce_bool_strings():
+    from fastapi_sqla.sqla import _coerce_bool_strings
 
-    assert _coerce_bool_string(value) == expected
+    assert _coerce_bool_strings(
+        {"a": "true", "b": "false", "c": "debug", "d": True, "e": 42}
+    ) == {"a": True, "b": False, "c": "debug", "d": True, "e": 42}
 
 
 @mark.parametrize(
