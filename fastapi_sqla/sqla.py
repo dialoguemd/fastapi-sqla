@@ -9,7 +9,6 @@ from fastapi import Depends, Request, Response
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from pydantic import __version__ as pydantic_version
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -19,14 +18,17 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from fastapi_sqla import aws_aurora_support, aws_rds_iam_support
 
-_pydantic_major = int(pydantic_version.split(".")[0])
-
 try:
     from sqlalchemy.orm import DeclarativeBase
 except ImportError:
     from sqlalchemy.ext.declarative import declarative_base
 
     DeclarativeBase = declarative_base()  # type: ignore
+
+try:
+    from pydantic import ConfigDict as _ConfigDict
+except ImportError:
+    _ConfigDict = None  # type: ignore[assignment,misc]
 
 try:
     from sqlmodel import Session as SqlaSession  # type: ignore
@@ -42,33 +44,15 @@ _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
 
 
-def _coerce_bool_strings(data: dict) -> dict:
-    """Coerce 'true'/'false' strings to bool in a dict."""
-    coerced = {}
-    for k, v in data.items():
-        if isinstance(v, str) and v.lower() in ("true", "false"):
-            coerced[k] = v.lower() == "true"
-        else:
-            coerced[k] = v
-    return coerced
-
-
-if _pydantic_major == 2:
-    from pydantic import model_validator
+if _ConfigDict is not None:
 
     class _EngineConfig(BaseModel):
         """Engine configuration with typed defaults and bool coercion."""
 
-        model_config = {"extra": "allow"}
+        model_config = _ConfigDict(extra="allow")
         hide_parameters: bool = True
 
-        @model_validator(mode="before")
-        @classmethod
-        def coerce_booleans(cls, data):
-            return _coerce_bool_strings(data)
-
 else:
-    from pydantic import root_validator
 
     class _EngineConfig(BaseModel):  # type: ignore[no-redef]
         """Engine configuration with typed defaults and bool coercion."""
@@ -77,10 +61,6 @@ else:
 
         class Config:
             extra = "allow"
-
-        @root_validator(pre=True, allow_reuse=True)
-        def coerce_booleans(cls, values):  # noqa: N805
-            return _coerce_bool_strings(values)
 
 
 class Base(DeclarativeBase, DeferredReflection):
@@ -110,7 +90,7 @@ def _get_engine_config(
         if k.startswith(envvar_prefix)
     }
     config = _EngineConfig(**overrides)  # type: ignore[arg-type]
-    coerced = config.model_dump() if _pydantic_major == 2 else config.dict()
+    coerced = config.model_dump() if hasattr(config, "model_dump") else config.dict()
     for param, value in coerced.items():
         lowercase_env[f"{envvar_prefix}{param}"] = value
 

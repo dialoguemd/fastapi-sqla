@@ -195,31 +195,6 @@ async def test_fastapi_integration():
 @mark.parametrize(
     "env_value, expected",
     [
-        ("true", True),
-        ("false", False),
-        ("debug", "debug"),
-    ],
-)
-def test_get_engine_config_coerces_bool_strings(monkeypatch, env_value, expected):
-    from fastapi_sqla.sqla import _get_engine_config
-
-    monkeypatch.setenv("sqlalchemy_echo", env_value)
-    config = _get_engine_config("sqlalchemy_")
-
-    assert config["sqlalchemy_echo"] == expected
-
-
-def test_coerce_bool_strings():
-    from fastapi_sqla.sqla import _coerce_bool_strings
-
-    assert _coerce_bool_strings(
-        {"a": "true", "b": "false", "c": "debug", "d": True, "e": 42}
-    ) == {"a": True, "b": False, "c": "debug", "d": True, "e": 42}
-
-
-@mark.parametrize(
-    "env_value, expected",
-    [
         (None, True),
         ("false", False),
     ],
