@@ -149,6 +149,24 @@ And define the environment variable `sqlalchemy_url` with `postgres+asyncpg` sch
 export sqlalchemy_url=postgresql+asyncpg://postgres@localhost
 ```
 
+### Hiding SQL parameters
+
+By default, `hide_parameters` is set to `True` on all engines to prevent SQL query
+parameters from appearing in error messages and logs. This helps protect sensitive data
+such as PII/PHI.
+
+To disable this (e.g. for local debugging or dev):
+
+```bash
+export sqlalchemy_hide_parameters=false
+```
+
+For named sessions:
+
+```bash
+export fastapi_sqla__read_only__sqlalchemy_hide_parameters=false
+```
+
 ## Setup the app AsyncContextManager (recommended):
 
 ```python
