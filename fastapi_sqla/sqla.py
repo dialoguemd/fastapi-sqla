@@ -9,6 +9,7 @@ from fastapi import Depends, Request, Response
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
+from pydantic import __version__ as pydantic_version
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -39,13 +40,26 @@ _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
 
 
-class _EngineConfig(BaseModel):
-    """Engine configuration with typed defaults and bool coercion."""
+_pydantic_major = int(pydantic_version.split(".")[0])
 
-    hide_parameters: bool = True
+if _pydantic_major == 2:
+    from pydantic import ConfigDict
 
-    class Config:
-        extra = "allow"
+    class _EngineConfig(BaseModel):
+        """Engine configuration with typed defaults and bool coercion."""
+
+        model_config = ConfigDict(extra="allow")
+        hide_parameters: bool = True
+
+else:
+
+    class _EngineConfig(BaseModel):  # type: ignore[no-redef]
+        """Engine configuration with typed defaults and bool coercion."""
+
+        hide_parameters: bool = True
+
+        class Config:
+            extra = "allow"
 
 
 class Base(DeclarativeBase, DeferredReflection):
@@ -75,7 +89,7 @@ def _get_engine_config(
         if k.startswith(envvar_prefix)
     }
     config = _EngineConfig(**overrides)  # type: ignore[arg-type]
-    coerced = config.dict()
+    coerced = config.model_dump() if _pydantic_major == 2 else config.dict()
     for param, value in coerced.items():
         lowercase_env[f"{envvar_prefix}{param}"] = value
 
