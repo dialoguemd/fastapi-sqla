@@ -75,8 +75,7 @@ def _get_engine_config(
         if k.startswith(envvar_prefix)
     }
     config = _EngineConfig(**overrides)  # type: ignore[arg-type]
-    coerced = config.dict()
-    for param, value in coerced.items():
+    for param, value in config.dict().items():
         lowercase_env[f"{envvar_prefix}{param}"] = value
 
     return lowercase_env
