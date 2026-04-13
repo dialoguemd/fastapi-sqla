@@ -190,3 +190,52 @@ async def test_fastapi_integration():
         res = await client.get("/one")
 
     assert res.json() == 1
+
+
+def test_new_engine_hide_parameters_default(monkeypatch):
+    from fastapi_sqla.sqla import new_engine
+
+    monkeypatch.delenv("sqlalchemy_hide_parameters", raising=False)
+
+    engine_or_conn = new_engine()
+
+    assert engine_or_conn.engine.hide_parameters is True
+
+
+def test_new_engine_hide_parameters_opt_out(monkeypatch):
+    from fastapi_sqla.sqla import new_engine
+
+    monkeypatch.setenv("sqlalchemy_hide_parameters", "false")
+
+    engine_or_conn = new_engine()
+
+    assert engine_or_conn.engine.hide_parameters is False
+
+
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
+async def test_new_async_engine_hide_parameters_default(monkeypatch, async_session_key):
+    from fastapi_sqla.async_sqla import new_async_engine
+
+    monkeypatch.delenv(
+        f"fastapi_sqla__{async_session_key}__sqlalchemy_hide_parameters",
+        raising=False,
+    )
+
+    engine_or_conn = new_async_engine(async_session_key)
+
+    assert engine_or_conn.sync_engine.hide_parameters is True
+
+
+@mark.require_asyncpg
+@mark.sqlalchemy("1.4")
+async def test_new_async_engine_hide_parameters_opt_out(monkeypatch, async_session_key):
+    from fastapi_sqla.async_sqla import new_async_engine
+
+    monkeypatch.setenv(
+        f"fastapi_sqla__{async_session_key}__sqlalchemy_hide_parameters", "false"
+    )
+
+    engine_or_conn = new_async_engine(async_session_key)
+
+    assert engine_or_conn.sync_engine.hide_parameters is False

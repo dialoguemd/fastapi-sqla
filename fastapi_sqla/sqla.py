@@ -8,6 +8,7 @@ import structlog
 from fastapi import Depends, Request, Response
 from fastapi.concurrency import contextmanager_in_threadpool
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.ext.declarative import DeferredReflection
@@ -38,6 +39,15 @@ _REQUEST_SESSION_KEY = "fastapi_sqla_session"
 _session_factories: dict[str, sessionmaker] = {}
 
 
+class _EngineConfig(BaseModel):
+    """Engine configuration with typed defaults and bool coercion."""
+
+    hide_parameters: bool = True
+
+    class Config:
+        extra = "allow"
+
+
 class Base(DeclarativeBase, DeferredReflection):
     __abstract__ = True
 
@@ -50,11 +60,31 @@ def get_envvar_prefix(key: str) -> str:
     return envvar_prefix
 
 
+def _get_engine_config(
+    envvar_prefix: str,
+) -> dict[str, Union[str, bool]]:
+    """Build engine config dict with opinionated defaults and type coercion."""
+    lowercase_env: dict[str, Union[str, bool]] = {
+        k.lower(): v for k, v in os.environ.items()
+    }
+    lowercase_env.pop(f"{envvar_prefix}warn_20", None)
+
+    overrides = {
+        k[len(envvar_prefix) :]: v
+        for k, v in lowercase_env.items()
+        if k.startswith(envvar_prefix)
+    }
+    config = _EngineConfig(**overrides)  # type: ignore[arg-type]
+    for param, value in config.dict().items():
+        lowercase_env[f"{envvar_prefix}{param}"] = value
+
+    return lowercase_env
+
+
 def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
     envvar_prefix = get_envvar_prefix(key)
-    lowercase_environ = {k.lower(): v for k, v in os.environ.items()}
-    lowercase_environ.pop(f"{envvar_prefix}warn_20", None)
-    return engine_from_config(lowercase_environ, prefix=envvar_prefix)
+    config = _get_engine_config(envvar_prefix)
+    return engine_from_config(config, prefix=envvar_prefix)
 
 
 def startup(key: str = _DEFAULT_SESSION_KEY):
