@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from sqlalchemy import engine_from_config, text
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.ext.declarative import DeferredReflection
+from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm.session import Session as SqlaSession
 from sqlalchemy.orm.session import sessionmaker
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -110,6 +111,11 @@ def startup(key: str = _DEFAULT_SESSION_KEY):
     )
 
     logger.info("engine startup", engine_key=key, engine=engine_or_connection)
+
+    # Initialize all mappers, so that any errors are raised here,
+    # rather than during the first ORM-enabled operation.
+    configure_mappers()
+    logger.info("ORM configured")
 
 
 @contextmanager
