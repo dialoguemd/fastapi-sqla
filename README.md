@@ -756,7 +756,7 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 
 ## Prerequisites
 
-- **Python >=3.9**
+- **Python >=3.10**
 - [**Poetry**](https://poetry.eustace.io/) to install package dependencies.
 - A postgres DB reachable at `postgresql://postgres@localhost/postgres`
 

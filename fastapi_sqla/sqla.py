@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Annotated, Union
+from typing import Annotated
 
 import structlog
 from fastapi import Depends, Request, Response
@@ -62,11 +62,9 @@ def get_envvar_prefix(key: str) -> str:
 
 def _get_engine_config(
     envvar_prefix: str,
-) -> dict[str, Union[str, bool]]:
+) -> dict[str, str | bool]:
     """Build engine config dict with opinionated defaults and type coercion."""
-    lowercase_env: dict[str, Union[str, bool]] = {
-        k.lower(): v for k, v in os.environ.items()
-    }
+    lowercase_env: dict[str, str | bool] = {k.lower(): v for k, v in os.environ.items()}
     lowercase_env.pop(f"{envvar_prefix}warn_20", None)
 
     overrides = {
@@ -81,7 +79,7 @@ def _get_engine_config(
     return lowercase_env
 
 
-def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Union[Engine, Connection]:
+def new_engine(key: str = _DEFAULT_SESSION_KEY) -> Engine | Connection:
     envvar_prefix = get_envvar_prefix(key)
     config = _get_engine_config(envvar_prefix)
     return engine_from_config(config, prefix=envvar_prefix)
