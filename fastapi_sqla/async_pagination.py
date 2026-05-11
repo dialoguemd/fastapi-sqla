@@ -1,6 +1,6 @@
 import math
 from collections.abc import Awaitable, Callable, Iterator
-from typing import Annotated, Optional, Union, cast
+from typing import Annotated, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.sql import Select, func, select
@@ -10,12 +10,12 @@ from fastapi_sqla.models import Meta, Page
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY
 
 QueryCountDependency = Callable[..., Awaitable[int]]
-AsyncPaginateSignature = Callable[[Select, Optional[bool]], Awaitable[Page]]
+AsyncPaginateSignature = Callable[[Select, bool | None], Awaitable[Page]]
 DefaultDependency = Callable[[SqlaAsyncSession, int, int], AsyncPaginateSignature]
 WithQueryCountDependency = Callable[
     [SqlaAsyncSession, int, int, int], AsyncPaginateSignature
 ]
-PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
+PaginateDependency = DefaultDependency | WithQueryCountDependency
 
 
 async def default_query_count(session: SqlaAsyncSession, query: Select) -> int:
@@ -54,7 +54,7 @@ def AsyncPagination(
     session_key: str = _DEFAULT_SESSION_KEY,
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count: Union[QueryCountDependency, None] = None,
+    query_count: QueryCountDependency | None = None,
 ) -> PaginateDependency:
     def default_dependency(
         session: SqlaAsyncSession = Depends(AsyncSessionDependency(key=session_key)),

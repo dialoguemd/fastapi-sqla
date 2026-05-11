@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Annotated, Union
+from typing import Annotated
 
 import structlog
 from fastapi import Depends, Request, Response
@@ -31,7 +31,7 @@ _async_session_factories: dict[str, sessionmaker] = {}
 
 def new_async_engine(
     key: str = _DEFAULT_SESSION_KEY,
-) -> Union[AsyncEngine, AsyncConnection]:
+) -> AsyncEngine | AsyncConnection:
     envvar_prefix = get_envvar_prefix(key)
     config = _get_engine_config(envvar_prefix)
     return async_engine_from_config(config, prefix=envvar_prefix)

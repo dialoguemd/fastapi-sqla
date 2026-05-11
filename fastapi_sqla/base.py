@@ -1,7 +1,6 @@
 import functools
 import os
 import re
-from typing import Union
 
 from deprecated import deprecated
 from fastapi import FastAPI
@@ -73,5 +72,5 @@ def _get_engine_keys() -> set[str]:
     return keys
 
 
-def _is_async_dialect(engine: Union[Engine, Connection]):
+def _is_async_dialect(engine: Engine | Connection):
     return engine.dialect.is_async if hasattr(engine.dialect, "is_async") else False
