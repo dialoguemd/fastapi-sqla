@@ -582,6 +582,68 @@ async def async_all_users_alt(
     return await paginate(select(User))
 ```
 
+# Pydantic v1 compatibility
+
+If you are migrating a project from Pydantic v1 to v2 and need time to update your
+response models, `fastapi_sqla.v1` provides a drop-in replacement for the pagination
+helpers that produces Pydantic v1-compatible `Page`, `Item`, and `Collection` types.
+
+Replace your `fastapi_sqla` imports with `fastapi_sqla.v1`:
+
+```python
+from fastapi import APIRouter
+from fastapi_sqla import Base
+from fastapi_sqla.v1 import Page, Paginate, Session, setup
+from sqlalchemy import select
+
+# Use pydantic v1 BaseModel (or pydantic.v1 when running pydantic v2)
+try:
+    from pydantic.v1 import BaseModel  # pydantic v2
+except ImportError:
+    from pydantic import BaseModel  # pydantic v1
+
+
+class User(Base):
+    __tablename__ = "user"
+
+
+class UserModel(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
+app = FastAPI()
+setup(app)
+
+
+@app.get("/users", response_model=Page[UserModel])
+def list_users(paginate: Paginate):
+    return paginate(select(User))
+```
+
+`fastapi_sqla.v1` re-exports everything from `fastapi_sqla` unchanged, with the
+following symbols replaced by Pydantic v1-backed versions:
+
+| Symbol | Notes |
+|---|---|
+| `Item`, `Collection`, `Meta`, `Page` | Generic models backed by Pydantic v1 |
+| `Paginate`, `PaginateSignature`, `Pagination` | Return `Page` backed by Pydantic v1 |
+| `AsyncPaginate`, `AsyncPaginateSignature`, `AsyncPagination` | Return `Page` backed by Pydantic v1 (requires `asyncpg`) |
+
+> **Important:** Any Pydantic model used as a type parameter of `Page[T]`, `Item[T]`, or
+> `Collection[T]` must also be a Pydantic v1 model (i.e. inherit from `pydantic.v1.BaseModel`
+> when running Pydantic v2, or `pydantic.BaseModel` when running Pydantic v1).
+> Mixing Pydantic v1 generic types with Pydantic v2 model classes is not supported.
+
+## Support
+
+Support for the Pydantic v1 compatibility layer will be provided until
+Fastapi-SQLA upgrades to Pydantic v3 (where Pydantic v3 aims to drop support for
+the Pydantic v1 compatibility layer).
+
 # SQLModel support 🎉
 
 If your project uses [SQLModel], then `Session` dependency is an SQLModel session::
