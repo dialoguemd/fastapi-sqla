@@ -2,10 +2,17 @@ import httpx
 from asgi_lifespan import LifespanManager
 from faker import Faker
 from fastapi import Depends, FastAPI
-from pydantic import BaseModel
 from pytest import fixture
 from sqlalchemy import JSON, MetaData, Table, cast, func, select, text
 from sqlalchemy.orm import joinedload
+
+from pydantic import __version__ as pydantic_version
+
+_pydantic_major = int(pydantic_version.split(".")[0])
+if _pydantic_major == 2:
+    from pydantic.v1 import BaseModel
+else:
+    from pydantic import BaseModel  # type: ignore[no-redef]
 
 
 @fixture(scope="module", autouse=True)
@@ -88,13 +95,13 @@ class UserWithMeta(User):
 
 @fixture
 def app(user_cls, note_cls, monkeypatch, db_url):
-    from fastapi_sqla import (
+    from fastapi_sqla import setup
+    from fastapi_sqla.v1 import (
         Page,
         Paginate,
         PaginateSignature,
         Pagination,
         Session,
-        setup,
     )
 
     custom_session_key = "custom"

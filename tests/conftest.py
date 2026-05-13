@@ -161,3 +161,37 @@ def check_sqlmodel(request):
 @fixture(scope="session")
 def faker():
     return Faker()
+
+
+@fixture(scope="session")
+def nb_users():
+    return 42
+
+
+@fixture(scope="session")
+def nb_notes(nb_users):
+    return 22 * nb_users
+
+
+@fixture(scope="session")
+def note_cls():
+    from fastapi_sqla import Base
+    from sqlalchemy.orm import relationship
+
+    class Note(Base):
+        __tablename__ = "note"
+
+    return Note
+
+
+@fixture(scope="session")
+def user_cls(note_cls):
+    from fastapi_sqla import Base
+    from sqlalchemy.orm import relationship
+
+    class User(Base):
+        __tablename__ = "user"
+
+        notes = relationship("Note")
+
+    return User
