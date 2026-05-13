@@ -835,7 +835,7 @@ $ poetry install --all-extras
 $ poetry run pytest
 ```
 
-#### Runing tests on multiple environments
+#### Running tests on multiple environments
 
 ```bash
 $ poetry run tox
