@@ -841,6 +841,20 @@ $ poetry run pytest
 $ poetry run tox
 ```
 
+## Pydantic v1 compatibility layer diff
+
+A `diff:v1` target is provided in the `Makefile` to help show the diff between
+the v1 compatibility layer and the files the compatibility layer aims to
+replicate.
+
+```bash
+make diff:v1
+```
+
+When making changes to the primary types/functionality, use `make diff:v1` to
+ensure that meaningful changes are propagated into the compatibility layer while
+support for Pydantic v1 is still provided.
+
 [`sqlalchemy.create_engine`]: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine
 [`Query.count`]: https://docs.sqlalchemy.org/en/20/orm/queryguide/query.html#sqlalchemy.orm.Query.count
 [pytest options]: https://docs.pytest.org/en/stable/reference.html#confval-usefixtures
