@@ -1,8 +1,7 @@
 from fastapi import Depends, FastAPI
+from pydantic import __version__ as pydantic_version
 from pytest import fixture, mark
 from sqlalchemy import func, select
-
-from pydantic import __version__ as pydantic_version
 
 if int(pydantic_version.split(".")[0]) == 2:
     from pydantic.v1 import BaseModel

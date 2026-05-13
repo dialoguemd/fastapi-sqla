@@ -175,8 +175,8 @@ def nb_notes(nb_users):
 
 @fixture(scope="session")
 def note_cls():
+
     from fastapi_sqla import Base
-    from sqlalchemy.orm import relationship
 
     class Note(Base):
         __tablename__ = "note"
@@ -186,8 +186,9 @@ def note_cls():
 
 @fixture(scope="session")
 def user_cls(note_cls):
-    from fastapi_sqla import Base
     from sqlalchemy.orm import relationship
+
+    from fastapi_sqla import Base
 
     class User(Base):
         __tablename__ = "user"

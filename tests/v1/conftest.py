@@ -2,11 +2,10 @@ import httpx
 from asgi_lifespan import LifespanManager
 from faker import Faker
 from fastapi import Depends, FastAPI
+from pydantic import __version__ as pydantic_version
 from pytest import fixture
 from sqlalchemy import JSON, MetaData, Table, cast, func, select, text
 from sqlalchemy.orm import joinedload
-
-from pydantic import __version__ as pydantic_version
 
 _pydantic_major = int(pydantic_version.split(".")[0])
 if _pydantic_major == 2:
