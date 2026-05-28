@@ -62,7 +62,7 @@ pytest = "9.0.3"
 pytest-asyncio = "1.4.0"
 pytest-cov = "7.1.0"
 ruff = "0.15.14"
-tox = "4.54.0"
+tox = "4.55.0"
 
 
 [tool.poetry.extras]
