@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-sqla"
-version = "3.7.0"
+version = "3.7.1"
 description = "SQLAlchemy extension for FastAPI with support for pagination, asyncio, SQLModel, and pytest, ready for production."
 authors = [
     "Hadrien David <hadrien.david@dialogue.co>",
@@ -202,6 +202,7 @@ plugins = ["sqlalchemy.ext.mypy.plugin"]
 [[tool.mypy.overrides]]
 module = ["asyncpg", "boto3", "deprecated"]
 ignore_missing_imports = true
+
 
 [build-system]
 requires = ["poetry>=1.3.0"]
