@@ -213,17 +213,17 @@ files = [
 
 [[package]]
 name = "boto3"
-version = "1.43.24"
+version = "1.43.29"
 description = "The AWS SDK for Python"
 optional = true
 python-versions = ">=3.10"
 files = [
-    {file = "boto3-1.43.24-py3-none-any.whl", hash = "sha256:b18ef745274ef548a9660d733d985d4a971b16bd8a6af88165ea9d0e40913b86"},
-    {file = "boto3-1.43.24.tar.gz", hash = "sha256:ba5afa266bf7265e0c1a454fcfd48bffe5939cb16ed223bebc669c3dc8ee0bc8"},
+    {file = "boto3-1.43.29-py3-none-any.whl", hash = "sha256:77c27ada27cdbf619a3bbc41fa9e991caef818d3a2988cf92ea722e107d90108"},
+    {file = "boto3-1.43.29.tar.gz", hash = "sha256:354006c512cdb87ef8214a095f2ade961c8145734475cd7a7e6b39260ff5494a"},
 ]
 
 [package.dependencies]
-botocore = ">=1.43.24,<1.44.0"
+botocore = ">=1.43.29,<1.44.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.18.0,<0.19.0"
 
@@ -232,13 +232,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.43.24"
+version = "1.43.29"
 description = "Low-level, data-driven core of boto 3."
 optional = true
 python-versions = ">=3.10"
 files = [
-    {file = "botocore-1.43.24-py3-none-any.whl", hash = "sha256:42903b4bfafd8f15a735ed940473f28e4ba21b2ea67a9b9aaa11dfa7fcb19fd5"},
-    {file = "botocore-1.43.24.tar.gz", hash = "sha256:0c02f2b40e99419d496ece0ea2dcdedb5c45998c16fd1674276c7dbb30767a16"},
+    {file = "botocore-1.43.29-py3-none-any.whl", hash = "sha256:5d62f2a03ed279a50207ca2824e009313df15f082b6bb591a095a4f04c7faef3"},
+    {file = "botocore-1.43.29.tar.gz", hash = "sha256:dce39d33b707aa162aa3820975f99d7f8f746d46576169fb42ce4f2b3b56b261"},
 ]
 
 [package.dependencies]
@@ -422,13 +422,13 @@ dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "setuptools", "tox"]
 
 [[package]]
 name = "distlib"
-version = "0.4.2"
+version = "0.4.3"
 description = "Distribution utilities"
 optional = false
 python-versions = "*"
 files = [
-    {file = "distlib-0.4.2-py2.py3-none-any.whl", hash = "sha256:ca4cb11e5d746b5ec13c199cbf19ae27a241f89702b54e153a74332955446067"},
-    {file = "distlib-0.4.2.tar.gz", hash = "sha256:baeb401c90f27acd15c4861ae0847d1e731c27ac3dbf4210643ba61fa1e813db"},
+    {file = "distlib-0.4.3-py2.py3-none-any.whl", hash = "sha256:4b0ce306c966eb73bc3a7b6abad017c556dadd92c44701562cd528ac7fde4d5b"},
+    {file = "distlib-0.4.3.tar.gz", hash = "sha256:f152097224a0ae24be5a0f6bae1b9359af82133bce63f98a95f86cae1aede9ed"},
 ]
 
 [[package]]
@@ -489,13 +489,13 @@ standard-no-fastapi-cloud-cli = ["email-validator (>=2.0.0)", "fastapi-cli[stand
 
 [[package]]
 name = "filelock"
-version = "3.29.1"
+version = "3.29.3"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "filelock-3.29.1-py3-none-any.whl", hash = "sha256:85199dfd706869641b72b2e8955d5416a4b2b7dc4b0e8e6d97b4cc1299a6983b"},
-    {file = "filelock-3.29.1.tar.gz", hash = "sha256:d97e6b1b9757569626c58caa07dc4beb1613f4a2938b1e8cc81afca398906c9e"},
+    {file = "filelock-3.29.3-py3-none-any.whl", hash = "sha256:e58333029cc9b925f39aad59b1d8f0a1ad836af4e60d7217f4a4dba87461261d"},
+    {file = "filelock-3.29.3.tar.gz", hash = "sha256:7fc1b3f39cf172fd8203812043c57b8a65aef9969f38b6704f628b881f761a84"},
 ]
 
 [[package]]
@@ -1306,13 +1306,13 @@ six = ">=1.5"
 
 [[package]]
 name = "python-discovery"
-version = "1.4.0"
+version = "1.4.2"
 description = "Python interpreter discovery"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "python_discovery-1.4.0-py3-none-any.whl", hash = "sha256:26ed78d703e234879a66244c7d4114563fb13ec5cd30a2d1357e5fb4850782da"},
-    {file = "python_discovery-1.4.0.tar.gz", hash = "sha256:eb8bc7daad3c226c147e45bb4e970a1feb1bf4048ee178e6db59e197b8010ce3"},
+    {file = "python_discovery-1.4.2-py3-none-any.whl", hash = "sha256:475803f53b7b2ed6e490e27373f9d8340f7d2eebf9acdaf645d7d714c97bb500"},
+    {file = "python_discovery-1.4.2.tar.gz", hash = "sha256:8f3746c4b4968d22afbb97d36e1a0e5b66e6c0f297290f2e95f05b9b8bf18690"},
 ]
 
 [package.dependencies]
@@ -1684,20 +1684,20 @@ zstd = ["backports-zstd (>=1.0.0)"]
 
 [[package]]
 name = "virtualenv"
-version = "21.4.2"
+version = "21.4.3"
 description = "Virtual Python Environment builder"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "virtualenv-21.4.2-py3-none-any.whl", hash = "sha256:854210ca524a1a4d0d744734f4acbc721c3ffe163b85bbf5d56d14d5ae2f0fae"},
-    {file = "virtualenv-21.4.2.tar.gz", hash = "sha256:38e6ee0a555615c0ea9da2ac7e9998fe8dc3b911dd33ad8eaad2020957653b0c"},
+    {file = "virtualenv-21.4.3-py3-none-any.whl", hash = "sha256:75f4127d4067397c64f38579ce918fec6bf9ca2cd4f48685e82952cc3c035840"},
+    {file = "virtualenv-21.4.3.tar.gz", hash = "sha256:938ff0fd3f4e0f0d3a025f67a3d2f25e3c3aabbcd5857ea6170619138d72d141"},
 ]
 
 [package.dependencies]
 distlib = ">=0.3.7,<1"
 filelock = {version = ">=3.24.2,<4", markers = "python_version >= \"3.10\""}
 platformdirs = ">=3.9.1,<5"
-python-discovery = ">=1.4"
+python-discovery = ">=1.4.2"
 typing-extensions = {version = ">=4.13.2", markers = "python_version < \"3.11\""}
 
 [[package]]
