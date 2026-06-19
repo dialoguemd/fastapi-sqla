@@ -61,7 +61,7 @@ psycopg2 = { version = "2.9.12", extras = ["binary"] }
 pytest = "9.1.0"
 pytest-asyncio = "1.4.0"
 pytest-cov = "7.1.0"
-ruff = "0.15.17"
+ruff = "0.15.18"
 tox = "4.55.1"
 
 
