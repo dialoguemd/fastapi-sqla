@@ -1797,4 +1797,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.14"
-content-hash = "30fab4e56c351ffeedbe813f31a94edba8f054a9cd135edc54e8b4c532cbe477"
+content-hash = "ab87377157a73e7ffa77b2144dfe078776c6cac1b37cdef53c0dded1a44e4f9e"
