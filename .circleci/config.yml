@@ -41,7 +41,7 @@ workflows:
           context: code-validator
 
       - test:
-          name: 🧪 test py<<matrix.python_version>> sqlalchemy-<<matrix.sqlalchemy_version >> pydantic-<<matrix.pydantic_version>> <<matrix.asyncpg>> <<matrix.aws_rds_iam>>
+          name: 🧪 test py<<matrix.python_version>> sqlalchemy-<<matrix.sqlalchemy_version >> <<matrix.asyncpg>> <<matrix.aws_rds_iam>>
           context: code-validator
           matrix:
             parameters:
@@ -49,7 +49,6 @@ workflows:
               sqlalchemy_version: ["1.4", "2.0", "2.0-sqlmodel"]
               asyncpg: ["asyncpg", "noasyncpg"]
               aws_rds_iam: ["aws_rds_iam", "noaws_rds_iam"]
-              pydantic_version: ["1", "2"]
 
       - release/release:
           name: 🕊 release
@@ -97,9 +96,6 @@ jobs:
         type: enum
         enum: ["aws_rds_iam", "noaws_rds_iam"]
         description: To run tests with and without asyncpg installed.
-      pydantic_version:
-        type: enum
-        enum: ["1", "2"]
     executor:
       name: python-postgres
       python_version: <<parameters.python_version>>
@@ -111,16 +107,16 @@ jobs:
       - python/install_deps
       - utils/with_cache:
           namespace: tox
-          key: 'python<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
+          key: 'python<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>-{{ checksum "pyproject.toml" }}-{{ checksum "poetry.lock" }}'
           path: ~/project/.tox
           strict: true
           steps:
             - run:
-                name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* pydantic<<parameters.pydantic_version>> and -<<parameters.asyncpg>> and -<<parameters.aws_rds_iam>>"
+                name: "run tox using sqlalchemy <<parameters.sqlalchemy_version>>.* and -<<parameters.asyncpg>> and -<<parameters.aws_rds_iam>>"
                 command: |
-                  poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
+                  poetry run tox -e sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
       - codecov/upload:
-          flags: python_version<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-pydantic<<parameters.pydantic_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
+          flags: python_version<<parameters.python_version>>-sqlalchemy<<parameters.sqlalchemy_version>>-<<parameters.asyncpg>>-<<parameters.aws_rds_iam>>
 
 
   publish:
