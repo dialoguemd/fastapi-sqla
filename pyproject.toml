@@ -122,6 +122,7 @@ ignore = [
     "PLR0912", # Disable max number of branches
     "PLR0913", # Disable max number of args
     "PLR0915", # Disable max number of statements
+    "PLR0917", # Disable max number of positional args
     "PLR2004", # Enable magic values
     "SIM105",  # Allow using try - except - pass
     "TD001",   # Enable FIXMEs
