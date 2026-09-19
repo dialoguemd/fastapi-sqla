@@ -1480,13 +1480,13 @@ sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
 name = "sqlmodel"
-version = "0.0.39"
+version = "0.0.42"
 description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
 optional = true
 python-versions = ">=3.10"
 files = [
-    {file = "sqlmodel-0.0.39-py3-none-any.whl", hash = "sha256:90ebe92ce5cc11d7fff8dc7cb594790a102333c8fe7c14865254f6fc5c939795"},
-    {file = "sqlmodel-0.0.39.tar.gz", hash = "sha256:23d8e50a8d8ee936032ed79c55023a5d618dd6bc3c510bbf4909d1a7a605a570"},
+    {file = "sqlmodel-0.0.42-py3-none-any.whl", hash = "sha256:a732dab1a40e5cbd6ac250cf2b12e8d9b1bf1a47edf27c34d612f359e8875c63"},
+    {file = "sqlmodel-0.0.42.tar.gz", hash = "sha256:9ecec2b6aa4c2aa58da39d2572e7bef4373419dcd6ec52973c07de7be2b1c516"},
 ]
 
 [package.dependencies]
@@ -1805,4 +1805,4 @@ sqlmodel = ["sqlmodel"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.14"
-content-hash = "9a29dcbcbbfdf92f34f20a44bb51e40fd18f5f643a9fd04a880c68757188b709"
+content-hash = "3431869c490f2c1bcc8d0ae27591f24bfafbddcadc2b00b2828e83636f27ddd7"
