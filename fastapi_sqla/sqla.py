@@ -125,12 +125,12 @@ def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None
             "please ensure you've configured the environment variables for this key."
         ) from exc
 
-    logger.bind(db_session=session)
+    session_logger = logger.bind(db_session=session)
 
     try:
         yield session
     except Exception:
-        logger.warning("context failed, rolling back", exc_info=True)
+        session_logger.warning("context failed, rolling back", exc_info=True)
         session.rollback()
         raise
 
@@ -138,7 +138,7 @@ def open_session(key: str = _DEFAULT_SESSION_KEY) -> Generator[SqlaSession, None
         try:
             session.commit()
         except Exception:
-            logger.exception("commit failed, rolling back")
+            session_logger.exception("commit failed, rolling back")
             session.rollback()
             raise
 
