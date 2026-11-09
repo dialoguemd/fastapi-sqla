@@ -158,8 +158,11 @@ def async_sqlalchemy_url(db_url: str) -> str:
 if asyncio_support:
 
     @fixture
-    def async_engine(async_sqlalchemy_url: str) -> AsyncEngine:
-        return create_async_engine(async_sqlalchemy_url)
+    async def async_engine(async_sqlalchemy_url: str) -> AsyncGenerator[AsyncEngine]:
+        """Async engine, disposed after each test to release pooled connections."""
+        engine = create_async_engine(async_sqlalchemy_url)
+        yield engine
+        await engine.dispose()
 
     @fixture
     async def async_sqla_connection(
