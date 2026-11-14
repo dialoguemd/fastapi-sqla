@@ -102,7 +102,7 @@ def sqla_modules():
 
 @fixture
 def sqla_reflection(sqla_modules, sqla_connection: Connection):
-    import fastapi_sqla
+    import fastapi_sqla  # noqa: PLC0415
 
     fastapi_sqla.Base.metadata.bind = sqla_connection  # type: ignore
     fastapi_sqla.Base.prepare(sqla_connection.engine)
@@ -142,7 +142,8 @@ def session(session_factory: sessionmaker) -> Generator[Session]:
 
 def format_async_async_sqlalchemy_url(url: str) -> str:
     scheme, location, path, query, fragment = urlsplit(url)
-    return urlunsplit([f"{scheme}+asyncpg", location, path, query, fragment])
+    bare_scheme = scheme.split("+")[0]
+    return urlunsplit([f"{bare_scheme}+asyncpg", location, path, query, fragment])
 
 
 @fixture(scope="session")
@@ -157,8 +158,11 @@ def async_sqlalchemy_url(db_url: str) -> str:
 if asyncio_support:
 
     @fixture
-    def async_engine(async_sqlalchemy_url: str) -> AsyncEngine:
-        return create_async_engine(async_sqlalchemy_url)
+    async def async_engine(async_sqlalchemy_url: str) -> AsyncGenerator[AsyncEngine]:
+        """Async engine, disposed after each test to release pooled connections."""
+        engine = create_async_engine(async_sqlalchemy_url)
+        yield engine
+        await engine.dispose()
 
     @fixture
     async def async_sqla_connection(
@@ -188,7 +192,7 @@ if asyncio_support:
     async def async_sqla_reflection(
         sqla_modules, async_sqla_connection: AsyncConnection
     ):
-        from fastapi_sqla import Base
+        from fastapi_sqla import Base  # noqa: PLC0415
 
         await async_sqla_connection.run_sync(lambda conn: Base.prepare(conn.engine))
 

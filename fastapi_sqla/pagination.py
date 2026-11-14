@@ -1,7 +1,7 @@
 import math
 from collections.abc import Callable, Iterator
 from functools import singledispatch
-from typing import Annotated, Optional, Union, cast
+from typing import Annotated, cast
 
 from fastapi import Depends, Query
 from sqlalchemy.orm import Query as LegacyQuery
@@ -10,12 +10,12 @@ from sqlalchemy.sql import Select, func, select
 from fastapi_sqla.models import Meta, Page
 from fastapi_sqla.sqla import _DEFAULT_SESSION_KEY, SessionDependency, SqlaSession
 
-DbQuery = Union[LegacyQuery, Select]
+DbQuery = LegacyQuery | Select
 QueryCountDependency = Callable[..., int]
-PaginateSignature = Callable[[DbQuery, Optional[bool]], Page]
+PaginateSignature = Callable[[DbQuery, bool | None], Page]
 DefaultDependency = Callable[[SqlaSession, int, int], PaginateSignature]
 WithQueryCountDependency = Callable[[SqlaSession, int, int, int], PaginateSignature]
-PaginateDependency = Union[DefaultDependency, WithQueryCountDependency]
+PaginateDependency = DefaultDependency | WithQueryCountDependency
 
 
 def default_query_count(session: SqlaSession, query: DbQuery) -> int:
@@ -110,7 +110,7 @@ def Pagination(
     session_key: str = _DEFAULT_SESSION_KEY,
     min_page_size: int = 10,
     max_page_size: int = 100,
-    query_count: Union[QueryCountDependency, None] = None,
+    query_count: QueryCountDependency | None = None,
 ) -> PaginateDependency:
     def default_dependency(
         session: SqlaSession = Depends(SessionDependency(key=session_key)),

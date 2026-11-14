@@ -170,11 +170,38 @@ def test_sqla_modules_fixture_raises_exception_when_not_overriden(testdir, conft
     result.stdout.fnmatch_lines(["*sqla_modules fixture is not defined*"])
 
 
+@mark.require_asyncpg
+def test_async_engine_is_disposed_after_each_test(testdir, conftest):
+    testdir.makepyfile(
+        """
+        engines = []
+
+
+        async def test_open_connection(async_engine):
+            async with async_engine.connect():
+                pass
+            assert async_engine.pool.checkedin() == 1
+            engines.append(async_engine)
+
+
+        def test_engine_was_disposed():
+            assert engines[0].pool.checkedin() == 0
+    """
+    )
+    result = testdir.runpytest("-o", "asyncio_mode=auto")
+    result.assert_outcomes(passed=2)
+
+
 @mark.parametrize(
     "url,expected",
     [
         ("postgresql://localhost/db", "postgresql+asyncpg://localhost/db"),
         ("postgresql://u:p@localhost/db", "postgresql+asyncpg://u:p@localhost/db"),
+        ("postgresql+psycopg://localhost/db", "postgresql+asyncpg://localhost/db"),
+        (
+            "postgresql+psycopg://u:p@localhost/db",
+            "postgresql+asyncpg://u:p@localhost/db",
+        ),
     ],
 )
 def test_format_async_sqlalchemy_url(monkeypatch, conftest, testdir, url, expected):

@@ -1,4 +1,4 @@
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import httpx
 from asgi_lifespan import LifespanManager
@@ -42,10 +42,10 @@ def app():
 
     class Hero(SQLModel, table=True, extend_existing=True):
         __table_args__: ClassVar = {"extend_existing": True}
-        id: Optional[int] = Field(default=None, primary_key=True)
+        id: int | None = Field(default=None, primary_key=True)
         name: str
         secret_name: str
-        age: Optional[int] = None
+        age: int | None = None
 
     app = FastAPI()
     setup(app)

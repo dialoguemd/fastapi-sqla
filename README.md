@@ -149,11 +149,30 @@ And define the environment variable `sqlalchemy_url` with `postgres+asyncpg` sch
 export sqlalchemy_url=postgresql+asyncpg://postgres@localhost
 ```
 
+### Hiding SQL parameters
+
+By default, `hide_parameters` is set to `True` on all engines to prevent SQL query
+parameters from appearing in error messages and logs. This helps protect sensitive data
+such as PII/PHI.
+
+To disable this (e.g. for local debugging or dev):
+
+```bash
+export sqlalchemy_hide_parameters=false
+```
+
+For named sessions:
+
+```bash
+export fastapi_sqla__read_only__sqlalchemy_hide_parameters=false
+```
+
 ## Setup the app AsyncContextManager (recommended):
 
 ```python
 import fastapi_sqla
 from fastapi import FastAPI
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -237,6 +256,7 @@ AsyncReadOnlySession = Annotated[
     SqlaAsyncSession, Depends(AsyncSessionDependency(key="read_only"))
 ]
 
+
 @router.get("/example")
 def example(session: ReadOnlySession):
     return session.execute("SELECT now()").scalar()
@@ -248,6 +268,7 @@ async def async_example(session: AsyncReadOnlySession):
 
 
 # Alternative
+
 
 @router.get("/example/alt")
 def example_alt(session: SqlaSession = Depends(SessionDependency(key="read_only"))):
@@ -285,13 +306,16 @@ def run_bg():
     with open_session() as session:
         session.execute("SELECT now()").scalar()
 
+
 def run_bg_with_key():
     with open_session(key="read_only") as session:
         session.execute("SELECT now()").scalar()
 
+
 async def run_async_bg():
     async with open_async_session() as session:
         await session.scalar("SELECT now()")
+
 
 async def run_async_bg_with_key():
     async with open_async_session(key="read_only") as session:
@@ -487,7 +511,9 @@ async def query_count(session: AsyncSession) -> int:
     return result.scalar()
 
 
-CustomPaginate = AsyncPagination(min_page_size=5, max_page_size=500, query_count=query_count)
+CustomPaginate = AsyncPagination(
+    min_page_size=5, max_page_size=500, query_count=query_count
+)
 
 
 @router.get("/users", response_model=Page[UserModel])
@@ -536,9 +562,11 @@ AsyncReadOnlyPaginate = Annotated[
     AsyncPaginateSignature, Depends(AsyncPagination(session_key="read_only"))
 ]
 
+
 @router.get("/users", response_model=Page[UserModel])
 def all_users(paginate: ReadOnlyPaginate):
     return paginate(select(User))
+
 
 @router.get("/async_users", response_model=Page[UserModel])
 async def async_all_users(paginate: AsyncReadOnlyPaginate):
@@ -547,13 +575,13 @@ async def async_all_users(paginate: AsyncReadOnlyPaginate):
 
 # Alternative
 
+
 @router.get("/users/alt", response_model=Page[UserModel])
 def all_users_alt(
-    paginate: PaginateSignature = Depends(
-        Pagination(session_key="read_only")
-    ),
+    paginate: PaginateSignature = Depends(Pagination(session_key="read_only")),
 ):
     return paginate(select(User))
+
 
 @router.get("/async_users/alt", response_model=Page[UserModel])
 async def async_all_users_alt(
@@ -569,34 +597,35 @@ async def async_all_users_alt(
 If your project uses [SQLModel], then `Session` dependency is an SQLModel session::
 
 ```python
-    from http import HTTPStatus
+from http import HTTPStatus
 
-    from fastapi import FastAPI, HTTPException
-    from fastapi_sqla import Item, Page, Paginate, Session, setup
-    from sqlmodel import Field, SQLModel, select
-
-    class Hero(SQLModel, table=True):
-        id: int | None = Field(default=None, primary_key=True)
-        name: str
-        secret_name: str
-        age: int | None = None
+from fastapi import FastAPI, HTTPException
+from fastapi_sqla import Item, Page, Paginate, Session, setup
+from sqlmodel import Field, SQLModel, select
 
 
-    app = FastAPI()
-    setup(app)
+class Hero(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    secret_name: str
+    age: int | None = None
 
-    @app.get("/heros", response_model=Page[Hero])
-    def list_hero(paginate: Paginate) -> Page[Hero]:
-        return paginate(select(Hero))
+
+app = FastAPI()
+setup(app)
 
 
-    @app.get("/heros/{hero_id}", response_model=Item[Hero])
-    def get_hero(hero_id: int, session: Session) -> Item[Hero]:
-        hero = session.get(Hero, hero_id)
-        if hero is None:
-            raise HTTPException(HTTPStatus.NOT_FOUND)
-        return {"data": hero}
+@app.get("/heros", response_model=Page[Hero])
+def list_hero(paginate: Paginate) -> Page[Hero]:
+    return paginate(select(Hero))
 
+
+@app.get("/heros/{hero_id}", response_model=Item[Hero])
+def get_hero(hero_id: int, session: Session) -> Item[Hero]:
+    hero = session.get(Hero, hero_id)
+    if hero is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND)
+    return {"data": hero}
 ```
 
 # Pytest fixtures
@@ -679,6 +708,7 @@ from pytest import fixture
 @fixture
 def patient(session):
     from er.sqla import Patient
+
     patient = Patient(first_name="Bob", last_name="David")
     session.add(patient)
     session.commit()
@@ -688,6 +718,7 @@ def patient(session):
 @fixture
 async def doctor(async_session):
     from er.sqla import Doctor
+
     doctor = Doctor(name="who")
     async_session.add(doctor)
     await async_session.commit()
@@ -738,7 +769,7 @@ It returns the path of  `alembic.ini` configuration file. By default, it returns
 
 ## Prerequisites
 
-- **Python >=3.9**
+- **Python >=3.10**
 - [**Poetry**](https://poetry.eustace.io/) to install package dependencies.
 - A postgres DB reachable at `postgresql://postgres@localhost/postgres`
 
