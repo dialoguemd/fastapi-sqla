@@ -806,3 +806,13 @@ $ poetry run tox
 [alembic]: https://alembic.sqlalchemy.org/
 [pytest]: https://docs.pytest.org/
 [@dialoguemd]: https://github.com/dialoguemd
+
+# Releases
+
+A merge to master that contains a `fix` or `feat` commit releases a new version right away.
+
+Renovate's `fix(deps)` commits, which widen the ranges of published dependencies, don't release on merge. They go out, along with any other unreleased change, with the next merge that isn't `chore`, `test` or `fix(deps)`, or with the weekly `scheduled-release` workflow on Mondays at 14:00 UTC.
+
+To release them now, open the `fastapi-sqla` project in CircleCI, click **Trigger Pipeline**, pick the `master` branch and add the boolean parameter `release_now` with the value `true`.
+
+That pipeline only runs the `release-now` workflow. It succeeds without a release when nothing is waiting.

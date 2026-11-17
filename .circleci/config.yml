@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   base: dialogue/base@1.26.2
-  release: dialogue/release@2.23.0
+  release: dialogue/release@2.31.0
   python: dialogue/python@3.30.0
   utils: dialogue/utils@3.22.2
   codecov: codecov/codecov@4.1.0
@@ -26,8 +26,16 @@ executors:
         environment:
           POSTGRES_HOST_AUTH_METHOD: trust
 
+parameters:
+  release_now:
+    type: boolean
+    default: false
+    description: Set to true when triggering a pipeline on master to release now instead of waiting for the weekly release.
+
 workflows:
   ci:
+    when:
+      not: << pipeline.parameters.release_now >>
     jobs:
       - python/lint:
           name: 👮 lint
@@ -52,6 +60,8 @@ workflows:
 
       - release/release:
           name: 🕊 release
+          # Renovate's fix(deps) commits wait for the next release (see Releases in the README)
+          defer_dependency_fixes: true
           requires:
             - test
             - 👮 lint
@@ -72,6 +82,26 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
+  scheduled-release:
+    triggers:
+      - schedule:
+          # Mondays at 14:00 UTC: releases the dependency fixes that are still waiting
+          cron: "0 14 * * 1"
+          filters:
+            branches:
+              only: master
+    jobs:
+      - release/release: &scheduled_release
+          name: 🕊 scheduled release
+          scheduled: true
+          context:
+            - base-github-ci
+  release-now:
+    when: << pipeline.parameters.release_now >>
+    jobs:
+      - release/release:
+          <<: *scheduled_release
+          name: 🕊 release now
 
 jobs:
   test:
