@@ -12,6 +12,10 @@ aliases:
     executor:
       name: python/python
       version: "3.12.5"
+  - &scheduled_release
+    scheduled: true
+    context:
+      - base-github-ci
 
 executors:
   python-postgres:
@@ -91,17 +95,15 @@ workflows:
             branches:
               only: master
     jobs:
-      - release/release: &scheduled_release
+      - release/release:
           name: 🕊 scheduled release
-          scheduled: true
-          context:
-            - base-github-ci
+          <<: *scheduled_release
   release-now:
     when: << pipeline.parameters.release_now >>
     jobs:
       - release/release:
-          <<: *scheduled_release
           name: 🕊 release now
+          <<: *scheduled_release
 
 jobs:
   test:
