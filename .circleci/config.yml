@@ -1,11 +1,11 @@
 version: 2.1
 
 orbs:
-  base: dialogue/base@1.26.2
+  base: dialogue/base@1.28.2
   release: dialogue/release@2.31.0
-  python: dialogue/python@3.30.0
-  utils: dialogue/utils@3.22.2
-  codecov: codecov/codecov@4.1.0
+  python: dialogue/python@3.43.1
+  utils: dialogue/utils@3.24.2
+  codecov: codecov/codecov@4.2.0
 
 aliases:
   - &executor
